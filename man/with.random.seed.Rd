@@ -1,0 +1,26 @@
+\name{with.random.seed}
+\alias{with.random.seed}
+\title{Evalutes the expression expr with the specified random seed. Afterwards the function restores the original random seed.}
+\usage{
+  with.random.seed(expr, seed = 1234567890)
+}
+\arguments{
+  \item{expr}{an R expression that returns some random
+  value}
+
+  \item{seed}{an integer number that will be used to call
+  set.seed}
+}
+\value{
+  the value of expr evaluated under the specifed random
+  seed
+}
+\description{
+  This function can be useful in simulation studies in
+  which some random variables, e.g. explanatory variables X
+  shall always be drawn in the same fashion, while other
+  data, like disturbances epsilon shall differ between
+  runs. One can then draw the X using with.random.seed to
+  guarantee the same X in every simulation run.
+}
+

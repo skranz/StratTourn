@@ -1,0 +1,16 @@
+Package: StratTourn
+Type: Package
+Title: Tournament of game theoretic strategies
+Version: 0.1.0
+Date: 2013-09-05
+URL: https://github.com/skranz/StratTourn
+Author: Sebastian Kranz
+Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
+Description: Tournament of game theoretic strategies
+License: GPL >= 2.0
+Depends:
+  restorepoint,
+  sktools,
+  reshape2,
+  data.table,
+  ggplot2

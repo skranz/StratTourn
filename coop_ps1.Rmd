@@ -1,0 +1,101 @@
+Analyzing Cooperation with Game Theory and Simulation
+========================================================================
+Task Set 1: Noisy Prisoner Dilemma
+========================================================================
+
+**Date: 2013-10-11**
+**Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
+
+### Task 1.1 Install software and work through the tutorial
+
+First read the tutorial for the seminar and for the R package StratTourn, install the software and try out the examples in the tutorial.
+
+### Task 1.2 Develop strategies for 4 scenarios of a Noisy Prisoners' Dilemma Game
+
+In the PD game of the tutorial, players can perfectly observe the action that their partner has chosen in the previous period. This is a strong assumption. In many real world problems that share some structure with a PD game, it is not always easy to observe what the other player has done (think of environmental agreements to reduce polution or reduce quantity of fishing, or hard to observe work effort on joint projects) Resulting information problems may become a severe obstacle to efficient cooperation and strategies have to take them into account.
+
+#### Noisy PD Game
+
+In this task we consider noisy prisoners' dilemma games that add a simple form of information problem. There is an exogenously given probability *err.D.prob* that players observe that a player has chosen D in the previous period, even if in fact he has chosen C. Similarly, there can be a positive probability *err.C.prob* that a player's action is observed as C, even though he has chosen D. Formally, the period t+1 observation $obs_{i,t+1}$ of player i's period t action $a_{i,t}$ is distributed as follows:
+\[
+obs_{i,t+1}=
+\begin{cases}
+  a_{i,t} & \mbox{with prob 1-err.D.prob-err.C.prob}\\
+  D & \mbox{with prob err.D.prob}\\
+  C & \mbox{with prob err.C.prob}
+\end{cases}
+\]
+
+Both players always make the same observations, i.e. each player knows what the other player has observed. That all players make the same noisy observations is called *imperfect public monitoring* in game theoretic language. (If there are no observation errors, we have *perfect monitoring*. If players could make different observations, we would have *private monitoring*)
+
+Every time shall develop one strategy for each of the following 4 scenarios:
+
+#### 1. Baseline scenario:
+
+  * err.D.prob = 0.15
+  * err.C.prob = 0
+  * $\delta=0.95$
+  
+#### 2. High err.D.prob scenario:
+
+  * err.D.prob = 0.3
+  * err.C.prob = 0
+  * $\delta=0.95$
+
+#### 3. err.C.prob scenario:
+
+  * err.D.prob = 0.3
+  * err.C.prob = 0
+  * $\delta=0.95$
+
+#### 4. Low $\delta$ scenario:
+
+  * err.D.prob = 0.15
+  * err.C.prob = 0
+  * $\delta=0.7$
+
+For each scenario separately the strategies of all teams will compete in a tournament as described in Section 4 of the tutorial. Scores are computed with an **instability.factor of 20**.
+
+#### Two stages of the tournament  
+As described in Section 4 of the tutorial, the tournament will have a second stage. After we run the first stage, every team gets the source code of all strategies and has 1-2 weeks time to develop strategies that have the only goal to increase the instability of competing strategies. The final score of the initially submitted strategies will be computed after this second stage.
+
+#### A code example for testing strategies
+```{r include=FALSE}
+library(StratTourn)
+set.storing(FALSE)
+runif(1)
+```
+
+```{r cache=!TRUE}
+library(StratTourn)
+
+# All scenarios
+# baseline scenario
+err.D.prob = 0.15; err.C.prob = 0; delta = 0.95
+# high err.D.prob scenario
+err.D.prob = 0.3; err.C.prob = 0; delta = 0.95
+# err.C.prob scenario 
+err.D.prob = 0.15; err.C.prob = 15; delta = 0.95
+# low delta scenario
+err.D.prob = 0.15; err.C.prob = 0; delta = 0.7
+
+# Current scenario
+# baseline scenario
+err.D.prob = 0.15; err.C.prob = 0; delta = 0.95
+
+
+game = make.pd.game(err.D.prob=err.D.prob, err.C.prob=err.C.prob)
+
+# Pick a pair of strategies 
+strat = nlist(tit.for.tat,grim.trigger)
+
+# Let the strategies play against each other
+run.rep.game(delta=delta, game=game, strat = strat)
+
+# Init and run a tournament of several strategies against each other  
+strat = nlist(grim.trigger,tit.for.tat,always.defect, always.coop)
+tourn = init.tournament(game=game, strat=strat, delta=delta, instability.factor=20)
+tourn = run.tournament(tourn=tourn, R = 10)
+tourn
+
+```

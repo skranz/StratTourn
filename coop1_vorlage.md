@@ -1,0 +1,101 @@
+Analyse von Kooperation mit Spieltheorie and Simulation
+========================================================================
+Lösungen für Aufgabenset 1: Noisy Prisoner Dilemma
+========================================================================
+
+**Team-Name:** Euer Team Name
+
+**Team:**
+  1. Name des ersten Teammitglieds, Email
+  2. Name des zweiten Teammitglieds, Email
+  
+
+**Abgabe:** Sendet diese Datei mit eurer Lösung bis spätestens zum **??** per Email an
+martin.kies@uni-ulm.de mit CC an sebastian.kranz@uni-ulm.de
+
+Szenario 1: Baseline
+-------------------------------------------------------------------
+
+### R-Code eurer Strategie
+
+```r
+# Bitte ändert nicht die Zeile oberhalb!  Fügt in diesen Codeblock bitte den
+# R Code eurer Strategie ein.  Diese Kommentarzeilen könnt Ihr danach
+# löschen
+
+```
+
+### Beschreibung eurer Strategie
+
+Beschreibt hier bitte eure Strategie. Was ist die Grundidee? Wie seit Ihr vorgegangen um die Strategie zu entwickeln und zu optimieren.
+
+
+Szenario 2: High err.D.prob
+-------------------------------------------------------------------
+
+### R-Code eurer Strategie
+
+```r
+# Bitte ändert nicht die Zeile oberhalb!  Fügt in diesen Codeblock bitte den
+# R Code eurer Strategie ein.  Diese Kommentarzeilen könnt Ihr danach
+# löschen
+
+```
+
+### Beschreibung eurer Strategie und Vergleich zum Baseline-Szenario
+
+Beschreibt hier bitte eure Strategie. Stellt insbesondere dar, wie und warum ihr die Strategie im Vergleich zum Baseline Szenario verändert habt.
+
+
+Szenario 3: err.C.prob
+-------------------------------------------------------------------
+
+### R-Code eurer Strategie
+
+```r
+# Bitte ändert nicht die Zeile oberhalb!  Fügt in diesen Codeblock bitte den
+# R Code eurer Strategie ein.  Diese Kommentarzeilen könnt Ihr danach
+# löschen
+
+```
+
+### Beschreibung eurer Strategie und Vergleich zum Baseline-Szenario
+
+Beschreibt hier bitte eure Strategie. Stellt insbesondere dar, wie und warum ihr die Strategie im Vergleich zum Baseline Szenario verändert habt.
+
+
+Szenario 4: Low $\delta$
+-------------------------------------------------------------------
+
+### R-Code eurer Strategie
+
+```r
+# Bitte ändert nicht die Zeile oberhalb!  Fügt in diesen Codeblock bitte den
+# R Code eurer Strategie ein.  Diese Kommentarzeilen könnt Ihr danach
+# löschen
+
+```
+
+### Beschreibung eurer Strategie und Vergleich zum Baseline-Szenario
+
+Beschreibt hier bitte eure Strategie. Stellt insbesondere dar, wie und warum ihr die Strategie im Vergleich zum Baseline Szenario verändert habt.
+
+
+Szenario 5: High $\delta$
+-------------------------------------------------------------------
+
+### R-Code eurer Strategie
+
+```r
+# Bitte ändert nicht die Zeile oberhalb!  Fügt in diesen Codeblock bitte den
+# R Code eurer Strategie ein.  Diese Kommentarzeilen könnt Ihr danach
+# löschen
+
+```
+
+### Beschreibung eurer Strategie und Vergleich zum Baseline-Szenario
+
+Beschreibt hier bitte eure Strategie. Stellt insbesondere dar, wie und warum ihr die Strategie im Vergleich zum Baseline Szenario verändert habt.
+
+
+
