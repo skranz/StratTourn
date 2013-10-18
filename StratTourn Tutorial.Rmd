@@ -169,6 +169,105 @@ The lines
 ```
 describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
 
+
+### 3.3 Strategies that use states. Example: strange.defector
+
+Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed (not very clever) strategy:
+
+ * "Strange Defector":  In the first round plays C with 70% probability, otherwise D. If he cooperates, he continues in this random fashion. Once a player defects, he plays 4 additional times "defect" in a row. Afterwards, he plays again in the same fashion as in first period until he defects again.
+ 
+Here is an R implementation of this strategy:
+
+```{r}
+strange.defector <- function(obs, i, t, game, still.defect=0){
+  debug.store("strange.defector",i,t) # Store each call for each player
+  debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
+  
+  # Randomize between C and D
+  if (still.defect==0) {
+    do.cooperate = (runif(1)<0.7) 
+    # With 60% probability choose C
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+    } else {
+      return(list(a="D", still.defect=4))
+    }
+  }
+  
+  # still.defect is bigger 0: play D and reduce still.defect by 1
+  still.defect = still.defect -1
+  return(list(a="D",still.defect=still.defect))
+}
+```
+Compared to the tit.for.tat function, the strange.defector function has an additional argument, namely *still.defect* which in the first round t=1 has the value 0.
+Also the returned lists contain an additional field of named *still.defect*.  The variable *still.defect* is a  manually generated *state variable*.
+
+
+Here is a short overview of state variables:
+#### How states transfer information between periods:
+```
+The value of the state that is passed to your function in period t is the value of the state that your function has returned in period t-1. (The value of a state in period 1 is the value you specify as argument in the function definition).
+```
+#### Name and number of state variables
+```
+You can freely pick the name of a state (except for the reserved names ops,i,t, and game) and you can have more than one state. 
+```
+**Which values can state variables take?**
+```
+States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. "angry"), or even vectors. (You just should not store a list in a state variable).
+```
+
+#### Back to the example:
+In our example, the state variable *still.defect* captures the information how many rounds the streak of defection should still last.
+
+Let us have a more detailed look at the code of the example. The line
+```{r eval=FALSE}
+  strange.defector <- function(obs, i, t, game, still.defect=0){
+```
+initializes the function with a state still.defect that has in the first period a value of 0. 
+The lines
+```{r eval=FALSE}
+  if (still.defect==0) {
+    do.cooperate = runif(1)<0.7 
+    # With 60% probability choose C
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+    } else {
+      return(list(a="D", still.defect=4))
+    }
+  }
+
+```
+first check whether we are in the initial state (still.defect=0), in which we randomize between C and D. If this is the case, we draw with the command
+```{r eval=FALSE}
+  do.cooperate = (runif(1)<0.7) 
+```
+a logical random variable that is TRUE with 60% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines
+```{r eval=FALSE}
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+```
+state that if the random variable says that we should cooperate, we return the action "C" and keep the state still.defect=0. The lines 
+```{r eval=FALSE}
+    } else {
+      return(list(a="D", still.defect=4))
+    }
+```
+state that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 rounds. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
+```{r eval=FALSE}
+  still.defect = still.defect -1
+  return(list(a="D",still.defect=still.defect))
+```
+The first line reduces still.defect by 1. This causes our defection streak to last a total of 4 periods. The second line returns our action a="D" and the new value of our state still.defect.
+
+
+If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
+```{r eval=TRUE, cache=!TRUE}
+  run.rep.game(delta=0.9, game=game, 
+               strat = nlist(strange.defector,tit.for.tat),T.min=25)
+```
+
+
 ### 3.3 Strategies that use states. Example: ashamed.defector
 
 Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed strategy:

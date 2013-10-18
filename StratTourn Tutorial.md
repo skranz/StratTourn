@@ -98,11 +98,20 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 
 ```
 ## $hist
-##   obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1     NA     NA  C  C   1   1
+##    obs_a1 obs_a2 a1 a2 pi1 pi2
+## 1    <NA>   <NA>  C  C   1   1
+## 2       C      C  C  C   1   1
+## 3       C      C  C  C   1   1
+## 4       C      C  C  D  -1   2
+## 5       C      D  D  C   2  -1
+## 6       D      C  C  D  -1   2
+## 7       C      D  D  C   2  -1
+## 8       D      C  C  C   1   1
+## 9       C      C  C  C   1   1
+## 10      C      C  C  D  -1   2
 ## 
 ## $u
-## [1] 1 1
+## [1] 0.6 0.9
 ```
 
 This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
@@ -189,6 +198,167 @@ list(a = obs$a[j])
 ```
 
 describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
+
+
+### 3.3 Strategies that use states. Example: strange.defector
+
+Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed (not very clever) strategy:
+
+ * "Strange Defector":  In the first round plays C with 70% probability, otherwise D. If he cooperates, he continues in this random fashion. Once a player defects, he plays 4 additional times "defect" in a row. Afterwards, he plays again in the same fashion as in first period until he defects again.
+ 
+Here is an R implementation of this strategy:
+
+
+```r
+strange.defector <- function(obs, i, t, game, still.defect = 0) {
+    debug.store("strange.defector", i, t)  # Store each call for each player
+    debug.restore("strange.defector", i = 1, t = 2)  # Restore call for player i in period t
+    
+    # Randomize between C and D
+    if (still.defect == 0) {
+        do.cooperate = (runif(1) < 0.7)
+        # With 60% probability choose C
+        if (do.cooperate) {
+            return(list(a = "C", still.defect = 0))
+        } else {
+            return(list(a = "D", still.defect = 4))
+        }
+    }
+    
+    # still.defect is bigger 0: play D and reduce still.defect by 1
+    still.defect = still.defect - 1
+    return(list(a = "D", still.defect = still.defect))
+}
+```
+
+Compared to the tit.for.tat function, the strange.defector function has an additional argument, namely *still.defect* which in the first round t=1 has the value 0.
+Also the returned lists contain an additional field of named *still.defect*.  The variable *still.defect* is a  manually generated *state variable*.
+
+
+Here is a short overview of state variables:
+#### How states work
+```
+In period t+1 the value of a state variable passed to the function is the value that has been returned from the function in period t.
+```
+#### Name and number of state variables
+```
+You can freely pick the name of a state (except for the reserved names ops,i,t, and game) and you can have more than one state. 
+```
+**Which values can state variables take?**
+```
+States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. "angry"), or even vectors. (You just should not store a list in a state variable).
+```
+
+#### Back to the example:
+In our example, the state variable *still.defect* captures the information how many rounds the streak of defection should still last.
+
+Let us have a more detailed look at the code of the example. The line
+
+```r
+  strange.defector <- function(obs, i, t, game, still.defect=0){
+```
+
+initializes the function with a state still.defect that has in the first period a value of 0. 
+The lines
+
+```r
+if (still.defect == 0) {
+    do.cooperate = runif(1) < 0.7
+    # With 60% probability choose C
+    if (do.cooperate) {
+        return(list(a = "C", still.defect = 0))
+    } else {
+        return(list(a = "D", still.defect = 4))
+    }
+}
+
+```
+
+first check whether we are in the initial state (still.defect=0), in which we randomize between C and D. If this is the case, we draw with the command
+
+```r
+do.cooperate = (runif(1) < 0.7)
+```
+
+a logical random variable that is TRUE with 60% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines
+
+```r
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+```
+
+state that if the random variable says that we should cooperate, we return the action "C" and keep the state still.defect=0. The lines 
+
+```r
+    } else {
+      return(list(a="D", still.defect=4))
+    }
+```
+
+state that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 rounds. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
+
+```r
+still.defect = still.defect - 1
+return(list(a = "D", still.defect = still.defect))
+```
+
+The first line reduces still.defect by 1. This causes our defection streak to last a total of 4 periods. The second line returns our action a="D" and the new value of our state still.defect.
+
+
+If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
+
+```r
+run.rep.game(delta = 0.9, game = game, strat = nlist(strange.defector, tit.for.tat), 
+    T.min = 25)
+```
+
+```
+## $hist
+##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
+## 1    <NA>   <NA>  C  C   1   1              0
+## 2       C      C  D  C   2  -1              4
+## 3       D      C  D  D   0   0              3
+## 4       D      D  D  D   0   0              2
+## 5       D      D  D  D   0   0              1
+## 6       D      D  D  D   0   0              0
+## 7       D      D  D  D   0   0              4
+## 8       D      D  D  D   0   0              3
+## 9       D      D  D  D   0   0              2
+## 10      D      D  D  D   0   0              1
+## 11      D      D  D  D   0   0              0
+## 12      D      D  D  D   0   0              4
+## 13      D      D  D  D   0   0              3
+## 14      D      D  D  D   0   0              2
+## 15      D      D  D  D   0   0              1
+## 16      D      D  D  D   0   0              0
+## 17      D      D  C  D  -1   2              0
+## 18      C      D  C  C   1   1              0
+## 19      C      C  C  C   1   1              0
+## 20      C      C  D  C   2  -1              4
+## 21      D      C  D  D   0   0              3
+## 22      D      D  D  D   0   0              2
+## 23      D      D  D  D   0   0              1
+## 24      D      D  D  D   0   0              0
+## 25      D      D  C  D  -1   2              0
+## 26      C      D  C  C   1   1              0
+## 27      C      C  C  C   1   1              0
+## 28      C      C  C  C   1   1              0
+## 29      C      C  D  C   2  -1              4
+## 30      D      C  D  D   0   0              3
+## 31      D      D  D  D   0   0              2
+## 32      D      D  D  D   0   0              1
+## 33      D      D  D  D   0   0              0
+## 34      D      D  C  D  -1   2              0
+## 35      C      D  C  C   1   1              0
+## 36      C      C  D  C   2  -1              4
+## 37      D      C  D  D   0   0              3
+## 38      D      D  D  D   0   0              2
+## 
+## $u
+## [1] 0.3567 0.1096
+```
+
+
 
 ### 3.3 Strategies that use states. Example: ashamed.defector
 
@@ -307,34 +477,36 @@ run.rep.game(delta = 0.9, game = game, strat = nlist(ashamed.defector, random.ac
 ## $hist
 ##    obs_a1 obs_a2 a1 a2 pi1 pi2 shame.counter_1
 ## 1    <NA>   <NA>  C  D  -1   2               0
-## 2       D      D  D  D   0   0               5
-## 3       D      D  D  C   2  -1               4
-## 4       D      C  D  D   0   0               3
-## 5       D      D  D  D   0   0               2
-## 6       D      D  D  D   0   0               1
-## 7       D      D  C  D  -1   2               0
-## 8       D      D  D  C   2  -1               5
-## 9       D      C  D  C   2  -1               4
-## 10      D      C  D  D   0   0               3
-## 11      D      D  D  D   0   0               2
+## 2       C      D  C  C   1   1               0
+## 3       C      C  C  C   1   1               0
+## 4       C      C  C  C   1   1               0
+## 5       C      C  C  D  -1   2               0
+## 6       C      D  C  D  -1   2               0
+## 7       C      D  C  C   1   1               0
+## 8       D      C  D  C   2  -1               5
+## 9       D      C  D  D   0   0               4
+## 10      D      D  D  C   2  -1               3
+## 11      D      C  D  C   2  -1               2
 ## 12      D      D  D  D   0   0               1
-## 13      D      D  C  D  -1   2               0
-## 14      D      D  D  C   2  -1               5
-## 15      D      C  D  D   0   0               4
-## 16      D      D  D  C   2  -1               3
-## 17      D      C  D  C   2  -1               2
+## 13      D      D  C  C   1   1               0
+## 14      D      C  D  D   0   0               5
+## 15      D      D  D  D   0   0               4
+## 16      D      D  D  D   0   0               3
+## 17      D      D  D  C   2  -1               2
 ## 18      D      D  D  D   0   0               1
-## 19      D      D  C  D  -1   2               0
-## 20      C      D  C  D  -1   2               0
+## 19      D      D  C  C   1   1               0
+## 20      C      C  C  D  -1   2               0
 ## 21      C      D  C  C   1   1               0
 ## 22      C      C  C  D  -1   2               0
 ## 23      C      D  C  C   1   1               0
-## 24      D      D  D  D   0   0               5
-## 25      D      D  D  D   0   0               4
-## 26      D      D  D  C   2  -1               3
+## 24      D      D  D  C   2  -1               5
+## 25      D      C  D  C   2  -1               4
+## 26      D      C  D  D   0   0               3
+## 27      D      D  D  D   0   0               2
+## 28      D      D  D  C   2  -1               1
 ## 
 ## $u
-## [1] 0.3097 0.2343
+## [1] 0.4650 0.7307
 ```
 
 
@@ -370,18 +542,18 @@ tourn
 ## Tournament for Noisy PD (15 rep.)
 ## 
 ##                  ashamed.defector tit.for.tat always.defect always.coop
-## ashamed.defector            0.617      0.4690       -0.6040        1.40
-## tit.for.tat                 0.693      0.2680       -0.0499        1.12
-## always.defect               1.260      0.0997        0.0000        2.00
-## always.coop                 0.259      0.7100       -1.0000        1.00
+## ashamed.defector            0.578       0.465       -0.6010        1.40
+## tit.for.tat                 0.630       0.222       -0.0501        1.18
+## always.defect               1.110       0.100        0.0000        2.00
+## always.coop                 0.108       0.716       -1.0000        1.00
 ## 
 ## Ranking with score = efficiency-2*instability- 20*instability^2
 ## 
 ##                  rank   score efficiency instability u.average   best.answer
-## always.defect       1   0.000      0.000       0.000     0.840 always.defect
-## tit.for.tat         2  -4.520      0.268       0.442     0.508   always.coop
-## ashamed.defector    3  -8.917      0.617       0.642     0.469 always.defect
-## always.coop         4 -21.000      1.000       1.000     0.242 always.defect
+## always.defect       1   0.000      0.000       0.000     0.802 always.defect
+## tit.for.tat         2  -5.646      0.222       0.494     0.494   always.coop
+## ashamed.defector    3  -6.115      0.578       0.531     0.460 always.defect
+## always.coop         4 -21.000      1.000       1.000     0.206 always.defect
 ```
 
 
@@ -591,17 +763,18 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action))
 ```
 
 ```
-## Error in evaluating strategy exploiter in period t=2 for player i=1 ERROR.HIST:
+## Error in evaluating strategy exploiter in period t=2 for player i=1
+## ERROR.HIST:
 ```
 
 ```
 ##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    C   1   1        0
+## 1     NA     NA    C    D  -1   2        0
 ## 2     NA     NA <NA> <NA>  NA  NA       NA
 ```
 
 ```
-## Error: Error in (function (obs, i, t, game, otherC) : Objekt 'j' nicht gefunden
+## Error: Error in (function (obs, i, t, game, otherC) : object 'j' not found
 ```
 
 We get an error message and learn that an error occurred when calling exploiter for player i=1 in period t=2. We also get the error message "object 'j' not found". Probably you see the problem directly from that message. Nevertheless, let us pretend we have not found the problem yet and let us step through our function.
@@ -612,7 +785,7 @@ debug.restore("exploiter", i = 1, t = 2)  # Restore call for player i in period 
 ```
 
 ```
-## Restored: game,i,obs,otherC,t
+## Restored:  game,i,obs,otherC,t
 ```
 
 in the R console by selecting the line and pressing the "Run" button or Ctrl-Enter. This call now restores now the arguments with which the strategy has been called  for player i=1 in period t=2. You can examine the function arguments by typing them in the R console:
@@ -624,7 +797,7 @@ obs
 ```
 ## $a
 ##  a1  a2 
-## "C" "C"
+## "C" "D"
 ```
 
 ```r
@@ -655,7 +828,7 @@ if (obs$a[[j]] == "C") otherC = otherC + 1
 ```
 
 ```
-## Error: Objekt 'j' nicht gefunden
+## Error: object 'j' not found
 ```
 
 We can also run parts of the last line to narrow down the error...
@@ -665,7 +838,7 @@ obs$a[[j]]
 ```
 
 ```
-## Error: Objekt 'j' nicht gefunden
+## Error: object 'j' not found
 ```
 
 ```r
@@ -673,7 +846,7 @@ j
 ```
 
 ```
-## Error: Objekt 'j' nicht gefunden
+## Error: object 'j' not found
 ```
 
 Ok, clearly we forgot to define the variable j, which shall be the index of the other player. We can add the line j = 3-i and run again the code inside the corrected function:
@@ -683,7 +856,7 @@ debug.restore("exploiter", i = 1, t = 2)  # Restore call for player i in period 
 ```
 
 ```
-## Restored: game,i,obs,otherC,t
+## Restored:  game,i,obs,otherC,t
 ```
 
 ```r
@@ -708,10 +881,10 @@ return(nlist(a = a, otherC))
 
 ```
 ## $a
-## [1] "C"
+## [1] "D"
 ## 
 ## $otherC
-## [1] 1
+## [1] 0
 ```
 
 You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.
@@ -754,7 +927,8 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ```
 
 ```
-## Error in evaluating strategy exploiter in period t=8 for player i=1 ERROR.HIST:
+## Error in evaluating strategy exploiter in period t=8 for player i=1
+## ERROR.HIST:
 ```
 
 ```
@@ -768,7 +942,7 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ```
 
 ```
-## Error: Error in otherC + 1: 'otherC' fehlt
+## Error: Error in otherC + 1: 'otherC' is missing
 ```
 
 We find an error in period t=8 . Let us investigate the call to our strategy in that period by setting t=8 in the call to debug.restore
@@ -778,11 +952,8 @@ debug.restore("exploiter", i = 1, t = 8)  # Restore call for player i in period 
 ```
 
 ```
-## Variable otherC was missing.
-```
-
-```
-## Restored: game,i,obs,otherC,t
+## Variable  otherC  was missing.
+## Restored:  game,i,obs,otherC,t
 ```
 
 The call tells me that the state variable otherC was not provided as an argument to this function. This basically means that in period t=7 the function did not return the variable otherC. Let us check where this problem happened by exploring in more detail the function call in period 7.
@@ -792,7 +963,7 @@ debug.restore("exploiter", i = 1, t = 7)  # Restore call for player i in period 
 ```
 
 ```
-## Restored: game,i,obs,otherC,t
+## Restored:  game,i,obs,otherC,t
 ```
 
 ```r

@@ -82,16 +82,12 @@ err.C.prob = 0
 delta = 0.95
 # scenario 3: err.C.prob
 err.D.prob = 0.15
-err.C.prob = 0.15
+err.C.prob = 0.3
 delta = 0.95
 # scenario 4: low delta
 err.D.prob = 0.15
 err.C.prob = 0
-delta = 0.7
-# scenario 5: high delta
-err.D.prob = 0.15
-err.C.prob = 0
-delta = 0.995
+delta = 0.5
 
 
 # Current scenario baseline scenario
@@ -111,50 +107,16 @@ run.rep.game(delta = delta, game = game, strat = strat)
 
 ```
 ## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 coop_2
-## 1    <NA>   <NA>  C  C   1   1   TRUE
-## 2       D      C  C  D  -1   2  FALSE
-## 3       C      D  D  D   0   0  FALSE
-## 4       D      D  D  D   0   0  FALSE
-## 5       D      D  D  D   0   0  FALSE
-## 6       D      D  D  D   0   0  FALSE
-## 7       D      D  D  D   0   0  FALSE
-## 8       D      D  D  D   0   0  FALSE
-## 9       D      D  D  D   0   0  FALSE
-## 10      D      D  D  D   0   0  FALSE
-## 11      D      D  D  D   0   0  FALSE
-## 12      D      D  D  D   0   0  FALSE
-## 13      D      D  D  D   0   0  FALSE
-## 14      D      D  D  D   0   0  FALSE
-## 15      D      D  D  D   0   0  FALSE
-## 16      D      D  D  D   0   0  FALSE
-## 17      D      D  D  D   0   0  FALSE
-## 18      D      D  D  D   0   0  FALSE
-## 19      D      D  D  D   0   0  FALSE
-## 20      D      D  D  D   0   0  FALSE
-## 21      D      D  D  D   0   0  FALSE
-## 22      D      D  D  D   0   0  FALSE
-## 23      D      D  D  D   0   0  FALSE
-## 24      D      D  D  D   0   0  FALSE
-## 25      D      D  D  D   0   0  FALSE
-## 26      D      D  D  D   0   0  FALSE
-## 27      D      D  D  D   0   0  FALSE
-## 28      D      D  D  D   0   0  FALSE
-## 29      D      D  D  D   0   0  FALSE
-## 30      D      D  D  D   0   0  FALSE
-## 31      D      D  D  D   0   0  FALSE
-## 32      D      D  D  D   0   0  FALSE
-## 33      D      D  D  D   0   0  FALSE
-## 34      D      D  D  D   0   0  FALSE
-## 35      D      D  D  D   0   0  FALSE
-## 36      D      D  D  D   0   0  FALSE
-## 37      D      D  D  D   0   0  FALSE
-## 38      D      D  D  D   0   0  FALSE
-## 39      D      D  D  D   0   0  FALSE
-## 40      D      D  D  D   0   0  FALSE
+##   obs_a1 obs_a2 a1 a2 pi1 pi2 coop_2
+## 1   <NA>   <NA>  C  C   1   1   TRUE
+## 2      C      C  C  C   1   1   TRUE
+## 3      C      D  D  D   0   0  FALSE
+## 4      D      D  D  D   0   0  FALSE
+## 5      D      D  D  D   0   0  FALSE
+## 6      D      D  D  D   0   0  FALSE
 ## 
 ## $u
-## [1] 0.000 0.075
+## [1] 0.3333 0.3333
 ```
 
 ```r
@@ -171,17 +133,17 @@ tourn
 ## Tournament for Noisy PD (10 rep.)
 ## 
 ##               grim.trigger tit.for.tat always.defect always.coop
-## grim.trigger         0.133       0.150         -0.05        1.87
-## tit.for.tat          0.102       0.239         -0.05        1.12
-## always.defect        0.100       0.100          0.00        2.00
-## always.coop         -0.734       0.686         -1.00        1.00
+## grim.trigger        0.2170      0.2530       -0.0499        1.78
+## tit.for.tat         0.2000      0.2800       -0.0499        1.14
+## always.defect       0.0999      0.0999        0.0000        2.00
+## always.coop        -0.5660      0.7500       -1.0000        1.00
 ## 
 ## Ranking with score = efficiency - 2*instability -20*instability^2
 ## 
 ##               rank   score efficiency instability u.average   best.answer
-## grim.trigger     1   0.133      0.133       0.000     0.525  grim.trigger
-## always.defect    2   0.000      0.000       0.000     0.550 always.defect
-## tit.for.tat      3  -4.663      0.239       0.448     0.353   always.coop
-## always.coop      4 -21.000      1.000       1.000    -0.012 always.defect
+## grim.trigger     1   0.217      0.217        0.00     0.551  grim.trigger
+## always.defect    2   0.000      0.000        0.00     0.550 always.defect
+## tit.for.tat      3  -5.084      0.280        0.47     0.393   always.coop
+## always.coop      4 -21.000      1.000        1.00     0.046 always.defect
 ```
 
