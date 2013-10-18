@@ -22,7 +22,7 @@ examples.pd = function() {
   
   # Pick a pair of strategies
   ## To pick a pair of strategies, comment (#) the other one
-  strat <- nlist(factor.in.my.revenge,random.action)
+  strat <- nlist(ashamed.defector,random.action)
   strat <- nlist(always.coop,always.coop)
   
   # Let the strategies play against each other (Baseline Szenario but with T.min set for less random results)
@@ -32,7 +32,7 @@ examples.pd = function() {
   
   # Init and run a tournament of several strategies against each other  
   set.storing(FALSE) # Debugging off, which saves time
-  strat = nlist(tit.for.tat,always.defect,always.coop,factor.in.my.revenge) # Strategies in the tournament
+  strat = nlist(tit.for.tat,always.defect,always.coop,ashamed.defector) # Strategies in the tournament
   tourn = init.tournament(game=game, strat=strat, delta=delta, score.fun = "efficiency-2*instability-20*instability^2")
   tourn = run.tournament(tourn=tourn, R = 10)
   tourn
@@ -69,39 +69,36 @@ tit.for.tat = function(obs,i,t,game) {
   list(a=obs$a[j])
 }
 
-#Enforces a certain quotient of defections between himself and his opponent as observed by both
-factor.in.my.revenge <- function(obs, i, t, game,mydefects,herdefects,quotient){
-  debug.store("factor.in.my.revenge",i,t) # Store each call for each player
-  debug.restore("factor.in.my.revenge",i=2,t=5) # Restore call for player i in period t
+#Does not admit to sending the wrong signal (even though he can not influence that) by defecting on purpose
+#to make it seem as if the defection was on purpose all along
+ashamed.defector <- function(obs, i, t, game, shame.counter){
+  debug.store("ashamed.defector",i,t) # Store each call for each player
+  debug.restore("ashamed.defector",i=1,t=2) # Restore call for player i in period t
   
-  ##Factor of Revenge
-  revengefactor <- 1.5
-  
-  #Start with cooperating
-  if (t==1){
-    return(list(a="C",mydefects=0,herdefects=0,quotient=NaN))
+  #First round be nice
+  if(t==1){
+    return(list(a="C",shame.counter=0))
   }
   
-  #Update defectioncounters
-  j = 3-i #j is other Player
-  if(obs$a[i] == "D"){
-    mydefects <- mydefects + 1
-  }
-  if(obs$a[j] == "D"){
-    herdefects <- herdefects +1
+  #"Normal" case, where player is not ashamed and has no reason to be so
+  if(shame.counter==0 && obs$a[i]=="C"){
+    return(list(a="C",shame.counter=0))
   }
   
-  #If quotient is acceptable Cooperate, otherwise defect
-  ## As we can not divide by 0, we will always cooperate if opponent did never defect
-  if(herdefects == 0){
-    return(list(a="C",mydefects=mydefects,herdefects=herdefects,quotient=round(mydefects/herdefects,digits=2)))
+  #If ashamed, defect to cover up "mistake"
+  if(shame.counter>1){
+    shame.counter = shame.counter-1
+    return(list(a="D",shame.counter=shame.counter))
   }
-  ## We reach this part iff herdefects != 0
-  if(mydefects/herdefects >= revengefactor){
-    return(list(a="C",mydefects=mydefects,herdefects=herdefects,quotient=round(mydefects/herdefects,digits=2)))
-  } else {
-    return(list(a="D",mydefects=mydefects,herdefects=herdefects,quotient=round(mydefects/herdefects,digits=2)))
-  }
+  
+  #Ready to be nice again
+  if(shame.counter==1){
+    shame.counter = 0
+    return(list(a="C",shame.counter=shame.counter))
+  }  
+  
+  ##This point is reached iff the shame.counter is zero, but other player observed a defection
+  return(list(a="D",shame.counter=5))
 }
 
 # A function to generate a PD game

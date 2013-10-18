@@ -3,7 +3,7 @@ Analyzing Cooperation with Game Theory and Simulation
 Tutorial for the R package StratTourn
 ========================================================================
 
-**Date: 2013-10-17**
+**Date: 2013-10-18**
 
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
 
@@ -99,28 +99,10 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 ```
 ## $hist
 ##   obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1   <NA>   <NA>  C  C   1   1
-## 2      C      C  C  C   1   1
-## 3      C      C  C  C   1   1
-## 4      C      C  C  C   1   1
-<<<<<<< HEAD
-## 5      C      C  C  D  -1   2
-## 6      C      D  D  C   2  -1
-## 7      D      C  C  C   1   1
-## 8      C      C  C  D  -1   2
-## 9      C      D  D  C   2  -1
+## 1     NA     NA  C  C   1   1
 ## 
 ## $u
-## [1] 0.6667 0.6667
-=======
-## 5      C      C  C  C   1   1
-## 6      C      C  C  D  -1   2
-## 7      C      D  D  D   0   0
-## 8      D      D  D  D   0   0
-## 
-## $u
-## [1] 0.500 0.875
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
+## [1] 1 1
 ```
 
 This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
@@ -208,188 +190,154 @@ list(a = obs$a[j])
 
 describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
 
-### 3.3 Strategies that use states. Example: factor.in.my.revenge
+### 3.3 Strategies that use states. Example: ashamed.defector
 
-Many strategies rely on more past information than just the observations obs from the previous period. Consider for example this self-developed strategy:
+Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed strategy:
 
- * "Factor in my revenge": Cooperate in the first period. In later periods cooperate if and only if the opponent has (observably) defected less than a certain fraction of my (observed) defections.
+ * "Ashamed Defector": Cooperate in the first period. Cooperate as long until the observations state, that player has defected. To "cover up" this "mistake", play 4 additional times "defect". Cooperate afterwards until the next wrongfully observed defection.
  
 Here is an R implementation of this strategy:
 
 
 ```r
-factor.in.my.revenge <- function(obs, i, t, game, mydefects, herdefects, quotient) {
-    debug.store("factor.in.my.revenge", i, t)  # Store each call for each player
-    debug.restore("factor.in.my.revenge", i = 2, t = 5)  # Restore call for player i in period t
+# Does not admit to sending the wrong signal (even though he can not
+# influence that) by defecting on purpose to make it seem as if the
+# defection was on purpose all along
+ashamed.defector <- function(obs, i, t, game, shame.counter) {
+    debug.store("ashamed.defector", i, t)  # Store each call for each player
+    debug.restore("ashamed.defector", i = 1, t = 2)  # Restore call for player i in period t
     
-    ## Factor of Revenge
-    revengefactor <- 1.5
-    
-    # Start with cooperating
+    # Be nice in the first round
     if (t == 1) {
-        return(list(a = "C", mydefects = 0, herdefects = 0, quotient = NaN))
+        return(list(a = "C", shame.counter = 0))
     }
     
-    # Update defectioncounters
-    j = 3 - i  #j is other Player
-    if (obs$a[i] == "D") {
-        mydefects <- mydefects + 1
-    }
-    if (obs$a[j] == "D") {
-        herdefects <- herdefects + 1
+    #'Normal' case, where player is not ashamed and has no reason to be so
+    if (shame.counter == 0 && obs$a[i] == "C") {
+        return(list(a = "C", shame.counter = 0))
     }
     
-    # If quotient is acceptable Cooperate, otherwise Defect; As we can not
-    # divide by 0, we will always cooperate if opponent did never defect
-    if (herdefects == 0) {
-        return(list(a = "C", mydefects = mydefects, herdefects = herdefects, 
-            quotient = round(mydefects/herdefects, digits = 2)))
+    # If ashamed, defect to cover up 'mistake'
+    if (shame.counter > 1) {
+        shame.counter = shame.counter - 1
+        return(list(a = "D", shame.counter = shame.counter))
     }
-    ## We reach this part iff herdefects != 0
-    if (mydefects/herdefects >= revengefactor) {
-        return(list(a = "C", mydefects = mydefects, herdefects = herdefects, 
-            quotient = round(mydefects/herdefects, digits = 2)))
-    } else {
-        return(list(a = "D", mydefects = mydefects, herdefects = herdefects, 
-            quotient = round(mydefects/herdefects, digits = 2)))
+    
+    # Ready to be nice again
+    if (shame.counter == 1) {
+        shame.counter = 0
+        return(list(a = "C", shame.counter = shame.counter))
     }
+    
+    ## This point is reached iff the shame.counter is zero, but other player
+    ## observed a defection
+    return(list(a = "D", shame.counter = 5))
 }
 ```
 
-Compared to the tit.for.tat function, the factor.in.my.revenge function has three additional argument, namely *mydefects*, *herdefects* and *quotient*. On top of that the returned lists contain additional fields of these names. These variables are manually generated state variables.
-These states capture the following information:
-* mydefects: How often have I defected, based on the public observations?
-* herdefects: How often have I observed a defection of my opponent?
-* quotient: What is the quotient mydefects/herdefects?
+Compared to the tit.for.tat function, the ashamed.defector function has an additional argument, namely *shame.counter*. On top of that the returned lists contain an additional field of this name. shame.counter is a  manually generated state variables. This state captures the information how many rounds the defections should last.
 
 Let us have a more detailed look at the code. The lines
 
 ```r
+# Be nice in the first round
 if (t == 1) {
-    return(list(a = "C", mydefects = 0, herdefects = 0, quotient = NaN))
+    return(list(a = "C", shame.counter = 0))
 }
 ```
 
-state that in the first period the player cooperates. As in the first period no previous observations exist, both counters are set to 0. We can not divide by 0, so the quotient is set to *NaN* (not a Number).
+state that in the first period the player cooperates. As in the first period no previous observations exist, the shame.counter is initialized by 0.
 
-In the later periods we do have observations to work with. Consequently the first step is to update our information:
-
-```r
-j = 3 - i  #j is other Player
-if (obs$a[i] == "D") {
-    mydefects <- mydefects + 1
-}
-if (obs$a[j] == "D") {
-    herdefects <- herdefects + 1
-}
-```
-
-Here j is defined as in the tit.for.tat strategy. We increase the corresponding counter if we observed a defection of the corresponding player.
-
-Afterwards we execute our strategy
-
-```r
-if (herdefects == 0) {
-    return(list(a = "C", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
-}
-## We reach this part iff herdefects != 0
-if (mydefects/herdefects >= revengefactor) {
-    return(list(a = "C", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
-} else {
-    return(list(a = "D", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
-}
-```
-
-
-The first if-condition, namely
-
-```r
-if (herdefects == 0) {
-    return(list(a = "C", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
-}
-```
-
-deals with the case, that the quotient is not calculable if herdefects equals 0. In this case the we want to cooperate.
+In the periods after the first, we do have observations to work with. There are four possible states the algorithm might be in:
+* Standard case: Not ashamed, still cooperating
+* Still ashamed: shame.counter is greater than 1 (with 1 indicating the last round)
+* Not ashamed anymore: shame.counter equals 1
+* Wrongful defection detected: This is only relevant, if the player is not already ashamed
 
 
 ```r
-quotient = round(mydefects/herdefects, digits = 2)
+if (shame.counter == 0 && obs$a[i] == "C") {
+    return(list(a = "C", shame.counter = 0))
+}
 ```
 
-passes our third argument. You might have noticed that it plays absolutely no role in any decision about whether to cooperate or to defect whatsoever. Sometimes it makes debugging much easier to make use of such arguments, which are displayed when executing run.rep.game (see below). We round this argument to 2 digits to increase visibility. Note that R correctly handles the division by 0.
+The code above deals with the first case. If the shame.counter is zero and it can be observed, that the player cooperated, he continues to so so.
 
 
 
 ```r
-if (mydefects/herdefects >= revengefactor) {
-    return(list(a = "C", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
-} else {
-    return(list(a = "D", mydefects = mydefects, herdefects = herdefects, quotient = round(mydefects/herdefects, 
-        digits = 2)))
+if (shame.counter > 1) {
+    shame.counter = shame.counter - 1
+    return(list(a = "D", shame.counter = shame.counter))
 }
 ```
 
+The code above deals with the second case. The shame.counter counts backwards each round, until the third case kicks in:
+
+```r
+if (shame.counter == 1) {
+    shame.counter = 0
+    return(list(a = "C", shame.counter = shame.counter))
+}
+```
+
+When the counter hits 1 it is time to cooperate again, which can be seen above.
 
 
-Here we check whether our quotient is above the formerly defined revengefactor.
 
-If you think about the code, you realize that it corresponds to the verbal description of the strategy which can be checked by  looking at the states of *quotient*.  
+```r
+return(list(a = "D", shame.counter = 5))
+```
+
+This line is reached if and only if the shame.counter is 0 and it can be (wrongfully) observed that the player defected. In that case we start the defection period by defecting and setting the counter to 5.
 
 You can freely pick the name of a state (except for the reserved names ops,i,t, and game). States don't have to take numeric values, you can also have TRUE/FALSE values, characters and even vectors (A state variable should not be a list, however. Use multiple states instead).  
 
 If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
 
 
+
+
 ```r
-run.rep.game(delta = 0.9, game = game, strat = nlist(factor.in.my.revenge, random.action), 
-    T.min = 10)
+run.rep.game(delta = 0.9, game = game, strat = nlist(ashamed.defector, random.action), 
+    T.min = 25)
 ```
 
 ```
 ## $hist
-<<<<<<< HEAD
-##   obs_a1 obs_a2 a1 a2 pi1 pi2 coop_1
-## 1   <NA>   <NA>  C  D  -1   2   TRUE
-## 2      C      D  D  C   2  -1  FALSE
-## 3      D      C  D  D   0   0  FALSE
-## 4      D      D  D  C   2  -1  FALSE
-## 5      D      C  D  D   0   0  FALSE
-## 6      D      D  D  C   2  -1  FALSE
+##    obs_a1 obs_a2 a1 a2 pi1 pi2 shame.counter_1
+## 1    <NA>   <NA>  C  D  -1   2               0
+## 2       D      D  D  D   0   0               5
+## 3       D      D  D  C   2  -1               4
+## 4       D      C  D  D   0   0               3
+## 5       D      D  D  D   0   0               2
+## 6       D      D  D  D   0   0               1
+## 7       D      D  C  D  -1   2               0
+## 8       D      D  D  C   2  -1               5
+## 9       D      C  D  C   2  -1               4
+## 10      D      C  D  D   0   0               3
+## 11      D      D  D  D   0   0               2
+## 12      D      D  D  D   0   0               1
+## 13      D      D  C  D  -1   2               0
+## 14      D      D  D  C   2  -1               5
+## 15      D      C  D  D   0   0               4
+## 16      D      D  D  C   2  -1               3
+## 17      D      C  D  C   2  -1               2
+## 18      D      D  D  D   0   0               1
+## 19      D      D  C  D  -1   2               0
+## 20      C      D  C  D  -1   2               0
+## 21      C      D  C  C   1   1               0
+## 22      C      C  C  D  -1   2               0
+## 23      C      D  C  C   1   1               0
+## 24      D      D  D  D   0   0               5
+## 25      D      D  D  D   0   0               4
+## 26      D      D  D  C   2  -1               3
 ## 
 ## $u
-## [1]  0.8333 -0.1667
-=======
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 mydefects_1 herdefects_1 quotient_1
-## 1    <NA>   <NA>  C  D  -1   2           0            0        NaN
-## 2       C      D  D  C   2  -1           0            1       0.00
-## 3       D      C  D  D   0   0           1            1       1.00
-## 4       D      D  D  C   2  -1           2            2       1.00
-## 5       D      C  C  C   1   1           3            2       1.50
-## 6       C      C  C  D  -1   2           3            2       1.50
-## 7       C      D  D  C   2  -1           3            3       1.00
-## 8       D      C  D  C   2  -1           4            3       1.33
-## 9       D      C  C  C   1   1           5            3       1.67
-## 10      C      C  C  C   1   1           5            3       1.67
-## 11      C      C  C  C   1   1           5            3       1.67
-## 12      C      C  C  C   1   1           5            3       1.67
-## 13      C      C  C  C   1   1           5            3       1.67
-## 14      C      C  C  D  -1   2           5            3       1.67
-## 15      C      D  D  D   0   0           5            4       1.25
-## 16      D      D  D  C   2  -1           6            5       1.20
-## 17      D      C  D  C   2  -1           7            5       1.40
-## 18      D      C  C  C   1   1           8            5       1.60
-## 19      C      C  C  C   1   1           8            5       1.60
-## 20      C      C  C  C   1   1           8            5       1.60
-## 
-## $u
-## [1] 0.8325 0.4179
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
+## [1] 0.3097 0.2343
 ```
+
+
 
 
 ### 3.4 Exercise:
@@ -411,7 +359,7 @@ The following lines run a tournament between 4 specified strategies
 ```r
 # Init and run a tournament of several strategies against each other
 game = make.pd.game(err.D.prob = 0.15)
-strat = nlist(factor.in.my.revenge, tit.for.tat, always.defect, always.coop)
+strat = nlist(ashamed.defector, tit.for.tat, always.defect, always.coop)
 tourn = init.tournament(game = game, strat = strat, delta = 0.95, score.fun = "efficiency-2*instability- 20*instability^2")
 tourn = run.tournament(tourn = tourn, R = 15)
 tourn
@@ -421,19 +369,19 @@ tourn
 ## 
 ## Tournament for Noisy PD (15 rep.)
 ## 
-##                      factor.in.my.revenge tit.for.tat always.defect always.coop
-## factor.in.my.revenge                0.149       0.181         -0.05        1.16
-## tit.for.tat                         0.157       0.208         -0.05        1.16
-## always.defect                       0.100       0.100          0.00        2.00
-## always.coop                         0.698       0.673         -1.00        1.00
+##                  ashamed.defector tit.for.tat always.defect always.coop
+## ashamed.defector            0.617      0.4690       -0.6040        1.40
+## tit.for.tat                 0.693      0.2680       -0.0499        1.12
+## always.defect               1.260      0.0997        0.0000        2.00
+## always.coop                 0.259      0.7100       -1.0000        1.00
 ## 
 ## Ranking with score = efficiency-2*instability- 20*instability^2
 ## 
-##                      rank   score efficiency instability u.average   best.answer
-## always.defect           1   0.000      0.000       0.000     0.550 always.defect
-## tit.for.tat             2  -5.058      0.208       0.466     0.369   always.coop
-## factor.in.my.revenge    3  -6.967      0.149       0.549     0.359   always.coop
-## always.coop             4 -21.000      1.000       1.000     0.343 always.defect
+##                  rank   score efficiency instability u.average   best.answer
+## always.defect       1   0.000      0.000       0.000     0.840 always.defect
+## tit.for.tat         2  -4.520      0.268       0.442     0.508   always.coop
+## ashamed.defector    3  -8.917      0.617       0.642     0.469 always.defect
+## always.coop         4 -21.000      1.000       1.000     0.242 always.defect
 ```
 
 
@@ -643,26 +591,17 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action))
 ```
 
 ```
-<<<<<<< HEAD
-## $hist
-##   obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
-## 1     NA     NA  C  C   1   1        0
-## 
-## $u
-## [1] 1 1
-=======
 ## Error in evaluating strategy exploiter in period t=2 for player i=1 ERROR.HIST:
 ```
 
 ```
 ##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    D  -1   2        0
+## 1     NA     NA    C    C   1   1        0
 ## 2     NA     NA <NA> <NA>  NA  NA       NA
 ```
 
 ```
 ## Error: Error in (function (obs, i, t, game, otherC) : Objekt 'j' nicht gefunden
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
 ```
 
 We get an error message and learn that an error occurred when calling exploiter for player i=1 in period t=2. We also get the error message "object 'j' not found". Probably you see the problem directly from that message. Nevertheless, let us pretend we have not found the problem yet and let us step through our function.
@@ -673,11 +612,7 @@ debug.restore("exploiter", i = 1, t = 2)  # Restore call for player i in period 
 ```
 
 ```
-<<<<<<< HEAD
-## Error: No objects stored under name exploiter_i=1_t=2
-=======
 ## Restored: game,i,obs,otherC,t
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
 ```
 
 in the R console by selecting the line and pressing the "Run" button or Ctrl-Enter. This call now restores now the arguments with which the strategy has been called  for player i=1 in period t=2. You can examine the function arguments by typing them in the R console:
@@ -687,13 +622,9 @@ obs
 ```
 
 ```
-<<<<<<< HEAD
-## Error: object 'obs' not found
-=======
 ## $a
 ##  a1  a2 
-## "C" "D"
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
+## "C" "C"
 ```
 
 ```r
@@ -701,7 +632,7 @@ i
 ```
 
 ```
-## Error: object 'i' not found
+## [1] 1
 ```
 
 ```r
@@ -709,10 +640,7 @@ t
 ```
 
 ```
-## function (x) 
-## UseMethod("t")
-## <bytecode: 0x0000000006d32960>
-## <environment: namespace:base>
+## [1] 2
 ```
 
 You can also run some further lines of code inside the function to see where exactly the error has occured:
@@ -722,23 +650,12 @@ You can also run some further lines of code inside the function to see where exa
 if (t == 1) {
     return(list(a = "C", otherC = 0))
 }
-```
-
-```
-## Error: comparison (1) is possible only for atomic and list types
-```
-
-```r
 # If the other player has chosen C two or more times in a row play D
 if (obs$a[[j]] == "C") otherC = otherC + 1
 ```
 
 ```
-<<<<<<< HEAD
-## Error: object 'obs' not found
-=======
 ## Error: Objekt 'j' nicht gefunden
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
 ```
 
 We can also run parts of the last line to narrow down the error...
@@ -748,11 +665,7 @@ obs$a[[j]]
 ```
 
 ```
-<<<<<<< HEAD
-## Error: object 'obs' not found
-=======
 ## Error: Objekt 'j' nicht gefunden
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
 ```
 
 ```r
@@ -770,11 +683,7 @@ debug.restore("exploiter", i = 1, t = 2)  # Restore call for player i in period 
 ```
 
 ```
-<<<<<<< HEAD
-## Error: No objects stored under name exploiter_i=1_t=2
-=======
 ## Restored: game,i,obs,otherC,t
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
 ```
 
 ```r
@@ -782,39 +691,11 @@ debug.restore("exploiter", i = 1, t = 2)  # Restore call for player i in period 
 if (t == 1) {
     return(list(a = "C", otherC = 0))
 }
-```
-
-```
-## Error: comparison (1) is possible only for atomic and list types
-```
-
-```r
 j = 3 - i  # index of other player
-```
-
-```
-## Error: object 'i' not found
-```
-
-```r
 
 # If the other player has chosen C two or more times in a row play D
 if (obs$a[[j]] == "C") otherC = otherC + 1
-```
-
-```
-## Error: object 'obs' not found
-```
-
-```r
 if (otherC > 2) return(list(a = "D"))
-```
-
-```
-## Error: object 'otherC' not found
-```
-
-```r
 
 # Play tit for tat with probability 70% and with prob. 30% play D
 if (runif(1) < 70) {
@@ -822,26 +703,15 @@ if (runif(1) < 70) {
 } else {
     a = "D"
 }
-```
-
-```
-## Error: object 'obs' not found
-```
-
-```r
 return(nlist(a = a, otherC))
 ```
 
 ```
-<<<<<<< HEAD
-## Error: object 'a' not found
-=======
 ## $a
-## [1] "D"
+## [1] "C"
 ## 
 ## $otherC
-## [1] 0
->>>>>>> ad84d5d21f61c7f78e05337ec480111af75bc769
+## [1] 1
 ```
 
 You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.
