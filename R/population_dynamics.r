@@ -98,7 +98,36 @@ path.to.defect = function() {
   # In every period, you can introduce a new strategy into your society that will be followed by 1% of inhabitants
   # Populations evolve according to some standard evolutionary dynamic
   
+  game = make.pd.game(err.D.prob=0.15)
   
+  # First part run tournament for all strategies to determine relative fitness
+  delta = 0.95
+  strat = nlist(tit.for.tat, always.defect, always.coop)
+  tourn = init.tournament(game=game, strat=strat, delta=delta)
+  tourn = run.tournament(tourn=tourn, R = 10)
+  tourn
+  mat = tourn$mat
+  names = colnames(mat)
+  names
+  
+  
+  
+  # Set initial shares  
+  init.shares = c(1,0,0); names(init.shares) = names
+  init.shares = add.type(init.shares,"always.coop",0.01)
+  #init.shares = add.type(init.shares,"nice.tft",0.01)
+  
+  # Start evolution
+  R = 100
+  ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=0, alpha=0.5)
+  plot.evolve(ev)
+  next.shares = add.type(ev,"always.defect")
+  ev = evolve(initial=next.shares,mat=mat, rounds = 200,min.shares=0, alpha=0.5)
+  plot.evolve(ev)
+  
+  
+  
+  library(StratTourn)  
   # First part run tournament for all strategies to determine relative fitness
   delta = 0.95
   strat = nlist(tit.for.tat, always.defect, nice.tft, always.coop)

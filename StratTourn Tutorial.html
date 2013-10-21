@@ -186,9 +186,11 @@ hljs.initHighlightingOnLoad();
 
 <h1>Tutorial for the R package StratTourn</h1>
 
-<p><strong>Date: 2013-10-18</strong></p>
+<p><strong>Date: 2013-10-21</strong></p>
 
 <p><strong>Author: Sebastian Kranz (<a href="mailto:sebastian.kranz@uni-ulm.de">sebastian.kranz@uni-ulm.de</a>)</strong></p>
+
+<p><strong>with help by Martin Kies (<a href="mailto:martin.kies@uni-ulm.de">martin.kies@uni-ulm.de</a>)</strong></p>
 
 <h2>1. Installing neccessary software</h2>
 
@@ -278,20 +280,15 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 </code></pre>
 
 <pre><code>## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1    &lt;NA&gt;   &lt;NA&gt;  C  C   1   1
-## 2       C      C  C  C   1   1
-## 3       C      C  C  C   1   1
-## 4       C      C  C  D  -1   2
-## 5       C      D  D  C   2  -1
-## 6       D      C  C  D  -1   2
-## 7       C      D  D  C   2  -1
-## 8       D      C  C  C   1   1
-## 9       C      C  C  C   1   1
-## 10      C      C  C  D  -1   2
+##   obs_a1 obs_a2 a1 a2 pi1 pi2
+## 1   &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2
+## 2      C      D  D  C   2  -1
+## 3      D      C  C  D  -1   2
+## 4      C      D  D  D   0   0
+## 5      D      D  D  D   0   0
 ## 
 ## $u
-## [1] 0.6 0.9
+## [1] 0.0 0.6
 </code></pre>
 
 <p>This code simulates a repated PD with continuation probability \( \delta=0.9 \) in which player 1 follows a strategy called &ldquo;tit.for.tat&rdquo; and player 2 follows a strategy called &ldquo;random.action&rdquo;. The resulting table shows for each period the following information:</p>
@@ -381,7 +378,7 @@ list(a = obs$a[j])
 <p>Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed (not very clever) strategy:</p>
 
 <ul>
-<li>&ldquo;Strange Defector&rdquo;:  In the first round plays C with 70% probability, otherwise D. If he cooperates, he continues in this random fashion. Once a player defects, he plays 4 additional times &ldquo;defect&rdquo; in a row. Afterwards, he plays again in the same fashion as in first period until he defects again.</li>
+<li>&ldquo;Strange Defector&rdquo;:  In the first round cooperates with 70% probability, otherwise defects. As long as the player cooperates, he continues in this random fashion. Once the player defects, he plays 4 additional times &ldquo;defect&rdquo; in a row. Afterwards, he plays again as in the first period (randomizing, and after defection, 4 defects in a row).</li>
 </ul>
 
 <p>Here is an R implementation of this strategy:</p>
@@ -408,23 +405,21 @@ list(a = obs$a[j])
 </code></pre>
 
 <p>Compared to the tit.for.tat function, the strange.defector function has an additional argument, namely <em>still.defect</em> which in the first round t=1 has the value 0.
-Also the returned lists contain an additional field of named <em>still.defect</em>.  The variable <em>still.defect</em> is a  manually generated <em>state variable</em>.</p>
+Also the returned lists contain an additional field named <em>still.defect</em>.  The variable <em>still.defect</em> is a  manually generated <em>state variable</em>.</p>
 
-<p>Here is a short overview of state variables:</p>
+<h4>How state variables transfer information between periods:</h4>
 
-<h4>How states work</h4>
-
-<pre><code>In period t+1 the value of a state variable passed to the function is the value that has been returned from the function in period t.
+<pre><code>The value of a state variable that is passed to your function in period t is the value of the state that your function has returned in period t-1. (The value of a state in period 1 is the value you specify in the function definition).
 </code></pre>
 
 <h4>Name and number of state variables</h4>
 
-<pre><code>You can freely pick the name of a state (except for the reserved names ops,i,t, and game) and you can have more than one state. 
+<pre><code>You can freely pick the name of a state variable (except for the reserved names ops,i,t, game and a) and you can have more than one state variable.
 </code></pre>
 
-<p><strong>Which values can state variables take?</strong></p>
+<h4>Which values can state variables take?</h4>
 
-<pre><code>States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. &quot;angry&quot;), or even vectors. (You just should not store a list in a state variable).
+<pre><code>States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. &quot;angry&quot;), or even vectors. You just should not store a list in a state variable.
 </code></pre>
 
 <h4>Back to the example:</h4>
@@ -456,7 +451,7 @@ The lines</p>
 <pre><code class="r">do.cooperate = (runif(1) &lt; 0.7)
 </code></pre>
 
-<p>a logical random variable that is TRUE with 60% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines</p>
+<p>a logical random variable that is TRUE with 70% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines</p>
 
 <pre><code class="r">    if (do.cooperate){
       return(list(a=&quot;C&quot;, still.defect=0))
@@ -469,200 +464,55 @@ The lines</p>
     }
 </code></pre>
 
-<p>state that otherwise, we return the action &ldquo;D&rdquo; and set the state still.defect = 4. This means that we will defect for the next 4 rounds. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:</p>
+<p>state that otherwise, we return the action &ldquo;D&rdquo; and set the state still.defect = 4. This means that we will defect for the next 4 periods. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:</p>
 
 <pre><code class="r">still.defect = still.defect - 1
 return(list(a = &quot;D&quot;, still.defect = still.defect))
 </code></pre>
 
-<p>The first line reduces still.defect by 1. This causes our defection streak to last a total of 4 periods. The second line returns our action a=&ldquo;D&rdquo; and the new value of our state still.defect.</p>
+<p>The first line reduces still.defect by 1. (Hence, after 4 periods, we will again be in the state still.defect =0 and choose a random action). The second line returns our action a=&ldquo;D&rdquo; and the new value of our state still.defect.</p>
 
 <p>If you run a single repeated game the result table also shows in each row, the values of the strategies&#39; states at the <em>end</em> of the period:</p>
 
 <pre><code class="r">run.rep.game(delta = 0.9, game = game, strat = nlist(strange.defector, tit.for.tat), 
-    T.min = 25)
+    T.min = 20)
 </code></pre>
 
 <pre><code>## $hist
 ##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
 ## 1    &lt;NA&gt;   &lt;NA&gt;  C  C   1   1              0
-## 2       C      C  D  C   2  -1              4
-## 3       D      C  D  D   0   0              3
-## 4       D      D  D  D   0   0              2
-## 5       D      D  D  D   0   0              1
-## 6       D      D  D  D   0   0              0
-## 7       D      D  D  D   0   0              4
-## 8       D      D  D  D   0   0              3
-## 9       D      D  D  D   0   0              2
-## 10      D      D  D  D   0   0              1
-## 11      D      D  D  D   0   0              0
-## 12      D      D  D  D   0   0              4
-## 13      D      D  D  D   0   0              3
-## 14      D      D  D  D   0   0              2
-## 15      D      D  D  D   0   0              1
-## 16      D      D  D  D   0   0              0
-## 17      D      D  C  D  -1   2              0
-## 18      C      D  C  C   1   1              0
-## 19      C      C  C  C   1   1              0
-## 20      C      C  D  C   2  -1              4
-## 21      D      C  D  D   0   0              3
-## 22      D      D  D  D   0   0              2
-## 23      D      D  D  D   0   0              1
-## 24      D      D  D  D   0   0              0
-## 25      D      D  C  D  -1   2              0
-## 26      C      D  C  C   1   1              0
-## 27      C      C  C  C   1   1              0
-## 28      C      C  C  C   1   1              0
-## 29      C      C  D  C   2  -1              4
-## 30      D      C  D  D   0   0              3
-## 31      D      D  D  D   0   0              2
-## 32      D      D  D  D   0   0              1
-## 33      D      D  D  D   0   0              0
-## 34      D      D  C  D  -1   2              0
-## 35      C      D  C  C   1   1              0
-## 36      C      C  D  C   2  -1              4
-## 37      D      C  D  D   0   0              3
-## 38      D      D  D  D   0   0              2
+## 2       C      C  C  C   1   1              0
+## 3       C      C  D  C   2  -1              4
+## 4       D      C  D  D   0   0              3
+## 5       D      D  D  D   0   0              2
+## 6       D      D  D  D   0   0              1
+## 7       D      D  D  D   0   0              0
+## 8       D      D  C  D  -1   2              0
+## 9       C      D  C  C   1   1              0
+## 10      C      C  C  C   1   1              0
+## 11      C      C  C  C   1   1              0
+## 12      C      C  C  C   1   1              0
+## 13      C      C  C  C   1   1              0
+## 14      C      C  C  C   1   1              0
+## 15      C      C  C  C   1   1              0
+## 16      C      C  D  C   2  -1              4
+## 17      D      C  D  D   0   0              3
+## 18      D      D  D  D   0   0              2
+## 19      D      D  D  D   0   0              1
+## 20      D      D  D  D   0   0              0
+## 21      D      D  D  D   0   0              4
+## 22      D      D  D  D   0   0              3
+## 23      D      D  D  D   0   0              2
+## 24      D      D  D  D   0   0              1
+## 25      D      D  D  D   0   0              0
+## 26      D      D  C  D  -1   2              0
+## 27      C      D  D  C   2  -1              4
+## 28      D      C  D  D   0   0              3
+## 29      D      D  D  D   0   0              2
+## 30      D      D  D  D   0   0              1
 ## 
 ## $u
-## [1] 0.3567 0.1096
-</code></pre>
-
-<h3>3.3 Strategies that use states. Example: ashamed.defector</h3>
-
-<p>Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed strategy:</p>
-
-<ul>
-<li>&ldquo;Ashamed Defector&rdquo;: Cooperate in the first period. Cooperate as long until the observations state, that player has defected. To &ldquo;cover up&rdquo; this &ldquo;mistake&rdquo;, play 4 additional times &ldquo;defect&rdquo;. Cooperate afterwards until the next wrongfully observed defection.</li>
-</ul>
-
-<p>Here is an R implementation of this strategy:</p>
-
-<pre><code class="r"># Does not admit to sending the wrong signal (even though he can not
-# influence that) by defecting on purpose to make it seem as if the
-# defection was on purpose all along
-ashamed.defector &lt;- function(obs, i, t, game, shame.counter) {
-    debug.store(&quot;ashamed.defector&quot;, i, t)  # Store each call for each player
-    debug.restore(&quot;ashamed.defector&quot;, i = 1, t = 2)  # Restore call for player i in period t
-
-    # Be nice in the first round
-    if (t == 1) {
-        return(list(a = &quot;C&quot;, shame.counter = 0))
-    }
-
-    #&#39;Normal&#39; case, where player is not ashamed and has no reason to be so
-    if (shame.counter == 0 &amp;&amp; obs$a[i] == &quot;C&quot;) {
-        return(list(a = &quot;C&quot;, shame.counter = 0))
-    }
-
-    # If ashamed, defect to cover up &#39;mistake&#39;
-    if (shame.counter &gt; 1) {
-        shame.counter = shame.counter - 1
-        return(list(a = &quot;D&quot;, shame.counter = shame.counter))
-    }
-
-    # Ready to be nice again
-    if (shame.counter == 1) {
-        shame.counter = 0
-        return(list(a = &quot;C&quot;, shame.counter = shame.counter))
-    }
-
-    ## This point is reached iff the shame.counter is zero, but other player
-    ## observed a defection
-    return(list(a = &quot;D&quot;, shame.counter = 5))
-}
-</code></pre>
-
-<p>Compared to the tit.for.tat function, the ashamed.defector function has an additional argument, namely <em>shame.counter</em>. On top of that the returned lists contain an additional field of this name. shame.counter is a  manually generated state variables. This state captures the information how many rounds the defections should last.</p>
-
-<p>Let us have a more detailed look at the code. The lines</p>
-
-<pre><code class="r"># Be nice in the first round
-if (t == 1) {
-    return(list(a = &quot;C&quot;, shame.counter = 0))
-}
-</code></pre>
-
-<p>state that in the first period the player cooperates. As in the first period no previous observations exist, the shame.counter is initialized by 0.</p>
-
-<p>In the periods after the first, we do have observations to work with. There are four possible states the algorithm might be in:</p>
-
-<ul>
-<li>Standard case: Not ashamed, still cooperating</li>
-<li>Still ashamed: shame.counter is greater than 1 (with 1 indicating the last round)</li>
-<li>Not ashamed anymore: shame.counter equals 1</li>
-<li>Wrongful defection detected: This is only relevant, if the player is not already ashamed</li>
-</ul>
-
-<pre><code class="r">if (shame.counter == 0 &amp;&amp; obs$a[i] == &quot;C&quot;) {
-    return(list(a = &quot;C&quot;, shame.counter = 0))
-}
-</code></pre>
-
-<p>The code above deals with the first case. If the shame.counter is zero and it can be observed, that the player cooperated, he continues to so so.</p>
-
-<pre><code class="r">if (shame.counter &gt; 1) {
-    shame.counter = shame.counter - 1
-    return(list(a = &quot;D&quot;, shame.counter = shame.counter))
-}
-</code></pre>
-
-<p>The code above deals with the second case. The shame.counter counts backwards each round, until the third case kicks in:</p>
-
-<pre><code class="r">if (shame.counter == 1) {
-    shame.counter = 0
-    return(list(a = &quot;C&quot;, shame.counter = shame.counter))
-}
-</code></pre>
-
-<p>When the counter hits 1 it is time to cooperate again, which can be seen above.</p>
-
-<pre><code class="r">return(list(a = &quot;D&quot;, shame.counter = 5))
-</code></pre>
-
-<p>This line is reached if and only if the shame.counter is 0 and it can be (wrongfully) observed that the player defected. In that case we start the defection period by defecting and setting the counter to 5.</p>
-
-<p>You can freely pick the name of a state (except for the reserved names ops,i,t, and game). States don&#39;t have to take numeric values, you can also have TRUE/FALSE values, characters and even vectors (A state variable should not be a list, however. Use multiple states instead).  </p>
-
-<p>If you run a single repeated game the result table also shows in each row, the values of the strategies&#39; states at the <em>end</em> of the period:</p>
-
-<pre><code class="r">run.rep.game(delta = 0.9, game = game, strat = nlist(ashamed.defector, random.action), 
-    T.min = 25)
-</code></pre>
-
-<pre><code>## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 shame.counter_1
-## 1    &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2               0
-## 2       C      D  C  C   1   1               0
-## 3       C      C  C  C   1   1               0
-## 4       C      C  C  C   1   1               0
-## 5       C      C  C  D  -1   2               0
-## 6       C      D  C  D  -1   2               0
-## 7       C      D  C  C   1   1               0
-## 8       D      C  D  C   2  -1               5
-## 9       D      C  D  D   0   0               4
-## 10      D      D  D  C   2  -1               3
-## 11      D      C  D  C   2  -1               2
-## 12      D      D  D  D   0   0               1
-## 13      D      D  C  C   1   1               0
-## 14      D      C  D  D   0   0               5
-## 15      D      D  D  D   0   0               4
-## 16      D      D  D  D   0   0               3
-## 17      D      D  D  C   2  -1               2
-## 18      D      D  D  D   0   0               1
-## 19      D      D  C  C   1   1               0
-## 20      C      C  C  D  -1   2               0
-## 21      C      D  C  C   1   1               0
-## 22      C      C  C  D  -1   2               0
-## 23      C      D  C  C   1   1               0
-## 24      D      D  D  C   2  -1               5
-## 25      D      C  D  C   2  -1               4
-## 26      D      C  D  D   0   0               3
-## 27      D      D  D  D   0   0               2
-## 28      D      D  D  C   2  -1               1
-## 
-## $u
-## [1] 0.4650 0.7307
+## [1] 0.5757 0.4165
 </code></pre>
 
 <h3>3.4 Exercise:</h3>
@@ -683,7 +533,7 @@ if (t == 1) {
 
 <pre><code class="r"># Init and run a tournament of several strategies against each other
 game = make.pd.game(err.D.prob = 0.15)
-strat = nlist(ashamed.defector, tit.for.tat, always.defect, always.coop)
+strat = nlist(strange.defector, tit.for.tat, always.defect, always.coop)
 tourn = init.tournament(game = game, strat = strat, delta = 0.95, score.fun = &quot;efficiency-2*instability- 20*instability^2&quot;)
 tourn = run.tournament(tourn = tourn, R = 15)
 tourn
@@ -692,19 +542,19 @@ tourn
 <pre><code>## 
 ## Tournament for Noisy PD (15 rep.)
 ## 
-##                  ashamed.defector tit.for.tat always.defect always.coop
-## ashamed.defector            0.578       0.465       -0.6010        1.40
-## tit.for.tat                 0.630       0.222       -0.0501        1.18
-## always.defect               1.110       0.100        0.0000        2.00
-## always.coop                 0.108       0.716       -1.0000        1.00
+##                  strange.defector tit.for.tat always.defect always.coop
+## strange.defector            0.351      0.3150       -0.3200        1.63
+## tit.for.tat                 0.339      0.2870       -0.0499        1.13
+## always.defect               0.751      0.0997        0.0000        2.00
+## always.coop                -0.264      0.7230       -1.0000        1.00
 ## 
 ## Ranking with score = efficiency-2*instability- 20*instability^2
 ## 
 ##                  rank   score efficiency instability u.average   best.answer
-## always.defect       1   0.000      0.000       0.000     0.802 always.defect
-## tit.for.tat         2  -5.646      0.222       0.494     0.494   always.coop
-## ashamed.defector    3  -6.115      0.578       0.531     0.460 always.defect
-## always.coop         4 -21.000      1.000       1.000     0.206 always.defect
+## always.defect       1   0.000      0.000       0.000     0.713 always.defect
+## strange.defector    2  -3.640      0.351       0.399     0.493 always.defect
+## tit.for.tat         3  -4.387      0.287       0.436     0.427   always.coop
+## always.coop         4 -21.000      1.000       1.000     0.115 always.defect
 </code></pre>
 
 <p>The tournament consists of R rounds (here R=15). In every round, every strategy plays against each other strategy in a repeated game. Every strategy also plays against itself. For every pairing of two strategies, we then compute the average payoff of the strategies over all R rounds</p>
@@ -915,7 +765,7 @@ Error: unexpected &#39;}&#39; in &quot;}&quot;
 </code></pre>
 
 <pre><code>##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    D  -1   2        0
+## 1     NA     NA    C    C   1   1        0
 ## 2     NA     NA &lt;NA&gt; &lt;NA&gt;  NA  NA       NA
 </code></pre>
 
@@ -938,7 +788,7 @@ Go to the function code and run the line</p>
 
 <pre><code>## $a
 ##  a1  a2 
-## &quot;C&quot; &quot;D&quot;
+## &quot;D&quot; &quot;D&quot;
 </code></pre>
 
 <pre><code class="r">i

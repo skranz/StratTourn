@@ -6,9 +6,10 @@ library(devtools)
 
 #Should be installed in case there was an update
 ## Can be commented while actively working on strategies
-install_github(repo = "restorepoint", username = "skranz")
-install_github(repo = "sktools", username = "skranz")
-install_github(repo = "StratTourn", username = "skranz")
+
+#install_github(repo = "restorepoint", username = "skranz")
+#install_github(repo = "sktools", username = "skranz")
+#install_github(repo = "StratTourn", username = "skranz")
 
 
 # The code inside can be used to explore the behavior of strategies for the PD game
