@@ -28,7 +28,10 @@ http://rstudio.org/
 You need to install several R packages from the internet. To do so, simply run in the R console the following code (you can use copy & paste):
 
 ```r
-install.packages("devtools", "data.table", "ggplot2", "reshape2")
+install.packages("devtools")
+install.packages("data.table")
+install.packages("ggplot2")
+install.packages("reshape2")
 
 library(devtools)
 install_github(repo = "restorepoint", username = "skranz")
@@ -101,14 +104,18 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 ```
 ## $hist
 ##   obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1   <NA>   <NA>  C  D  -1   2
-## 2      C      D  D  C   2  -1
-## 3      D      C  C  D  -1   2
-## 4      C      D  D  D   0   0
-## 5      D      D  D  D   0   0
+## 1   <NA>   <NA>  C  C   1   1
+## 2      C      C  C  D  -1   2
+## 3      C      D  D  D   0   0
+## 4      D      D  D  C   2  -1
+## 5      D      C  C  C   1   1
+## 6      C      C  C  C   1   1
+## 7      C      C  C  D  -1   2
+## 8      C      D  D  D   0   0
+## 9      D      D  D  C   2  -1
 ## 
 ## $u
-## [1] 0.0 0.6
+## [1] 0.5556 0.5556
 ```
 
 This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
@@ -312,38 +319,40 @@ run.rep.game(delta = 0.9, game = game, strat = nlist(strange.defector, tit.for.t
 ## $hist
 ##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
 ## 1    <NA>   <NA>  C  C   1   1              0
-## 2       C      C  C  C   1   1              0
-## 3       C      C  D  C   2  -1              4
-## 4       D      C  D  D   0   0              3
-## 5       D      D  D  D   0   0              2
-## 6       D      D  D  D   0   0              1
-## 7       D      D  D  D   0   0              0
-## 8       D      D  C  D  -1   2              0
-## 9       C      D  C  C   1   1              0
-## 10      C      C  C  C   1   1              0
-## 11      C      C  C  C   1   1              0
-## 12      C      C  C  C   1   1              0
-## 13      C      C  C  C   1   1              0
-## 14      C      C  C  C   1   1              0
-## 15      C      C  C  C   1   1              0
-## 16      C      C  D  C   2  -1              4
-## 17      D      C  D  D   0   0              3
-## 18      D      D  D  D   0   0              2
-## 19      D      D  D  D   0   0              1
-## 20      D      D  D  D   0   0              0
-## 21      D      D  D  D   0   0              4
-## 22      D      D  D  D   0   0              3
-## 23      D      D  D  D   0   0              2
-## 24      D      D  D  D   0   0              1
-## 25      D      D  D  D   0   0              0
-## 26      D      D  C  D  -1   2              0
-## 27      C      D  D  C   2  -1              4
-## 28      D      C  D  D   0   0              3
-## 29      D      D  D  D   0   0              2
-## 30      D      D  D  D   0   0              1
+## 2       C      C  D  C   2  -1              4
+## 3       D      C  D  D   0   0              3
+## 4       D      D  D  D   0   0              2
+## 5       D      D  D  D   0   0              1
+## 6       D      D  D  D   0   0              0
+## 7       D      D  C  D  -1   2              0
+## 8       C      D  D  C   2  -1              4
+## 9       D      C  D  D   0   0              3
+## 10      D      D  D  D   0   0              2
+## 11      D      D  D  D   0   0              1
+## 12      D      D  D  D   0   0              0
+## 13      D      D  C  D  -1   2              0
+## 14      C      D  D  C   2  -1              4
+## 15      D      C  D  D   0   0              3
+## 16      D      D  D  D   0   0              2
+## 17      D      D  D  D   0   0              1
+## 18      D      D  D  D   0   0              0
+## 19      D      D  C  D  -1   2              0
+## 20      C      D  D  C   2  -1              4
+## 21      D      C  D  D   0   0              3
+## 22      D      D  D  D   0   0              2
+## 23      D      D  D  D   0   0              1
+## 24      D      D  D  D   0   0              0
+## 25      D      D  D  D   0   0              4
+## 26      D      D  D  D   0   0              3
+## 27      D      D  D  D   0   0              2
+## 28      D      D  D  D   0   0              1
+## 29      D      D  D  D   0   0              0
+## 30      D      D  D  D   0   0              4
+## 31      D      D  D  D   0   0              3
+## 32      D      D  D  D   0   0              2
 ## 
 ## $u
-## [1] 0.5757 0.4165
+## [1] 0.3432 0.1115
 ```
 
 
@@ -365,30 +374,30 @@ The following lines run a tournament between 4 specified strategies
 
 ```r
 # Init and run a tournament of several strategies against each other
-game = make.pd.game(err.D.prob = 0.15)
+game = make.pd.game()
 strat = nlist(strange.defector, tit.for.tat, always.defect, always.coop)
 tourn = init.tournament(game = game, strat = strat, delta = 0.95, score.fun = "efficiency-2*instability- 20*instability^2")
-tourn = run.tournament(tourn = tourn, R = 15)
+tourn = run.tournament(tourn = tourn, R = 10)
 tourn
 ```
 
 ```
 ## 
-## Tournament for Noisy PD (15 rep.)
+## Tournament for Noisy PD (10 rep.)
 ## 
 ##                  strange.defector tit.for.tat always.defect always.coop
-## strange.defector            0.351      0.3150       -0.3200        1.63
-## tit.for.tat                 0.339      0.2870       -0.0499        1.13
-## always.defect               0.751      0.0997        0.0000        2.00
-## always.coop                -0.264      0.7230       -1.0000        1.00
+## strange.defector            0.296       0.396       -0.3100        1.68
+## tit.for.tat                 0.291       1.000       -0.0501        1.00
+## always.defect               0.583       0.100        0.0000        2.00
+## always.coop                -0.338       1.000       -1.0000        1.00
 ## 
 ## Ranking with score = efficiency-2*instability- 20*instability^2
 ## 
 ##                  rank   score efficiency instability u.average   best.answer
-## always.defect       1   0.000      0.000       0.000     0.713 always.defect
-## strange.defector    2  -3.640      0.351       0.399     0.493 always.defect
-## tit.for.tat         3  -4.387      0.287       0.436     0.427   always.coop
-## always.coop         4 -21.000      1.000       1.000     0.115 always.defect
+## tit.for.tat         1   1.000      1.000       0.000     0.560   tit.for.tat
+## always.defect       2   0.000      0.000       0.000     0.671 always.defect
+## strange.defector    3  -1.917      0.296       0.286     0.515 always.defect
+## always.coop         4 -21.000      1.000       1.000     0.166 always.defect
 ```
 
 
@@ -632,7 +641,7 @@ obs
 ```
 ## $a
 ##  a1  a2 
-## "D" "D"
+## "C" "C"
 ```
 
 ```r
@@ -716,10 +725,10 @@ return(nlist(a = a, otherC))
 
 ```
 ## $a
-## [1] "D"
+## [1] "C"
 ## 
 ## $otherC
-## [1] 0
+## [1] 1
 ```
 
 You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.
@@ -770,7 +779,7 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
 ## 3      D      D    D    C   2  -1        0
 ## 4      D      C    C    C   1   1        1
-## 5      D      C    C    D  -1   2        2
+## 5      C      C    C    D  -1   2        2
 ## 6      C      D    D    C   2  -1        2
 ## 7      D      C    D    C   2  -1       NA
 ## 8   <NA>   <NA> <NA> <NA>  NA  NA       NA
@@ -866,7 +875,7 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ## 2       C      D  D  D   0   0        0
 ## 3       D      D  D  C   2  -1        0
 ## 4       D      C  C  C   1   1        1
-## 5       D      C  C  D  -1   2        2
+## 5       C      C  C  D  -1   2        2
 ## 6       C      D  D  C   2  -1        2
 ## 7       D      C  D  C   2  -1        3
 ## 8       D      C  D  D   0   0        4
@@ -876,15 +885,15 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ## 12      D      C  D  C   2  -1        7
 ## 13      D      C  D  C   2  -1        8
 ## 14      D      C  D  C   2  -1        9
-## 15      D      D  D  D   0   0        9
-## 16      D      D  D  C   2  -1        9
-## 17      D      C  D  C   2  -1       10
-## 18      D      C  D  D   0   0       11
-## 19      D      D  D  D   0   0       11
-## 20      D      D  D  D   0   0       11
-## 21      D      D  D  C   2  -1       11
-## 22      D      C  D  D   0   0       12
-## 23      D      D  D  D   0   0       12
+## 15      D      C  D  D   0   0       10
+## 16      D      D  D  C   2  -1       10
+## 17      D      C  D  C   2  -1       11
+## 18      D      C  D  D   0   0       12
+## 19      D      D  D  D   0   0       12
+## 20      D      D  D  D   0   0       12
+## 21      D      D  D  C   2  -1       12
+## 22      D      C  D  D   0   0       13
+## 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043
@@ -932,7 +941,7 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ## 2       C      D  D  D   0   0        0
 ## 3       D      D  D  C   2  -1        0
 ## 4       D      C  C  C   1   1        1
-## 5       D      C  C  D  -1   2        2
+## 5       C      C  C  D  -1   2        2
 ## 6       C      D  D  C   2  -1        2
 ## 7       D      C  D  C   2  -1        3
 ## 8       D      C  D  D   0   0        4
@@ -942,15 +951,15 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ## 12      D      C  D  C   2  -1        7
 ## 13      D      C  D  C   2  -1        8
 ## 14      D      C  D  C   2  -1        9
-## 15      D      D  D  D   0   0        9
-## 16      D      D  D  C   2  -1        9
-## 17      D      C  D  C   2  -1       10
-## 18      D      C  D  D   0   0       11
-## 19      D      D  D  D   0   0       11
-## 20      D      D  D  D   0   0       11
-## 21      D      D  D  C   2  -1       11
-## 22      D      C  D  D   0   0       12
-## 23      D      D  D  D   0   0       12
+## 15      D      C  D  D   0   0       10
+## 16      D      D  D  C   2  -1       10
+## 17      D      C  D  C   2  -1       11
+## 18      D      C  D  D   0   0       12
+## 19      D      D  D  D   0   0       12
+## 20      D      D  D  D   0   0       12
+## 21      D      D  D  C   2  -1       12
+## 22      D      C  D  D   0   0       13
+## 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043

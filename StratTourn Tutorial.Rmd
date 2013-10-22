@@ -27,7 +27,10 @@ http://rstudio.org/
 
 You need to install several R packages from the internet. To do so, simply run in the R console the following code (you can use copy & paste):
 ```{r eval=FALSE}
-install.packages("devtools","data.table","ggplot2","reshape2")
+install.packages("devtools")
+install.packages("data.table")
+install.packages("ggplot2")
+install.packages("reshape2")
 
 library(devtools)
 install_github(repo="restorepoint", username="skranz")
@@ -287,11 +290,11 @@ The following lines run a tournament between 4 specified strategies
 ```
 ```{r eval=TRUE, cache=TRUE}
   # Init and run a tournament of several strategies against each other
-  game = make.pd.game(err.D.prob=0.15)
+  game = make.pd.game()
   strat = nlist(strange.defector,tit.for.tat,always.defect, always.coop)
   tourn = init.tournament(game=game, strat=strat, delta=0.95,
                           score.fun = "efficiency-2*instability- 20*instability^2")
-  tourn = run.tournament(tourn=tourn, R = 15)
+  tourn = run.tournament(tourn=tourn, R = 10)
   tourn
 ```
 ```{r include=FALSE}
