@@ -49,14 +49,20 @@ evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,rounds = 100,alpha=0.1,
   return(shares)
 }
 
-plot.evolve = function(res.prop) {
+#res.prop = ev
+plot.evolve = function(res.prop, direct.labels=suppressWarnings(require(directlabels,quietly=TRUE))) {
   rounds = NROW(res.prop)
   df = as.data.frame(cbind(1:rounds,res.prop))
   colnames(df)[1] = "round"
   mdf = melt(df,id.vars = "round")
   colnames(mdf) = c("round","strategy","share")
-  qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
-  
+  if (!direct.labels) {
+    qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
+  } else {
+    library(directlabels)
+    p=qplot(x=round,y=share,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2))
+    direct.label(p) 
+  }
 }
 
 evolve.one.round = function(shares,shares.j=shares,mat,alpha=0.1, min.shares=0.001) {
@@ -104,7 +110,7 @@ path.to.defect = function() {
   delta = 0.95
   strat = nlist(tit.for.tat, always.defect, always.coop)
   tourn = init.tournament(game=game, strat=strat, delta=delta)
-  tourn = run.tournament(tourn=tourn, R = 10)
+  tourn = run.tournament(tourn=tourn, R = 1)
   tourn
   mat = tourn$mat
   names = colnames(mat)
@@ -118,9 +124,9 @@ path.to.defect = function() {
   #init.shares = add.type(init.shares,"nice.tft",0.01)
   
   # Start evolution
-  R = 100
+  R = 1
   ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=0, alpha=0.5)
-  plot.evolve(ev)
+  plot.evolve(ev,!TRUE)
   next.shares = add.type(ev,"always.defect")
   ev = evolve(initial=next.shares,mat=mat, rounds = 200,min.shares=0, alpha=0.5)
   plot.evolve(ev)

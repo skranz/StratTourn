@@ -10,10 +10,27 @@ find.row = function(txt,pattern,li, stop.if.not.found = TRUE) {
 }
 
 examples.import.stage1.strats = function() {
-  dir = "C:/libraries/StratTourn/coop1_sols"
-  num.scen = 2
-  import.stage1.strats(dir, num.scen)
+  library(StratTourn)
+  library(compiler)
+
+  dir = "D:/lehre/cooperation seminar/task1strat"
+  num.scen = 1
+  scen.strat = import.stage1.strats(dir, num.scen)[[1]]
+  cbind(scen.strat$strat.name,scen.strat$team)
   
+  game = make.pd.game(err.D.prob = 0.15)
+  strat = c(scen.strat$strat,nlist(nn))
+  team = substring(c(scen.strat$team,"prof"),1,8)
+  
+  set.storing(FALSE)
+  tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
+  enableJIT(3)
+  tourn = run.tournament(tourn=tourn, R=400)
+  setwd("D:/lehre/cooperation seminar/")
+  save.tournament(tourn,file="task1_tourn.Rdata")
+  tourn
+  
+  t = load.tournament(file="task1_tourn.Rdata")
 }
 
 #' Import all strategies from a directory with all team's solutions (as Rmd files) from stage 1 of a tournament
@@ -92,7 +109,7 @@ parse.stage1.Rmd = function(file, num.scen) {
       li$strat[[scen]] <- get(fun.name,env)
     }, error = function(e) {
       str = paste0("Warning: Could not parse strategy in ", file, " for scenario ", scen, ". Code chunk does not specify a single correct function.")
-      warning(str, call.=FALSE)
+      stop(str, call.=FALSE)
       li$strat.names[scen] <<- "NO STRATEGY"
       li$strat[[scen]] <<- NA
     })
