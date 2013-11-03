@@ -61,7 +61,7 @@ rep.game.results.df = function(game, obs.hist, a.hist, payoff.mat, game.states=N
 run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = round(runif(1,10000,12000)),detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE) {
   restore.point("run.rep.game")
   
-  gbos$do.store <<- do.store
+  gbos$do.store = do.store
   
   # We have a separate function for multistage games
   if (length(game$stages)>0) {

@@ -25,8 +25,8 @@ examples.import.stage1.strats = function() {
   set.storing(FALSE)
   tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
   enableJIT(3)
-  tourn = run.tournament(tourn=tourn, R=400)
-  setwd("D:/lehre/cooperation seminar/")
+  tourn = run.tournament(tourn=tourn, R=300)
+   setwd("D:/lehre/cooperation seminar/")
   save.tournament(tourn,file="task1_tourn.Rdata")
   tourn
   
