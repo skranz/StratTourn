@@ -34,7 +34,7 @@ examples.pd = function() {
 
 
 # A strategy that always cooperates
-always.coop = function(obs,i,t,game, stage,...) {
+xalways.coop = function(obs,i,t,game, stage,...) {
   if (stage == "action")
     return(list(a="C"))
   
@@ -46,7 +46,7 @@ always.coop = function(obs,i,t,game, stage,...) {
 }
 
 # A strategy that always defects
-always.defect = function(obs,i,t,game, stage,...) {
+xalways.defect = function(obs,i,t,game, stage,...) {
   if (stage == "action")
     return(list(a="D"))
   
@@ -58,7 +58,7 @@ always.defect = function(obs,i,t,game, stage,...) {
 }
 
 # A strategy that randomly chooses an action
-random.action = function(obs,i,t,game,stage,...) {
+xrandom.action = function(obs,i,t,game,stage,...) {
   a = sample( c("C","D"),  1)
   if (stage == "action")
     return(list(a=a))

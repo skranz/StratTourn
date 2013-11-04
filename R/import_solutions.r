@@ -18,6 +18,8 @@ examples.import.stage1.strats = function() {
   scen.strat = import.stage1.strats(dir, num.scen)[[1]]
   cbind(scen.strat$strat.name,scen.strat$team)
   
+  
+  
   game = make.pd.game(err.D.prob = 0.15)
   strat = c(scen.strat$strat,nlist(nn))
   team = substring(c(scen.strat$team,"prof"),1,8)
@@ -26,11 +28,15 @@ examples.import.stage1.strats = function() {
   tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
   enableJIT(3)
   tourn = run.tournament(tourn=tourn, R=300)
-   setwd("D:/lehre/cooperation seminar/")
+  
+  
+  setwd("D:/lehre/cooperation seminar/")
   save.tournament(tourn,file="task1_tourn.Rdata")
   tourn
-  
-  t = load.tournament(file="task1_tourn.Rdata")
+
+  setwd("D:/lehre/cooperation seminar/")
+  tourn = load.tournament(file="task1_tourn.Rdata")
+  tourn
 }
 
 #' Import all strategies from a directory with all team's solutions (as Rmd files) from stage 1 of a tournament

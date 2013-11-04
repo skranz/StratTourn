@@ -47,7 +47,7 @@ df.signif = function(df,digits=3,fun=signif) {
 #' store objects when called from a function
 debug.store = function(strat,i,t, stage = NULL, do.store = is.true(gbos$do.store)) {
   if (!do.store) return()
-  message("Store...", do.store)
+  #message("Store...", do.store)
   store = !identical(.GlobalEnv,sys.frame(-1))  
   if (!store) return()
   if (is.null(stage)) {
