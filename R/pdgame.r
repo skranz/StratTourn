@@ -17,18 +17,12 @@ examples.pd = function() {
   
   # Init and run a tournament of several strategies against each other  
   set.storing(FALSE)
-  #strat = nlist(grim.trigger,tit.for.tat,always.defect, always.coop,net.nice0)
-  strat = nlist(grim.trigger,tit.for.tat,always.defect,net.nice0,net.nice2)
-  
+  strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
   tourn = init.tournament(game=game, strat=strat, delta=0.95, score.fun = "efficiency-2*instability-20*instability^2")
   tourn = run.tournament(tourn=tourn, R = 4)
   tourn
   
-  x = seq(0,0.5,by=0.05)
-  score = 2*x+20*x^2
-  plot(x,x+10*x^2)
-  round(cbind(x,score),3)
-  
+  # Second stage of tournament  
   strat = nlist(tit.for.tat)
   strat.dev = list(grim.trigger= nlist(always.defect, always.coop),
                    tit.for.tat = nlist(always.defect, always.coop))
@@ -70,24 +64,28 @@ tit.for.tat = function(obs,i,t,game) {
   list(a=obs$a[j])
 }
 
-grim.trigger = function(obs,i,t,game,coop) {
-  debug.store("grim.trigger",i,t) # Store each call for each player
-  debug.restore("grim.trigger",i=1,t=2) # Restore call for player i in period t
+# Strategy from the tutorial without much meaning
+strange.defector <- function(obs, i, t, game, still.defect=0){
+  debug.store("strange.defector",i,t) # Store each call for each player
+  debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
   
-  if (t==1)
-    return(list(a="C",coop=TRUE))
-  
-  # Cooperate if and only if everybody so far has cooperated
-  if (coop & obs$a[1]=="C" & obs$a[2]=="C") {
-    return(list(a="C",coop=TRUE))
-  } else {
-    return(list(a="D",coop=FALSE))
+  # Randomize between C and D
+  if (still.defect==0) {
+    do.cooperate = (runif(1)<0.7) 
+    # With 60% probability choose C
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+    } else {
+      return(list(a="D", still.defect=4))
+    }
   }
+  
+  # still.defect is bigger 0: play D and reduce still.defect by 1
+  still.defect = still.defect -1
+  return(list(a="D",still.defect=still.defect))
 }
 
-
-
-# A function to generate a PD game
+#' Generate a (noisy) Prisoners' Dilemma game
 make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, private.signals=FALSE) {
   results.fun = function(a,...) {
     restore.point("pd.results.fun")
@@ -147,7 +145,7 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
     list(a=c("D","C"))
   }
   
-  nlist(results.fun, check.action,example.action,example.obs, n=2, private.signals, a.names = c("a1","a2"), params = nlist(uCC,uCD,uDC,uDD,err.D.prob                                                                                                                                    ), sym=TRUE, name="Noisy PD")
+  nlist(results.fun, check.action,example.action,example.obs, n=2, private.signals, a.names = c("a1","a2"), params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, name="Noisy PD", score.fun = "efficiency-2*instability- 20*instability^2")
 }
 
   

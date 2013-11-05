@@ -3,9 +3,11 @@ Analyzing Cooperation with Game Theory and Simulation
 Tutorial for the R package StratTourn
 ========================================================================
 
-**Date: 2013-10-12**
+**Date: 2013-10-21**
 
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
+
+**with help by Martin Kies (martin.kies@uni-ulm.de)**
 
 ## 1. Installing neccessary software
 
@@ -21,12 +23,15 @@ I recommend to additionally install RStudio, which is a great open source IDE fo
 
 http://rstudio.org/
 
-### 1.2 Installing neccessary R packages
+### 1.2 Installing necessary R packages
 
 You need to install several R packages from the internet. To do so, simply run in the R console the following code (you can use copy & paste):
 
 ```s
-install.packages("devtools", "data.table", "ggplot2", "reshape2")
+install.packages("devtools")
+install.packages("data.table")
+install.packages("ggplot2")
+install.packages("reshape2")
 
 library(devtools)
 install_github(repo = "restorepoint", username = "skranz")
@@ -37,10 +42,10 @@ install_github(repo = "StratTourn", username = "skranz")
 
 ## 2. Brief Background: The Prisoners' Dilemma Game
 
-In the 'Evolution of Cooperation' Robert Axelrod describes his famous computer tournament that he used to investigate effective cooperation strategies in repeated social dilemma situations. His tournament was based on a repeated *prisoners' dilemma game*, which I will also use as example in this tutorial.
+In the 'Evolution of Cooperation' Robert Axelrod describes his famous computer tournament that he used to investigate effective cooperation strategies in repeated social dilemma situations. His tournament was based on a repeated *prisoner's dilemma game*, which I will also use as an example in this tutorial.
 
 ### 2.1 The one-shot Prisoner's Dilemma
-A one-shot prisoners' dilemma (short PD) is played only once. We can describe a PD by the following *payoff matrix*:
+A one-shot prisoner's dilemma (short: PD) is played only once. We can describe a PD by the following *payoff matrix*:
 
 <center><table border="1"><tr>
     <td align='center'>Pl 1. / Pl. 2</td>
@@ -56,13 +61,13 @@ A one-shot prisoners' dilemma (short PD) is played only once. We can describe a 
     <td align='center'>  0, 0</td>
 </tr></table></center>
 
-Each player can either cooperate C or defect D, which means not to cooperate. The row shows player 1's action and the column player 2's. The cells show the *payoffs* of player 1 and 2 for each *action profile*. For example, when player 1 cooperates C and player 2 defects D, i.e. the action profile (C,D) is played, then player 1's payoff is -1 and player 2's payoff is 2.
+Each player can either cooperate *C* or defect *D*, which means not to cooperate. The row shows player 1's action and the column player 2's. The cells show the *payoffs* of player 1 and 2 for each *action profile*. For example, when player 1 cooperates C and player 2 defects D, i.e. the action profile (C,D) is played, then player 1's payoff is -1 and player 2's payoff is 2.
 
 The highest average payoff (1,1) could be achieved if both players cooperate (C,C). Yet, assume that both players decide independently which action they choose, i.e. player 1's action does not influence player 2's action and vice versa. Then no matter which action the other player chooses, a player always maximizes its own payoff by choosing D. In game theoretic terms, choosing D is *strictly dominant* in a PD game that is played only once. (Consequently, the only *Nash equilibrium* of the one-shot PD is (D,D)). 
 
-### 2.2 The repeated Prisoners' Dilemma
+### 2.2 The repeated Prisoner's Dilemma
 
-In this seminar, we will mostly consider games that are repeated for an uncertain number of periods. Let $\delta \in [0,1)$ be a continuation probability (we will also often refer to $\delta$ as *discount factor*). After each period a randum number is drawn and the repeated game ends with probability $1-\delta$, i.e. it continues with probability $\delta$. In the basic version (formally called a PD game with *perfect monitoring*) all players exactly observe the actions that the other players have played in the previous periods. It is then no longer strictly dominant to always play D. For example, player 2's action in period 2 may depend on what player 1 did in period 1: she may only play C if player 1 has played C in period 1 and otherwise play D. A player's optimal strategy now depends on how the other player reacts to her action and cooperation may become rational even for pure egoists.
+In this seminar, we will mostly consider games that are repeated for an uncertain number of periods. Let $\delta \in [0,1)$ be a continuation probability (we will also often refer to $\delta$ as *discount factor*). After each period a random number is drawn and the repeated game ends with probability $1-\delta$, i.e. it continues with probability $\delta$. In the basic version (formally called a PD game with *perfect monitoring*) all players exactly observe the actions that the other players have played in the previous periods. It is then no longer strictly dominant to always play D. For example, player 2's action in period 2 may depend on what player 1 did in period 1: she may only play C if player 1 has played C in period 1 and otherwise play D. A player's optimal strategy now depends on how the other player reacts to her action and cooperation may become rational even for pure egoists.
 
 It turns out that if the continuation probability $\delta$ is large enough, such repeated games often have a very large number of *Nash equilibria*. This means we can have many possible profiles of strategies that are stable in the sense that it is optimal for each player to follow her strategy given the strategies of the other players. In some Nash equilibria players will cooperate a lot, in others very little or not at all.
 
@@ -70,9 +75,9 @@ It turns out that if the continuation probability $\delta$ is large enough, such
 
 We search for stable, socially efficient cooperative strategy profiles in several strategic interactions and study which factors make cooperation harder and how one best adapts cooperation strategies to such factors. I will typically interpret such strategy profiles as stable *social norms* that allow a high degree of cooperation in a society.
 
-We do this search by programming strategies in R and let them play against each other in a tournament (more on that below). During the seminar, we will discuss a bit informally in how far the winning strategies of our tournament are related to game theoretic equilibrium concepts, like *Nash equilibrium*. For those who already know more about Nash equilibria, let us just state that the socially most efficient Nash equilibria probably would have a very good chance to be winners in our tournaments, but often it is very hard to find these equilibria.
+We do this search by programming strategies in R and let them play against each other in a tournament (more on that below). During the seminar, we will discuss a bit informally in how far the winning strategies of our tournament are related to game theoretic equilibrium concepts, like the *Nash equilibrium*. For those who already know more about Nash equilibria, let us just state that the socially most efficient Nash equilibria probably would have a very good chance to be winners in our tournaments, but often it is very hard to find these equilibria.
 
-## 3. Getting Started: Developing strategies for the repeated Prisoners' Dilemma in R
+## 3. Getting Started: Developing strategies for the repeated Prisoner's Dilemma in R
 
 Preparations:
  1. Make sure you installed all software and packages as described in Section 1
@@ -89,7 +94,7 @@ library(StratTourn)
 
 # Generate a PD game object
 game = make.pd.game()
-# Pick a pair of strategies (strategies are defined above)
+# Pick a pair of strategies (strategies are defined below)
 strat = nlist(tit.for.tat, random.action)
 
 # Let the strategies play against each other one repeated PD
@@ -98,23 +103,19 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 
 ```
 ## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1    <NA>   <NA>  C  C   1   1
-## 2       C      C  C  C   1   1
-## 3       C      C  C  C   1   1
-## 4       C      C  C  D  -1   2
-## 5       C      D  D  C   2  -1
-## 6       D      C  C  D  -1   2
-## 7       C      D  D  D   0   0
-## 8       D      D  D  D   0   0
-## 9       D      D  D  D   0   0
-## 10      D      D  D  C   2  -1
-## 11      D      C  C  C   1   1
-## 12      C      C  C  D  -1   2
-## 13      C      D  D  D   0   0
+##   obs_a1 obs_a2 a1 a2 pi1 pi2
+## 1   <NA>   <NA>  C  C   1   1
+## 2      C      C  C  D  -1   2
+## 3      C      D  D  D   0   0
+## 4      D      D  D  C   2  -1
+## 5      D      C  C  C   1   1
+## 6      C      C  C  C   1   1
+## 7      C      C  C  D  -1   2
+## 8      C      D  D  D   0   0
+## 9      D      D  D  C   2  -1
 ## 
 ## $u
-## [1] 0.3846 0.6154
+## [1] 0.5556 0.5556
 ```
 
 This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
@@ -132,9 +133,9 @@ Tit-for-Tat was the winning strategy in Axelrod's original tournament. It has a 
   * Start nice by cooperating in period 1
   * In later periods play that action that the other player has played in the previous period. 
 
-### 3.2 Tit-for-Tat as R function
+### 3.2 Tit-for-Tat as a R function
 
-Further below in the file pdgame.r you find a definition of tit.for.tat as R function:
+Further below in the file pdgame.r you find a definition of tit.for.tat as a R function:
 
 ```s
 tit.for.tat = function(obs, i, t, game) {
@@ -191,7 +192,7 @@ list(a = "C")
 ```
 
 
-where the element a is "C". In more complex games, a function may return more than a single action. The exact structure of the list of actions that a function has to return will be explained in the corresponding exercises.
+where the element a is "C". In more complex games, a function may return more than a single action. The exact structure of the list of actions that a function has to return will be explained in the corresponding exercises. Note that we ommitted the "{" brackets of the 'if' condition. We can do that iff there follows exactly one statement after the condition.
 
 The lines
 
@@ -202,73 +203,156 @@ list(a = obs$a[j])
 
 describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
 
-### 3.3 Strategies that use states. Example: grim trigger
 
-Many strategies rely on more past information than just the observations obs from the previous period. Consider for example the famous *grim trigger* strategy.
+### 3.3 Strategies that use states. Example: strange.defector
 
- * Grim trigger: Cooperate in the first period. In later periods cooperate if and only if *no* player ever has played D, otherwise play D.
+Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed (not very clever) strategy:
+
+ * "Strange Defector":  In the first round cooperates with 70% probability, otherwise defects. As long as the player cooperates, he continues in this random fashion. Once the player defects, he plays 4 additional times "defect" in a row. Afterwards, he plays again as in the first period (randomizing, and after defection, 4 defects in a row).
  
-Here is an R implementation of the grim trigger strategy:
+Here is an R implementation of this strategy:
 
 
 ```s
-grim.trigger = function(obs, i, t, game, coop) {
-    debug.store("grim.trigger", i, t)  # Store each call for each player
-    debug.restore("grim.trigger", i = 1, t = 2)  # Restore call for player i in period t
+strange.defector <- function(obs, i, t, game, still.defect = 0) {
+    debug.store("strange.defector", i, t)  # Store each call for each player
+    debug.restore("strange.defector", i = 1, t = 2)  # Restore call for player i in period t
     
-    if (t == 1) 
-        return(list(a = "C", coop = TRUE))
+    # Randomize between C and D
+    if (still.defect == 0) {
+        do.cooperate = (runif(1) < 0.7)
+        # With 60% probability choose C
+        if (do.cooperate) {
+            return(list(a = "C", still.defect = 0))
+        } else {
+            return(list(a = "D", still.defect = 4))
+        }
+    }
     
-    # Cooperate if and only if everybody so far has cooperated
-    if (coop & obs$a[1] == "C" & obs$a[2] == "C") {
-        return(list(a = "C", coop = TRUE))
+    # still.defect is bigger 0: play D and reduce still.defect by 1
+    still.defect = still.defect - 1
+    return(list(a = "D", still.defect = still.defect))
+}
+```
+
+Compared to the tit.for.tat function, the strange.defector function has an additional argument, namely *still.defect* which in the first round t=1 has the value 0.
+Also the returned lists contain an additional field named *still.defect*.  The variable *still.defect* is a  manually generated *state variable*.
+
+
+#### How state variables transfer information between periods:
+```
+The value of a state variable that is passed to your function in period t is the value of the state that your function has returned in period t-1. (The value of a state in period 1 is the value you specify in the function definition).
+```
+#### Name and number of state variables
+```
+You can freely pick the name of a state variable (except for the reserved names ops,i,t, game and a) and you can have more than one state variable.
+```
+#### Which values can state variables take?
+```
+States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. "angry"), or even vectors. You just should not store a list in a state variable.
+```
+
+#### Back to the example:
+In our example, the state variable *still.defect* captures the information how many rounds the streak of defection should still last.
+
+Let us have a more detailed look at the code of the example. The line
+
+```s
+  strange.defector <- function(obs, i, t, game, still.defect=0){
+```
+
+initializes the function with a state still.defect that has in the first period a value of 0. 
+The lines
+
+```s
+if (still.defect == 0) {
+    do.cooperate = runif(1) < 0.7
+    # With 60% probability choose C
+    if (do.cooperate) {
+        return(list(a = "C", still.defect = 0))
     } else {
-        return(list(a = "D", coop = FALSE))
+        return(list(a = "D", still.defect = 4))
     }
 }
+
 ```
 
-Compared to the tit.for.tat function, the grim.trigger function has an additional argument, called *coop* and it also the returned lists contain an additional field called *coop*. The variable *coop* is a manually generated state variable.
-
-Let us look in more detail at the code. The lines
+first check whether we are in the initial state (still.defect=0), in which we randomize between C and D. If this is the case, we draw with the command
 
 ```s
-if (t == 1) return(list(a = "C", coop = TRUE))
+do.cooperate = (runif(1) < 0.7)
 ```
 
-state that in the first period the player cooperates and the state *coop* shall be TRUE.
-
-For later periods the following lines are relevant:
+a logical random variable that is TRUE with 70% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines
 
 ```s
-if (coop & obs$a[1] == "C" & obs$a[2] == "C") {
-    return(list(a = "C", coop = TRUE))
-} else {
-    return(list(a = "D", coop = FALSE))
-}
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
 ```
 
-The first two lines say that if the state coop is TRUE **and** player 1 has cooperated in the previous period **and** player 2 has cooperated in the previous period then the player chooses C and the state coop remains TRUE. Otherwise (else), the player chooses "D" and sets the state coop to FALSE. In period t+1 the value of the function argument coop will be simply the value of coop that has been returned in period t.
+state that if the random variable says that we should cooperate, we return the action "C" and keep the state still.defect=0. The lines 
 
-If you think about the code, you realize that it corresponds to the verbal description of the grim trigger strategy: once coop has been set to FALSE because a player has defected in the previous period, coop will remain FALSE in all future periods and henceforth the player chooses always D.  
+```s
+    } else {
+      return(list(a="D", still.defect=4))
+    }
+```
 
-You don't need to have a single state, but your function can also have multiple states and you can freely pick the name of states (except for th reseverd names ops,i,t, and game). States don't have to take TRUE/FALSE values, but can also take number, or characters and even vector values. (A state variable should not be a list, however. Use multiple states instead).  
+state that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 periods. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
+
+```s
+still.defect = still.defect - 1
+return(list(a = "D", still.defect = still.defect))
+```
+
+The first line reduces still.defect by 1. (Hence, after 4 periods, we will again be in the state still.defect =0 and choose a random action). The second line returns our action a="D" and the new value of our state still.defect.
+
 
 If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
 
-
 ```s
-run.rep.game(delta = 0.9, game = game, strat = nlist(grim.trigger, random.action))
+run.rep.game(delta = 0.9, game = game, strat = nlist(strange.defector, tit.for.tat), 
+    T.min = 20)
 ```
 
 ```
 ## $hist
-##   obs_a1 obs_a2 a1 a2 pi1 pi2 coop_1
-## 1   <NA>   <NA>  C  D  -1   2   TRUE
-## 2      C      D  D  C   2  -1  FALSE
+##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
+## 1    <NA>   <NA>  C  C   1   1              0
+## 2       C      C  D  C   2  -1              4
+## 3       D      C  D  D   0   0              3
+## 4       D      D  D  D   0   0              2
+## 5       D      D  D  D   0   0              1
+## 6       D      D  D  D   0   0              0
+## 7       D      D  C  D  -1   2              0
+## 8       C      D  D  C   2  -1              4
+## 9       D      C  D  D   0   0              3
+## 10      D      D  D  D   0   0              2
+## 11      D      D  D  D   0   0              1
+## 12      D      D  D  D   0   0              0
+## 13      D      D  C  D  -1   2              0
+## 14      C      D  D  C   2  -1              4
+## 15      D      C  D  D   0   0              3
+## 16      D      D  D  D   0   0              2
+## 17      D      D  D  D   0   0              1
+## 18      D      D  D  D   0   0              0
+## 19      D      D  C  D  -1   2              0
+## 20      C      D  D  C   2  -1              4
+## 21      D      C  D  D   0   0              3
+## 22      D      D  D  D   0   0              2
+## 23      D      D  D  D   0   0              1
+## 24      D      D  D  D   0   0              0
+## 25      D      D  D  D   0   0              4
+## 26      D      D  D  D   0   0              3
+## 27      D      D  D  D   0   0              2
+## 28      D      D  D  D   0   0              1
+## 29      D      D  D  D   0   0              0
+## 30      D      D  D  D   0   0              4
+## 31      D      D  D  D   0   0              3
+## 32      D      D  D  D   0   0              2
 ## 
 ## $u
-## [1] 0.5 0.5
+## [1] 0.3432 0.1115
 ```
 
 
@@ -276,7 +360,7 @@ run.rep.game(delta = 0.9, game = game, strat = nlist(grim.trigger, random.action
 
 Implement the following strategy in R.
 
-  - tit3tat: The player starts with C and plays like tit-for-tat in period t=2 and t=3. In period t>2 the player plays with 60% probability like tit-for-tat and with 30% probability he plays the action that the other player played in the pre-previous period, i.e. in t-2 and with 10% probability he plays the action the other player played in t-3.
+  - tit3tat: The player starts with C and plays like tit-for-tat in period t=2 and t=3. In period t>3 the player plays with 60% probability like tit-for-tat and with 30% probability he plays the action that the other player played in the pre-previous period, i.e. in t-2 and with 10% probability he plays the action the other player played in t-3.
   
   Hints:
   1. To do something with 60% probability, you can draw a random variable x with the command x=runif(1) that is uniformely distributed between 0 and 1 and then check whether x<=0.6. To do something else with 30 probability, you can check 0.6 < x & x <= 0.9 and so on...
@@ -291,8 +375,8 @@ The following lines run a tournament between 4 specified strategies
 ```s
 # Init and run a tournament of several strategies against each other
 game = make.pd.game()
-strat = nlist(grim.trigger, tit.for.tat, always.defect, always.coop)
-tourn = init.tournament(game = game, strat = strat, delta = 0.95, instability.factor = 20)
+strat = nlist(strange.defector, tit.for.tat, always.defect, always.coop)
+tourn = init.tournament(game = game, strat = strat, delta = 0.95, score.fun = "efficiency-2*instability- 20*instability^2")
 tourn = run.tournament(tourn = tourn, R = 10)
 tourn
 ```
@@ -301,31 +385,32 @@ tourn
 ## 
 ## Tournament for Noisy PD (10 rep.)
 ## 
-##               grim.trigger tit.for.tat always.defect always.coop
-## grim.trigger           1.0         1.0         -0.05           1
-## tit.for.tat            1.0         1.0         -0.05           1
-## always.defect          0.1         0.1          0.00           2
-## always.coop            1.0         1.0         -1.00           1
+##                  strange.defector tit.for.tat always.defect always.coop
+## strange.defector            0.296       0.396       -0.3100        1.68
+## tit.for.tat                 0.291       1.000       -0.0501        1.00
+## always.defect               0.583       0.100        0.0000        2.00
+## always.coop                -0.338       1.000       -1.0000        1.00
 ## 
-## Ranking with instability.factor = 20
-##               rank score efficiency instability   best.answer
-## grim.trigger     1     1          1           0  grim.trigger
-## tit.for.tat      1     1          1           0   tit.for.tat
-## always.defect    3     0          0           0 always.defect
-## always.coop      4   -19          1           1 always.defect
+## Ranking with score = efficiency-2*instability- 20*instability^2
+## 
+##                  rank   score efficiency instability u.average   best.answer
+## tit.for.tat         1   1.000      1.000       0.000     0.560   tit.for.tat
+## always.defect       2   0.000      0.000       0.000     0.671 always.defect
+## strange.defector    3  -1.917      0.296       0.286     0.515 always.defect
+## always.coop         4 -21.000      1.000       1.000     0.166 always.defect
 ```
 
 
 
-The tournament consists of R rounds (here R=10). In every round, every strategy plays against each other strategy in a repeated game. Every strategy also plays against itself. For every pairing of two strategies, we then compute the average payoff of the strategies over all R rounds
+The tournament consists of R rounds (here R=15). In every round, every strategy plays against each other strategy in a repeated game. Every strategy also plays against itself. For every pairing of two strategies, we then compute the average payoff of the strategies over all R rounds
 
 The first matrix has for every strategy a row and column and shows the average payoff of the *row strategy*  when the row strategy plays against the column strategy. (In a symmetric game like the PD game, we will just display the average payoffs of both player 1 and player 2). For example, when strategy always.defect played against always.coop, then always.defect got on average a payoff of  2 and always.coop got on average a payoff of -1. Against itself always.coop got an average payoff of 1.
 
 The table below shows which strategies have won, as well as their score, efficiency, instability and best answer.
 
-### 4.1 Social norms, efficiency, instability and tournament score
+### 4.1 Social norms, efficiency, instability and score
 
-How do we determine the winner of the tournament? Axelrod ranked the strategies according to their average payoff across all pairings. We will use a different criterion, however. 
+How do we determine the winner of the tournament? Axelrod ranked the strategies according to their average payoff across all pairings. This average payoff is shown in the column *u.average*. We will use different scores to rank strategies, however. 
 
 Our underlying question is the following. Assume interactions in a group are such that people, who essentially want to maximize their own payoffs, are randomly matched with each other and play the specified repeated game. What would be a **"good social norm"** that one could teach to all people and which describes how they should behave in their interactions? More compactly:
 
@@ -335,11 +420,11 @@ What do we mean with efficient and stable?
 
 #### **Efficiency:**
 
-We define efficiency of a strategy is the **average payoff** the strategy achieves when it plays **against itself**. Hence, the efficiency is the average payoff of every person in the group if *everybody* in the group follows this strategy.
+We define efficiency of a strategy is the **average payoff** the strategy achieves when it plays **against itself**. Hence, the efficiency is the average payoff of every person in the group if *everybody* in the group would follow this strategy.
 
 #### **Best answer:**
 
-The best answer against a strategy s shall be that strategy (from all strategies that participate in the tournament) that has the highest payoff against s. The column best.answer shows the best answer for each strategy. Note that several strategies can be best answers if they achieve the same payoff (we then only show one). Also note that a strategy can be a best answer against itself.
+The best answer against a strategy s shall be that strategy (from all strategies that participate in the tournament) that has the highest payoff against s. The column *best.answer* shows the best answer for each strategy. Note that several strategies can be best answers if they achieve the same payoff (we then only show one). Also note that a strategy can be a best answer against itself.
 
 #### **Instability:**
 
@@ -347,7 +432,7 @@ We define the instability of a strategy s as the following difference:
 
     instability = best answer payoff against s - payoff of s against itself
 
-Note that a strategy that is a best answer against itself has an instability of 0 and is therefore very stable. The following idea lies behind this definition of instability. We assume that persons want to maximize their own payoff. If s has a high instability value, it has the following problem: if everybody follows s, persons have very high incentives not to follow s (deviate from s) and play the best -answer strategy instead. The strategy s would not be a robust, sustainable social norm.
+Note that a strategy that is a best answer against itself has an instability of 0 and is therefore very stable. The following idea lies behind this definition of instability. We assume that persons want to maximize their own payoff. If s has a high instability value, it has the following problem: if everybody follows s, people have very high incentives not to follow s (deviate from s) and play the best answer strategy instead. The strategy s would not be a robust, sustainable social norm.
 
 
 #### Relationship to Best Replies and Nash equilibrium
@@ -367,22 +452,46 @@ There are also additional differences. If you are not firm in game theory, you j
 
   - Compared to game theoretic terminology, our use of the term strategy is quite imprecise with respect to which players plays the strategy (Our R functions are defined for both players and could in game theoretic terms also be seen as *strategy profiles*). When computing best answers we don't distinguish between player 1's best answer against player 2 and vice versa, but we will just take the mean of player 1's and player 2's payoffs. 
 
-#### Second stage of tournament: Finding better answers to destabilize competing strategies
-
-To somewhat mitigate an issue related to the main difference between best answers and best replies, we will play two rounds of the tournament in our seminar. After the first round, the teams get the source code of all other strategies and have some time to develop new strategies that are just designed to become best answers against the strategies of the other teams. More precisely, the goal of a team's second stage strategies is just to increase the computed instability of other teams' first stage strategies. This will be explained in more detail in the seminar.
-
 #### Score
 
-The score is just a combination of the efficiency and instability value of a strategy. We use the following simple formula:
+The score of a strategy is a formula that combines its effieciency and instability. The basic rule is
 
-    score = efficiency - instability.factor * instability
-    
-The instability factor measures how important stability is compared to efficiency. In this tournament, we used an instability factor of 20, i.e. low instability is quite crucial for a high score. The strategy with the highest score is the winner!
+```
+The score increases in the efficiency and decreases in the instability
+```
 
-In our example, both grim.trigger and tit.for.tat are winners with the same score. They both are able to sustain cooperation in every period and have instability 0 (one can indeed show that both are Nash equilibria of that repeated PD). While always.coop also has a high efficiency, it looses because it is very instable. That is because a player who plays always.defect against always.coop makes a much higher payoff than a player who plays always.coop against always.coop. While always.defect is stable, it only reaches rank 3 because it is a very inefficient. 
+In the example we use the following formula:
+\[
+    score = efficiency - 2 * instability - 20*instability^2
+\]
+
+The quadratic term makes sure that large instability gets more strongly penalized than small instability. It is not clear how much we want to penalize instability. Game theory always puts a lot of emphasis on stability, since a Nash equilibrium needs an instability of 0. On the other hand, checking instability is not so easy and it can be very hard in the tasks of our seminar to find somewhat efficient strategies that really have an instability of 0. A score that allows some degree of instability may be a sensible criterion if we think about norms in a society in which at least some people have some intrinsic motivation to follow a prevailing norm or simply are too lazy to think much about a profitable deviation from the prevailing norm. 
+
+In our example, always.defect is the winner of the tournament. It is able to sustain cooperation in every period and has instability 0 (one can indeed show that it is a Nash equilibrium of that repeated PD). While always.coop also has a high efficiency, it looses because it is very instable. That is because a player who plays always.defect against always.coop makes a much higher payoff than a player who plays always.coop against always.coop.
 
 
-## 5. Debugging a strategy
+#### Second stage of tournament: Finding better answers to destabilize competing strategies
+
+To somewhat mitigate an issue related to the main difference between best answers and best replies, we will play two rounds of the tournament in our seminar. After the first round, the teams get the source code of all other strategies and have some time to develop new strategies that are just designed to become best answers against the strategies of the other teams. More precisely, the goal of a team's second stage strategies is just to increase the computed instability of other teams' first stage strategies and thereby decrease their score. This will be explained in more detail in the seminar.
+
+
+
+## 5. Guidelines for your Strategies
+
+### Keep it sufficiently simple, intuitive, clean and fast
+
+Your strategies and the implementation as R should be intuitively understandable. It is not the goal to develop extremely complex strategies with a large number of states that nobody understands and that require extremely complicated computations. The idea is that strategies resemble some sort of social norms. Also take into account that for the simulations we may run your strategy on the order of a million times, so don't make any complicated computations that need very long to run. That being said your strategy does not have to be as simple as tit-for-tat.
+
+### Don't cheat
+
+If you are a hacker, you may think of many ways to cheat. For example, it might be really useful to find out whether your strategy plays against itself, but the rules of the basic PD game don't give you an effective way to communicate (you can only choose C or D). So you may think of exchanging information by writing information into a global R variable which the other player can read out. Such things are considered cheating and **not allowed**.
+
+  * You are only allowed to use the information that is passed to the function as parameters (including the states you returned in earlier periods).
+  * You are not allowed to modify any external objects.
+  
+As a rule of thumb: if you wonder whether something is cheating it probably is; if you are not sure ask us.
+
+## 6. Debugging a strategy
 
 When you first write a strategy or other R function, it often does not work correctly: your function is likely to have bugs. Some bugs make your programm stop and throw an error message, other bugs are more subtle and make your function run in a different fashion than you expected. *Debugging* means to find and correct bugs in your code. There are different tools that help debugging. I want to illustrate some debugging steps with an example.
 
@@ -504,7 +613,7 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action))
 
 ```
 ##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    D  -1   2        0
+## 1     NA     NA    C    C   1   1        0
 ## 2     NA     NA <NA> <NA>  NA  NA       NA
 ```
 
@@ -532,7 +641,7 @@ obs
 ```
 ## $a
 ##  a1  a2 
-## "C" "D"
+## "C" "C"
 ```
 
 ```s
@@ -616,10 +725,10 @@ return(nlist(a = a, otherC))
 
 ```
 ## $a
-## [1] "D"
+## [1] "C"
 ## 
 ## $otherC
-## [1] 0
+## [1] 1
 ```
 
 You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.

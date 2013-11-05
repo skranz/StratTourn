@@ -3,9 +3,11 @@ Analyzing Cooperation with Game Theory and Simulation
 Tutorial for the R package StratTourn
 ========================================================================
 
-**Date: 2013-10-18**
+**Date: 2013-10-21**
 
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
+
+**with help by Martin Kies (martin.kies@uni-ulm.de)**
 
 ## 1. Installing neccessary software
 
@@ -25,7 +27,10 @@ http://rstudio.org/
 
 You need to install several R packages from the internet. To do so, simply run in the R console the following code (you can use copy & paste):
 ```{r eval=FALSE}
-install.packages("devtools","data.table","ggplot2","reshape2")
+install.packages("devtools")
+install.packages("data.table")
+install.packages("ggplot2")
+install.packages("reshape2")
 
 library(devtools)
 install_github(repo="restorepoint", username="skranz")
@@ -169,106 +174,101 @@ The lines
 ```
 describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
 
-### 3.3 Strategies that use states. Example: ashamed.defector
 
-Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed strategy:
+### 3.3 Strategies that use states. Example: strange.defector
 
- * "Ashamed Defector": Cooperate in the first period. Cooperate as long until the observations state, that player has defected. To "cover up" this "mistake", play 4 additional times "defect". Cooperate afterwards until the next wrongfully observed defection.
+Many strategies rely not only on the most recent observations which are saved in obs. Consider for example this self-developed (not very clever) strategy:
+
+ * "Strange Defector":  In the first round cooperates with 70% probability, otherwise defects. As long as the player cooperates, he continues in this random fashion. Once the player defects, he plays 4 additional times "defect" in a row. Afterwards, he plays again as in the first period (randomizing, and after defection, 4 defects in a row).
  
 Here is an R implementation of this strategy:
 
 ```{r}
-#Does not admit to sending the wrong signal (even though he can not influence that) by defecting on purpose
-#to make it seem as if the defection was on purpose all along
-ashamed.defector <- function(obs, i, t, game, shame.counter){
-  debug.store("ashamed.defector",i,t) # Store each call for each player
-  debug.restore("ashamed.defector",i=1,t=2) # Restore call for player i in period t
+strange.defector <- function(obs, i, t, game, still.defect=0){
+  debug.store("strange.defector",i,t) # Store each call for each player
+  debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
   
-  #Be nice in the first round
-  if(t==1){
-    return(list(a="C",shame.counter=0))
+  # Randomize between C and D
+  if (still.defect==0) {
+    do.cooperate = (runif(1)<0.7) 
+    # With 60% probability choose C
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+    } else {
+      return(list(a="D", still.defect=4))
+    }
   }
   
-  #"Normal" case, where player is not ashamed and has no reason to be so
-  if(shame.counter==0 && obs$a[i]=="C"){
-    return(list(a="C",shame.counter=0))
-  }
-  
-  #If ashamed, defect to cover up "mistake"
-  if(shame.counter>1){
-    shame.counter = shame.counter-1
-    return(list(a="D",shame.counter=shame.counter))
-  }
-  
-  #Ready to be nice again
-  if(shame.counter==1){
-    shame.counter = 0
-    return(list(a="C",shame.counter=shame.counter))
-  }  
-  
-  ##This point is reached iff the shame.counter is zero, but other player observed a defection
-  return(list(a="D",shame.counter=5))
+  # still.defect is bigger 0: play D and reduce still.defect by 1
+  still.defect = still.defect -1
+  return(list(a="D",still.defect=still.defect))
 }
 ```
-Compared to the tit.for.tat function, the ashamed.defector function has an additional argument, namely *shame.counter*. On top of that the returned lists contain an additional field of this name. shame.counter is a  manually generated state variables. This state captures the information how many rounds the defections should last.
+Compared to the tit.for.tat function, the strange.defector function has an additional argument, namely *still.defect* which in the first round t=1 has the value 0.
+Also the returned lists contain an additional field named *still.defect*.  The variable *still.defect* is a  manually generated *state variable*.
 
-Let us have a more detailed look at the code. The lines
+
+#### How state variables transfer information between periods:
+```
+The value of a state variable that is passed to your function in period t is the value of the state that your function has returned in period t-1. (The value of a state in period 1 is the value you specify in the function definition).
+```
+#### Name and number of state variables
+```
+You can freely pick the name of a state variable (except for the reserved names ops,i,t, game and a) and you can have more than one state variable.
+```
+#### Which values can state variables take?
+```
+States can take all sort of values: numbers (e.g 4.5), logical values (TRUE or FALSE), strings (e.g. "angry"), or even vectors. You just should not store a list in a state variable.
+```
+
+#### Back to the example:
+In our example, the state variable *still.defect* captures the information how many rounds the streak of defection should still last.
+
+Let us have a more detailed look at the code of the example. The line
 ```{r eval=FALSE}
-  #Be nice in the first round
-  if(t==1){
-    return(list(a="C",shame.counter=0))
+  strange.defector <- function(obs, i, t, game, still.defect=0){
+```
+initializes the function with a state still.defect that has in the first period a value of 0. 
+The lines
+```{r eval=FALSE}
+  if (still.defect==0) {
+    do.cooperate = runif(1)<0.7 
+    # With 60% probability choose C
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+    } else {
+      return(list(a="D", still.defect=4))
+    }
   }
+
 ```
-state that in the first period the player cooperates. As in the first period no previous observations exist, the shame.counter is initialized by 0.
-
-In the periods after the first, we do have observations to work with. There are four possible states the algorithm might be in:
-* Standard case: Not ashamed, still cooperating
-* Still ashamed: shame.counter is greater than 1 (with 1 indicating the last round)
-* Not ashamed anymore: shame.counter equals 1
-* Wrongful defection detected: This is only relevant, if the player is not already ashamed
-
+first check whether we are in the initial state (still.defect=0), in which we randomize between C and D. If this is the case, we draw with the command
 ```{r eval=FALSE}
-    if (shame.counter == 0 && obs$a[i] == "C") {
-        return(list(a = "C", shame.counter = 0))
+  do.cooperate = (runif(1)<0.7) 
+```
+a logical random variable that is TRUE with 70% probability and otherwise FALSE. (To see this, note that runif(1) draws one uniformely distributed random variable between 0 and 1). The lines
+```{r eval=FALSE}
+    if (do.cooperate){
+      return(list(a="C", still.defect=0))
+```
+state that if the random variable says that we should cooperate, we return the action "C" and keep the state still.defect=0. The lines 
+```{r eval=FALSE}
+    } else {
+      return(list(a="D", still.defect=4))
     }
 ```
-The code above deals with the first case. If the shame.counter is zero and it can be observed, that the player cooperated, he continues to so so.
-
-
+state that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 periods. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
 ```{r eval=FALSE}
-    if (shame.counter > 1) {
-        shame.counter = shame.counter - 1
-        return(list(a = "D", shame.counter = shame.counter))
-    }
+  still.defect = still.defect -1
+  return(list(a="D",still.defect=still.defect))
 ```
-The code above deals with the second case. The shame.counter counts backwards each round, until the third case kicks in:
-```{r eval=FALSE}
-    if (shame.counter == 1) {
-        shame.counter = 0
-        return(list(a = "C", shame.counter = shame.counter))
-    }
-```
-When the counter hits 1 it is time to cooperate again, which can be seen above.
+The first line reduces still.defect by 1. (Hence, after 4 periods, we will again be in the state still.defect =0 and choose a random action). The second line returns our action a="D" and the new value of our state still.defect.
 
-
-```{r eval=FALSE}
-    return(list(a = "D", shame.counter = 5))
-```
-This line is reached if and only if the shame.counter is 0 and it can be (wrongfully) observed that the player defected. In that case we start the defection period by defecting and setting the counter to 5.
-
-You can freely pick the name of a state (except for the reserved names ops,i,t, and game). States don't have to take numeric values, you can also have TRUE/FALSE values, characters and even vectors (A state variable should not be a list, however. Use multiple states instead).  
 
 If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
-```{r include=FALSE}
-game = make.pd.game(err.D.prob=0.3)
-```
-
 ```{r eval=TRUE, cache=!TRUE}
   run.rep.game(delta=0.9, game=game, 
-               strat = nlist(ashamed.defector,random.action),T.min=25)
-```
-```{r include=FALSE}
-game = make.pd.game(err.D.prob=0.15)
+               strat = nlist(strange.defector,tit.for.tat),T.min=20)
 ```
 
 ### 3.4 Exercise:
@@ -290,11 +290,11 @@ The following lines run a tournament between 4 specified strategies
 ```
 ```{r eval=TRUE, cache=TRUE}
   # Init and run a tournament of several strategies against each other
-  game = make.pd.game(err.D.prob=0.15)
-  strat = nlist(ashamed.defector,tit.for.tat,always.defect, always.coop)
+  game = make.pd.game()
+  strat = nlist(strange.defector,tit.for.tat,always.defect, always.coop)
   tourn = init.tournament(game=game, strat=strat, delta=0.95,
                           score.fun = "efficiency-2*instability- 20*instability^2")
-  tourn = run.tournament(tourn=tourn, R = 15)
+  tourn = run.tournament(tourn=tourn, R = 10)
   tourn
 ```
 ```{r include=FALSE}

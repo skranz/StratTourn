@@ -49,14 +49,20 @@ evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,rounds = 100,alpha=0.1,
   return(shares)
 }
 
-plot.evolve = function(res.prop) {
+#res.prop = ev
+plot.evolve = function(res.prop, direct.labels=suppressWarnings(require(directlabels,quietly=TRUE))) {
   rounds = NROW(res.prop)
   df = as.data.frame(cbind(1:rounds,res.prop))
   colnames(df)[1] = "round"
   mdf = melt(df,id.vars = "round")
   colnames(mdf) = c("round","strategy","share")
-  qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
-  
+  if (!direct.labels) {
+    qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
+  } else {
+    library(directlabels)
+    p=qplot(x=round,y=share,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2))
+    direct.label(p) 
+  }
 }
 
 evolve.one.round = function(shares,shares.j=shares,mat,alpha=0.1, min.shares=0.001) {
@@ -98,7 +104,36 @@ path.to.defect = function() {
   # In every period, you can introduce a new strategy into your society that will be followed by 1% of inhabitants
   # Populations evolve according to some standard evolutionary dynamic
   
+  game = make.pd.game(err.D.prob=0.15)
   
+  # First part run tournament for all strategies to determine relative fitness
+  delta = 0.95
+  strat = nlist(tit.for.tat, always.defect, always.coop)
+  tourn = init.tournament(game=game, strat=strat, delta=delta)
+  tourn = run.tournament(tourn=tourn, R = 1)
+  tourn
+  mat = tourn$mat
+  names = colnames(mat)
+  names
+  
+  
+  
+  # Set initial shares  
+  init.shares = c(1,0,0); names(init.shares) = names
+  init.shares = add.type(init.shares,"always.coop",0.01)
+  #init.shares = add.type(init.shares,"nice.tft",0.01)
+  
+  # Start evolution
+  R = 1
+  ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=0, alpha=0.5)
+  plot.evolve(ev,!TRUE)
+  next.shares = add.type(ev,"always.defect")
+  ev = evolve(initial=next.shares,mat=mat, rounds = 200,min.shares=0, alpha=0.5)
+  plot.evolve(ev)
+  
+  
+  
+  library(StratTourn)  
   # First part run tournament for all strategies to determine relative fitness
   delta = 0.95
   strat = nlist(tit.for.tat, always.defect, nice.tft, always.coop)
