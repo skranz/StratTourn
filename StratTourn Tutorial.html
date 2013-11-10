@@ -283,19 +283,14 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 </code></pre>
 
 <pre><code>## $hist
-##   obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1   &lt;NA&gt;   &lt;NA&gt;  C  C   1   1
-## 2      C      C  C  D  -1   2
-## 3      C      D  D  D   0   0
-## 4      D      D  D  C   2  -1
-## 5      D      C  C  C   1   1
-## 6      C      C  C  C   1   1
-## 7      C      C  C  D  -1   2
-## 8      C      D  D  D   0   0
-## 9      D      D  D  C   2  -1
+##   t obs_a1 obs_a2 a1 a2 pi1 pi2
+## 1 1   &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2
+## 2 2      C      D  D  D   0   0
+## 3 3      D      D  D  C   2  -1
+## 4 4      D      C  C  C   1   1
 ## 
 ## $u
-## [1] 0.5556 0.5556
+## [1] 0.5 0.5
 </code></pre>
 
 <p>This code simulates a repated PD with continuation probability \( \delta=0.9 \) in which player 1 follows a strategy called &ldquo;tit.for.tat&rdquo; and player 2 follows a strategy called &ldquo;random.action&rdquo;. The resulting table shows for each period the following information:</p>
@@ -486,42 +481,32 @@ return(list(a = &quot;D&quot;, still.defect = still.defect))
 </code></pre>
 
 <pre><code>## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
-## 1    &lt;NA&gt;   &lt;NA&gt;  C  C   1   1              0
-## 2       C      C  D  C   2  -1              4
-## 3       D      C  D  D   0   0              3
-## 4       D      D  D  D   0   0              2
-## 5       D      D  D  D   0   0              1
-## 6       D      D  D  D   0   0              0
-## 7       D      D  C  D  -1   2              0
-## 8       C      D  D  C   2  -1              4
-## 9       D      C  D  D   0   0              3
-## 10      D      D  D  D   0   0              2
-## 11      D      D  D  D   0   0              1
-## 12      D      D  D  D   0   0              0
-## 13      D      D  C  D  -1   2              0
-## 14      C      D  D  C   2  -1              4
-## 15      D      C  D  D   0   0              3
-## 16      D      D  D  D   0   0              2
-## 17      D      D  D  D   0   0              1
-## 18      D      D  D  D   0   0              0
-## 19      D      D  C  D  -1   2              0
-## 20      C      D  D  C   2  -1              4
-## 21      D      C  D  D   0   0              3
-## 22      D      D  D  D   0   0              2
-## 23      D      D  D  D   0   0              1
-## 24      D      D  D  D   0   0              0
-## 25      D      D  D  D   0   0              4
-## 26      D      D  D  D   0   0              3
-## 27      D      D  D  D   0   0              2
-## 28      D      D  D  D   0   0              1
-## 29      D      D  D  D   0   0              0
-## 30      D      D  D  D   0   0              4
-## 31      D      D  D  D   0   0              3
-## 32      D      D  D  D   0   0              2
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
+## 1   1   &lt;NA&gt;   &lt;NA&gt;  D  C   2  -1              4
+## 2   2      D      C  D  D   0   0              3
+## 3   3      D      D  D  D   0   0              2
+## 4   4      D      D  D  D   0   0              1
+## 5   5      D      D  D  D   0   0              0
+## 6   6      D      D  D  D   0   0              4
+## 7   7      D      D  D  D   0   0              3
+## 8   8      D      D  D  D   0   0              2
+## 9   9      D      D  D  D   0   0              1
+## 10 10      D      D  D  D   0   0              0
+## 11 11      D      D  C  D  -1   2              0
+## 12 12      C      D  C  C   1   1              0
+## 13 13      C      C  C  C   1   1              0
+## 14 14      C      C  C  C   1   1              0
+## 15 15      C      C  C  C   1   1              0
+## 16 16      C      C  C  C   1   1              0
+## 17 17      C      C  C  C   1   1              0
+## 18 18      C      C  C  C   1   1              0
+## 19 19      C      C  C  C   1   1              0
+## 20 20      C      C  D  C   2  -1              4
+## 21 21      D      C  D  D   0   0              3
+## 22 22      D      D  D  D   0   0              2
 ## 
 ## $u
-## [1] 0.3432 0.1115
+## [1] 0.4096 0.1490
 </code></pre>
 
 <h3>3.4 Exercise:</h3>
@@ -773,9 +758,9 @@ Error: unexpected &#39;}&#39; in &quot;}&quot;
 ## ERROR.HIST:
 </code></pre>
 
-<pre><code>##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    C   1   1        0
-## 2     NA     NA &lt;NA&gt; &lt;NA&gt;  NA  NA       NA
+<pre><code>##    t obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
+## 1  1     NA     NA    C    D  -1   2        0
+## 2 NA     NA     NA &lt;NA&gt; &lt;NA&gt;  NA  NA       NA
 </code></pre>
 
 <pre><code>## Error: Error in (function (obs, i, t, game, otherC) : object &#39;j&#39; not found
@@ -797,7 +782,7 @@ Go to the function code and run the line</p>
 
 <pre><code>## $a
 ##  a1  a2 
-## &quot;C&quot; &quot;C&quot;
+## &quot;C&quot; &quot;D&quot;
 </code></pre>
 
 <pre><code class="r">i
@@ -867,10 +852,10 @@ return(nlist(a = a, otherC))
 </code></pre>
 
 <pre><code>## $a
-## [1] &quot;C&quot;
+## [1] &quot;D&quot;
 ## 
 ## $otherC
-## [1] 1
+## [1] 0
 </code></pre>
 
 <p>You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.
@@ -914,13 +899,13 @@ Before proceeding we copy the whole corrected function definition into the R con
 ## ERROR.HIST:
 </code></pre>
 
-<pre><code>##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 3      D      D    D    C   2  -1        0
-## 4      D      C    C    C   1   1        1
-## 5      C      C    C    D  -1   2        2
-## 6      C      D    D    C   2  -1        2
-## 7      D      C    D    C   2  -1       NA
-## 8   &lt;NA&gt;   &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  NA  NA       NA
+<pre><code>##    t obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
+## 3  3      D      D    D    C   2  -1        0
+## 4  4      D      C    C    C   1   1        1
+## 5  5      C      C    C    D  -1   2        2
+## 6  6      C      D    D    C   2  -1        2
+## 7  7      D      C    D    C   2  -1       NA
+## 8 NA   &lt;NA&gt;   &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  NA  NA       NA
 </code></pre>
 
 <pre><code>## Error: Error in otherC + 1: &#39;otherC&#39; is missing
@@ -997,30 +982,30 @@ if (otherC &gt; 2) return(list(a = &quot;D&quot;))
 </code></pre>
 
 <pre><code>## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
-## 1    &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2        0
-## 2       C      D  D  D   0   0        0
-## 3       D      D  D  C   2  -1        0
-## 4       D      C  C  C   1   1        1
-## 5       C      C  C  D  -1   2        2
-## 6       C      D  D  C   2  -1        2
-## 7       D      C  D  C   2  -1        3
-## 8       D      C  D  D   0   0        4
-## 9       D      D  D  C   2  -1        4
-## 10      D      C  D  C   2  -1        5
-## 11      D      C  D  C   2  -1        6
-## 12      D      C  D  C   2  -1        7
-## 13      D      C  D  C   2  -1        8
-## 14      D      C  D  C   2  -1        9
-## 15      D      C  D  D   0   0       10
-## 16      D      D  D  C   2  -1       10
-## 17      D      C  D  C   2  -1       11
-## 18      D      C  D  D   0   0       12
-## 19      D      D  D  D   0   0       12
-## 20      D      D  D  D   0   0       12
-## 21      D      D  D  C   2  -1       12
-## 22      D      C  D  D   0   0       13
-## 23      D      D  D  D   0   0       13
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
+## 1   1   &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2        0
+## 2   2      C      D  D  D   0   0        0
+## 3   3      D      D  D  C   2  -1        0
+## 4   4      D      C  C  C   1   1        1
+## 5   5      C      C  C  D  -1   2        2
+## 6   6      C      D  D  C   2  -1        2
+## 7   7      D      C  D  C   2  -1        3
+## 8   8      D      C  D  D   0   0        4
+## 9   9      D      D  D  C   2  -1        4
+## 10 10      D      C  D  C   2  -1        5
+## 11 11      D      C  D  C   2  -1        6
+## 12 12      D      C  D  C   2  -1        7
+## 13 13      D      C  D  C   2  -1        8
+## 14 14      D      C  D  C   2  -1        9
+## 15 15      D      C  D  D   0   0       10
+## 16 16      D      D  D  C   2  -1       10
+## 17 17      D      C  D  C   2  -1       11
+## 18 18      D      C  D  D   0   0       12
+## 19 19      D      D  D  D   0   0       12
+## 20 20      D      D  D  D   0   0       12
+## 21 21      D      D  D  C   2  -1       12
+## 22 22      D      C  D  D   0   0       13
+## 23 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043
@@ -1060,30 +1045,30 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 </code></pre>
 
 <pre><code>## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
-## 1    &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2        0
-## 2       C      D  D  D   0   0        0
-## 3       D      D  D  C   2  -1        0
-## 4       D      C  C  C   1   1        1
-## 5       C      C  C  D  -1   2        2
-## 6       C      D  D  C   2  -1        2
-## 7       D      C  D  C   2  -1        3
-## 8       D      C  D  D   0   0        4
-## 9       D      D  D  C   2  -1        4
-## 10      D      C  D  C   2  -1        5
-## 11      D      C  D  C   2  -1        6
-## 12      D      C  D  C   2  -1        7
-## 13      D      C  D  C   2  -1        8
-## 14      D      C  D  C   2  -1        9
-## 15      D      C  D  D   0   0       10
-## 16      D      D  D  C   2  -1       10
-## 17      D      C  D  C   2  -1       11
-## 18      D      C  D  D   0   0       12
-## 19      D      D  D  D   0   0       12
-## 20      D      D  D  D   0   0       12
-## 21      D      D  D  C   2  -1       12
-## 22      D      C  D  D   0   0       13
-## 23      D      D  D  D   0   0       13
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
+## 1   1   &lt;NA&gt;   &lt;NA&gt;  C  D  -1   2        0
+## 2   2      C      D  D  D   0   0        0
+## 3   3      D      D  D  C   2  -1        0
+## 4   4      D      C  C  C   1   1        1
+## 5   5      C      C  C  D  -1   2        2
+## 6   6      C      D  D  C   2  -1        2
+## 7   7      D      C  D  C   2  -1        3
+## 8   8      D      C  D  D   0   0        4
+## 9   9      D      D  D  C   2  -1        4
+## 10 10      D      C  D  C   2  -1        5
+## 11 11      D      C  D  C   2  -1        6
+## 12 12      D      C  D  C   2  -1        7
+## 13 13      D      C  D  C   2  -1        8
+## 14 14      D      C  D  C   2  -1        9
+## 15 15      D      C  D  D   0   0       10
+## 16 16      D      D  D  C   2  -1       10
+## 17 17      D      C  D  C   2  -1       11
+## 18 18      D      C  D  D   0   0       12
+## 19 19      D      D  D  D   0   0       12
+## 20 20      D      D  D  D   0   0       12
+## 21 21      D      D  D  C   2  -1       12
+## 22 22      D      C  D  D   0   0       13
+## 23 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043
@@ -1092,6 +1077,125 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 <h3>Exercise: Correct the remaining bugs in exploiter</h3>
 
 <p>That was the tutorial. Take at the look at the upcoming problem sets that will describe the tournament tasks&hellip;</p>
+
+<h2>7 Studying candidates for good strategies: fine-tuning the parameters</h2>
+
+<p>The package StratTourn contains the functions <strong>study.strats.and.answers</strong> and <strong>study.actions.and.states</strong> that can help to find promising strategies in the first stage and best answers in the second stage of a tournament. These functions are under active development and may change in future versions. </p>
+
+<p>The development of strategies or best answers often involves two steps:</p>
+
+<ol>
+<li>You develop a general idea of a strategy, which often involes some numeric parameters that affect the probability to cooperate or defect in certain situations.</li>
+<li>You fine-tune the parameters of your strategy for the given scenarios</li>
+</ol>
+
+<p>Fine tuning means in the first stage that you want to find parameters that increase efficiency and stability of your strategy. In the second stage you want to find parameters for your answer strategy that allow the biggest stabilization of the original strategy. The function study.strats.and.answers can be helpful for both tasks.</p>
+
+<h2>study.strats.and.answers</h2>
+
+<p>To illustrat, the function, we define a simple strategy called <strong>mix</strong> which randomly chooses &ldquo;C&rdquo; or &ldquo;D&rdquo;.</p>
+
+<pre><code class="r">  mix = function(obs,t,i,game, probC = 0.5, ...) {
+    if (runif(1)&lt;=probC) return(nlist(a=&quot;C&quot;))
+    return(nlist(a=&quot;D&quot;))
+  }
+</code></pre>
+
+<p>The function has parameter <strong>probC</strong> that specifies the probability to cooperate. W now graphically analyze the mean efficiency of this simple strategy class for different values of probC.</p>
+
+<pre><code class="r">  library(StratTourn)
+
+  # A PD game 
+  game = make.pd.game()
+
+  sim = NULL
+  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=10, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-38"/> </p>
+
+<p>You can call the function one more time to get more simulations, which will be added to the earlier simulations stored in sim. This reduces the sampling uncertainty. We also increase R from 10 to 50 to add 50 additional simulations instead of only 10.</p>
+
+<pre><code class="r">  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-39"/> </p>
+
+<p>Non-surprisingly, our strategy <strong>mix</strong> has the highest efficiency if probC=1, i.e. when it always cooperates. Yet, not only efficiency matters but also stability. Consider the following code:</p>
+
+<pre><code class="r">sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(mix), answers = nlist(mix), strat.par = list(probC = 1), 
+    answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, sim = sim, 
+    game = game)
+</code></pre>
+
+<pre><code>## Strategies vs answers...
+</code></pre>
+
+<pre><code class="r">plot(sim)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-40"/> </p>
+
+<p>The blue line shows the payoff of our strategy mix with probC=1. The red line shows the payoffs of candidates for best answers against the strategy mix with probC=1. Here the considered answer strategies are variants of mix with 11 different mixing probabilities between 0 and 1 (provided in the argument answer.par in the function call and shown on the x-axis of the plot.). Non-surprisingly, the strategy with mix=0 (i.e. always defect) achieves the highest payoff against our always.coop strategy and highly destabilizes it.</p>
+
+<p>The following code studies payoffs and answer payoffs for 4 different mix-variants with probC = 0,0.1, 0.5 and 1.</p>
+
+<pre><code class="r">sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(mix), answers = nlist(mix), strat.par = list(probC = c(0, 
+    0.1, 0.5, 1)), answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, 
+    sim = sim, game = game)
+</code></pre>
+
+<pre><code>## Strategies vs answers...
+</code></pre>
+
+<pre><code class="r">plot(sim)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-41"/> </p>
+
+<p>The plot shows the payoffs and answer payoff for all 4 variants of mix. In the plots for probC=0 and probC=0.1, you also see a green line. This is the <strong>score</strong> of the strategy computed from its efficiency and instability (see the rules of the tournament described earlier in this tutorial). For probC=0.5 and probC=1 the score is so strongly negative that it is not shown anymore in the plot. (Note that we don&#39;t have yet confidence intervals for the score.)</p>
+
+<p>Our analysis confirms the idea that among different variants of mix, the variant with probC=0 (always defect) gets the highest score if we search for best answers also among different variants of mix.</p>
+
+<p>Of course, &ldquo;mix&rdquo; is not a very clever class of strategies in the repeated prisoners&#39; dilemma game. For example, tit.for.tat has the same efficiency as always.coop (mix for probC=1) while being much more stable. In the first problem set, you will be asked to consider a variant of the prisoners&#39; dilemma where with probability err.D.prob an action &ldquo;C&rdquo; is wrongly observed as &ldquo;D&rdquo;. This will make cooperation much harder to sustain and tit.for.tat loses its appeal quite quickly. We can also use the function study.strats.and.answers to explore the effect of changes in parameters of the game:</p>
+
+<pre><code class="r">sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(tit.for.tat), answers = nlist(mix), 
+    answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, sim = sim, 
+    game.fun = make.pd.game, game.par = list(err.D.prob = c(0, 0.1, 0.3)))
+</code></pre>
+
+<pre><code>## Strategies vs answers...
+</code></pre>
+
+<pre><code class="r">plot(sim)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-42"/> </p>
+
+<p>We see that tit-for-tat becomes less efficient and quite instable once we introduce the observation error. Interestingly, it is most strongly destabilized by the very cooperative variant of mix with probC=1.</p>
+
+<p>Hope you enjoyed the tutorial. Have fun in the challenge that lie ahead! </p>
 
 </body>
 

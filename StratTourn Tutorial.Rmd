@@ -665,3 +665,111 @@ run.rep.game(delta=0.95, game=game, strat = nlist(exploiter,random.action), game
 ### Exercise: Correct the remaining bugs in exploiter
 
 That was the tutorial. Take at the look at the upcoming problem sets that will describe the tournament tasks...
+
+
+## 7 Studying candidates for good strategies: fine-tuning the parameters 
+
+The package StratTourn contains the functions **study.strats.and.answers** and **study.actions.and.states** that can help to find promising strategies in the first stage and best answers in the second stage of a tournament. These functions are under active development and may change in future versions. 
+
+The development of strategies or best answers often involves two steps:
+
+  1. You develop a general idea of a strategy, which often involes some numeric parameters that affect the probability to cooperate or defect in certain situations.
+  2. You fine-tune the parameters of your strategy for the given scenarios
+
+Fine tuning means in the first stage that you want to find parameters that increase efficiency and stability of your strategy. In the second stage you want to find parameters for your answer strategy that allow the biggest stabilization of the original strategy. The function study.strats.and.answers can be helpful for both tasks.
+
+## study.strats.and.answers
+```{r include=FALSE}
+  library(StratTourn)
+  library(compiler)
+```
+
+To illustrat, the function, we define a simple strategy called **mix** which randomly chooses "C" or "D".
+```{r tidy=FALSE}
+  mix = function(obs,t,i,game, probC = 0.5, ...) {
+    if (runif(1)<=probC) return(nlist(a="C"))
+    return(nlist(a="D"))
+  }
+```
+The function has parameter **probC** that specifies the probability to cooperate. W now graphically analyze the mean efficiency of this simple strategy class for different values of probC.
+
+```{r cache=TRUE, tidy=FALSE, fig.height=4, fig.width=4}
+  library(StratTourn)
+   
+  # A PD game 
+  game = make.pd.game()
+  
+  sim = NULL
+  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=10, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+
+```
+You can call the function one more time to get more simulations, which will be added to the earlier simulations stored in sim. This reduces the sampling uncertainty. We also increase R from 10 to 50 to add 50 additional simulations instead of only 10.
+
+```{r cache=TRUE, tidy=FALSE,fig.height=4, fig.width=4}
+  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+```
+
+Non-surprisingly, our strategy **mix** has the highest efficiency if probC=1, i.e. when it always cooperates. Yet, not only efficiency matters but also stability. Consider the following code:
+```{r cache=TRUE,fig.height=4, fig.width=4}
+  sim = NULL # reset sim
+ 
+  # Study which mix variant is a best answer against mix with probC=1
+  sim = study.strats.and.answers(
+    strats = nlist(mix),answers=nlist(mix),
+    strat.par = list(probC = 1),
+    answer.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+```
+The blue line shows the payoff of our strategy mix with probC=1. The red line shows the payoffs of candidates for best answers against the strategy mix with probC=1. Here the considered answer strategies are variants of mix with 11 different mixing probabilities between 0 and 1 (provided in the argument answer.par in the function call and shown on the x-axis of the plot.). Non-surprisingly, the strategy with mix=0 (i.e. always defect) achieves the highest payoff against our always.coop strategy and highly destabilizes it.
+
+The following code studies payoffs and answer payoffs for 4 different mix-variants with probC = 0,0.1, 0.5 and 1.
+```{r cache=TRUE, fig.height=4, fig.width=9}
+  sim = NULL # reset sim
+ 
+  # Study which mix variant is a best answer against mix with probC=1
+  sim = study.strats.and.answers(
+    strats = nlist(mix),answers=nlist(mix),
+    strat.par = list(probC = c(0,0.1,0.5,1)),
+    answer.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+
+```
+
+The plot shows the payoffs and answer payoff for all 4 variants of mix. In the plots for probC=0 and probC=0.1, you also see a green line. This is the **score** of the strategy computed from its efficiency and instability (see the rules of the tournament described earlier in this tutorial). For probC=0.5 and probC=1 the score is so strongly negative that it is not shown anymore in the plot. (Note that we don't have yet confidence intervals for the score.)
+
+Our analysis confirms the idea that among different variants of mix, the variant with probC=0 (always defect) gets the highest score if we search for best answers also among different variants of mix.
+
+Of course, "mix" is not a very clever class of strategies in the repeated prisoners' dilemma game. For example, tit.for.tat has the same efficiency as always.coop (mix for probC=1) while being much more stable. In the first problem set, you will be asked to consider a variant of the prisoners' dilemma where with probability err.D.prob an action "C" is wrongly observed as "D". This will make cooperation much harder to sustain and tit.for.tat loses its appeal quite quickly. We can also use the function study.strats.and.answers to explore the effect of changes in parameters of the game:
+
+```{r cache=TRUE, fig.height=4, fig.width=9}
+  sim = NULL # reset sim
+ 
+  # Study which mix variant is a best answer against mix with probC=1
+  sim = study.strats.and.answers(
+    strats = nlist(tit.for.tat),answers=nlist(mix),
+    answer.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game.fun=make.pd.game,
+    game.par = list(err.D.prob=c(0,0.1,0.3))
+  )
+  plot(sim)
+```
+
+We see that tit-for-tat becomes less efficient and quite instable once we introduce the observation error. Interestingly, it is most strongly destabilized by the very cooperative variant of mix with probC=1.
+
+Hope you enjoyed the tutorial. Have fun in the challenge that lie ahead! 

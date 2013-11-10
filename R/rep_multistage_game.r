@@ -15,7 +15,6 @@ split.action.and.strat.states = function(t,i,game,strat.res, sts.names=NULL, sta
 run.rep.multistage.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = round(runif(1,10000,12000)),detailed.return = TRUE, strat.seed=NULL, game.seed = NULL) {
   restore.point("run.rep.game")
   
-  set.random.state(".GLOBAL")
   
   if (is.null(game.seed))
     game.seed = draw.seed()
@@ -136,6 +135,8 @@ run.rep.multistage.game = function(delta=game$param$delta, game, strat, T.min=1,
     
   }
   
+  set.random.state(".GLOBAL")
+  
   u = sum.to.average.payoffs(u.sum=u,T=T,T.min=T.min,delta=delta, game=game)
   if (detailed.return) {
     return(list(hist=denv$li,u=u))
@@ -161,7 +162,7 @@ sum.to.average.payoffs = function(u.sum,T, T.min, delta, game) {
 
 
 rep.multistage.game.store.detailed.return = function(stage,t,obs,next.obs,a, payoffs, strat.states,next.strat.states, game.states,next.game.states,denv,T, game, max.state.vector.size = 4, strat) {
-  restore.point("rep.game.store.detailed.return")
+  restore.point("rep.multistage.game.store.detailed.return")
   n = game$n
   if (is.null(denv$li))
     denv$li = list()

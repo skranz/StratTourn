@@ -1,11 +1,12 @@
-\name{run.rep.game}
-\alias{run.rep.game}
+\name{run.rep.multistage.game}
+\alias{run.rep.multistage.game}
 \title{Runs a repeated game}
 \usage{
-  run.rep.game(delta = game$param$delta, game, strat,
-    T.min = 1, T.max = round(runif(1, 10000, 12000)),
+  run.rep.multistage.game(delta = game$param$delta, game,
+    strat, T.min = 1,
+    T.max = round(runif(1, 10000, 12000)),
     detailed.return = TRUE, strat.seed = NULL,
-    game.seed = NULL, do.store = TRUE, strat.par = NULL)
+    game.seed = NULL)
 }
 \arguments{
   \item{delta}{discount factor}
