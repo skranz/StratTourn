@@ -21,13 +21,13 @@ examples.import.stage1.strats = function() {
   
   
   game = make.pd.game(err.D.prob = 0.15)
-  strat = c(scen.strat$strat,nlist(nn))
-  team = substring(c(scen.strat$team,"prof"),1,8)
+  strat = scen.strat$strat
+  team = scen.strat$team
   
   set.storing(FALSE)
   tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
   enableJIT(3)
-  tourn = run.tournament(tourn=tourn, R=300)
+  tourn = run.tournament(tourn=tourn, R=2)
   
   
   setwd("D:/lehre/cooperation seminar/")

@@ -5,12 +5,13 @@ make.answers.rmd = function(in.dir, out.dir, num.scen = 1, num.answer = 2, answe
   out.dir = "D:/lehre/cooperation seminar/task1_stage2_template"
   
   tmp.file = "D:/libraries/StratTourn/StratTourn/coop1_answerstrats_vorlage.template.Rmd"
-    
+  
+  num.answer = 2
   num.scen = 4
   must.scen = 1:2
   scs = import.stage1.strats(in.dir, num.scen)
   teams = scs[[1]]$team
-  ignore.teams = "The Overseer"
+  ignore.teams = c("The Overseer","Prof")
   
   if (!file.exists(out.dir))
     dir.create(out.dir)
@@ -27,23 +28,15 @@ make.answers.rmd = function(in.dir, out.dir, num.scen = 1, num.answer = 2, answe
   for (t in 1:num.teams) {
     txt = render.answer.template(tmp.file,t,scs,as, teams, must.scen)
     cat(txt)
-    team.dir = paste0(out.dir,"/Team ", teams[t])
-    if (!file.exists(team.dir))
-      dir.create(team.dir)
     
-    setwd(team.dir)
+    setwd(out.dir)
     
     file = paste("answer strats ", teams[t], ".Rmd")
     writeLines(txt,file)
     
-    for (scen in 1:num.scen) {
-      file = paste0("strats_scen",scen,".r")
-      writeLines(scs[[scen]]$all.code, file)
-    }
-    
-    setwd(out.dir)
-    zipfile = paste0("Team ", teams[t],".zip")
-    zip(zipfile, files =  paste0("./Team ", teams[t]))
+    #setwd(out.dir)
+    #zipfile = paste0("Team ", teams[t],".zip")
+    #zip(zipfile, files =  paste0("./Team ", teams[t]))
   }
   
   
