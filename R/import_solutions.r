@@ -54,6 +54,10 @@ import.stage1.strats = function(dir, num.scen) {
   
   num.team = length(team.li)
   for (s in 1:num.scen) {
+    scen.li[[s]]$code = lapply(1:num.team, function(t) {
+      team.li[[t]]$code[[s]]
+    })
+    
     scen.li[[s]]$strat = lapply(1:num.team, function(t) {
       team.li[[t]]$strat[[s]]
     })

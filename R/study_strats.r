@@ -1,6 +1,7 @@
 # Utilities for helping to find best answers
 
 examples.study.strats.and.answers.par = function() {
+  library(StratTourn)
   # A strategy that cooperates with probability probC
   # The function nests always.coop (probC=1) and always.defect (probC=0)
   mix = function(obs,t,i,game, probC = 0.5, ...) {
@@ -11,7 +12,7 @@ examples.study.strats.and.answers.par = function() {
   # A noisy PD game
   set.storing(TRUE)
   
-  game = make.pd.game(err.D.prob=0.05)
+  game = make.pd.game(err.D.prob=0.15)
   
   sim = NULL
   # Study performance of tit.for.tat against variants of mix
@@ -19,7 +20,7 @@ examples.study.strats.and.answers.par = function() {
     strats = nlist(tit.for.tat), answers=nlist(mix),
     strat.par = NULL,
     answer.par=list(probC = seq(0,1,length=5)),
-    R=50, delta=0.95, sim=sim,game=game
+    R=5, delta=0.95, sim=sim,game=game
   )
   head(sim)
   plot(sim)
@@ -250,7 +251,7 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
     cat(paste0("Strategies vs answers... \n"))
   
   
-  was.storing = is.storing();set.storing(FALSE);enableJIT(3)
+  was.storing = is.storing();set.storing(FALSE);library(compiler);enableJIT(3)
   dat = simulation.study(run.one.game, par = c(list(strat=strat.names, answer=answer.names, delta=delta),par), repl=R, seeds = seeds)
   enableJIT(0); set.storing(was.storing)
   colnames(dat)[NCOL(dat)] = "u"
@@ -313,7 +314,7 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
   if (verbose)
     cat(paste0("Strategies play against themselves... \n"))
   
-  was.storing = is.storing(); set.storing(FALSE); enableJIT(3)
+  was.storing = is.storing(); set.storing(FALSE);library(compiler); enableJIT(3)
   dat = simulation.study(run.against.itself,par=c(list(strat=strat.names, delta=delta),strat.par, game.par), repl=R, seeds = seeds)
   enableJIT(0); set.storing(was.storing)
         
@@ -343,7 +344,7 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
 study.actions.and.states = function(strats, game, delta, T=100, R=1, sim=NULL, strat.par=NULL, verbose=interactive()) {
   restore.point("study.actions.and.states")
   
-  was.storing = is.storing(); set.storing(FALSE); enableJIT(3)
+  was.storing = is.storing(); set.storing(FALSE);library(compiler); enableJIT(3)
   cat("\n")
   li = replicate(n=R,simplify=FALSE, {
     cat(".")
