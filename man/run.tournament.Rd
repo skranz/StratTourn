@@ -8,7 +8,7 @@
     delta = tourn$delta, R = 1, LAPPLY = lapply,
     backup.each.R = NULL, backup.path = getwd(),
     T.min = ceiling(log(0.01)/log(delta)),
-    verbose = interactive())
+    verbose = interactive(), do.store = FALSE)
 }
 \description{
   By setting backup.each.R to a number, say 10, a backup of

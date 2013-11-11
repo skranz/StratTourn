@@ -17,48 +17,13 @@ get.obs.i = function(i,obs, game) {
   
 }
 
-
-rep.game.results.df = function(game, obs.hist, a.hist, payoff.mat, game.states=NULL, strat.states=NULL) {
-  restore.point("hfhf")
-  T = length(a.hist)
-  my.unlist = function(li) {
-    vec = unlist(li)
-    if (is.null(vec))
-      return(NULL)
-    cols = length(vec) / T
-    names = names(vec[1:cols])
-    df = as.data.frame(matrix(vec,nrow=T,byrow=TRUE))
-    colnames(df) = names
-    df
-  }
-  a.df = my.unlist(a.hist)
-  obs.df = my.unlist(obs.hist)
-  state.df = my.unlist(game.states)
-  colnames(obs.df) = paste0("obs.", colnames(obs.df))
-  colnames(payoff.mat) = paste0("pi",1:NCOL(payoff.mat))
-  if (!is.null(state.df) & NCOL(state.df)==1)
-    colnames(state.df) = "state"
-  
-  glob.df = lapply(strat.states, my.unlist)
-  for (i in 1:length(glob.df)) {
-    if (!is.null(glob.df[[i]]))
-      if (NCOL(glob.df[[i]])>0)
-        colnames(glob.df[[i]]) = paste0(colnames(glob.df[[i]]),".",i)
-  }
-  null.glob = sapply(glob.df,function(df) is.null(df) | length(df)==0)
-  glob.df = glob.df[!null.glob]
-  #glob.df = do.call(cbind, glob.df)
-  my.data.frame(list(t=1:T),payoff.mat,a.df,obs.df,state.df, glob.df)    
-}
-
-
 #' Runs a repeated game
 #' @param delta discount factor
 #' @param game the game object
 #' @param strat a list of strategies
 #' @param T.min the minium number of periods that will be played. Payoffs for periods t=1,...,T.min will be disocunted with delta^(t-1). After any period t>=T the game stops with probability 1-delta and all payoffs are discounted with delta^(T-1).
 #' @param T.max optionally a maximum number of rounds
-run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = round(runif(1,10000,12000)),detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE) {
+run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = round(runif(1,10000,12000)),detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL) {
   restore.point("run.rep.game")
   
   gbos$do.store = do.store
@@ -69,7 +34,6 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
   }
   
   
-  set.random.state(".GLOBAL")
   
   if (is.null(game.seed))
     game.seed = draw.seed()
@@ -131,7 +95,7 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
     # 1. Evaluate strategies of each player
     for (i in strat.id) {
       obs.i = get.obs.i(obs = obs, i = i, game = game)
-      args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]])
+      args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]], strat.par[[i]])
       
       
       tryCatch(
@@ -179,6 +143,8 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
       rep.game.store.detailed.return(t,old.obs,obs,a, payoffs=results$payoff, start.strat.states,next.strat.states=strat.states, game.states = start.game.states,next.game.states=game.states, denv,T, game, strat=strat)
     }
   }
+  
+  set.random.state(".GLOBAL")
   
   # Compute expexted number of rounds
   if (T.min>1) {
@@ -300,7 +266,7 @@ rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.state
     }))
     next.game.states.cols = str.combine("next_",game.states.cols)
     
-    col.names = unlist(c(game.states.cols,obs.cols,a.names,payoff.names,strat.states.cols))
+    col.names = c("t",unlist(c(game.states.cols,obs.cols,a.names,payoff.names,strat.states.cols)))
     df = as.data.frame(matrix(NA,T,length(col.names)))
     names(df)=col.names
     denv$df = df
@@ -317,7 +283,7 @@ rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.state
     denv$next.game.states.cols = next.game.states.cols
     
   }
-  
+  denv$df[t,"t"] = t
   denv$df[t,denv$a.names] = unlist(a)
   denv$df[t,denv$payoff.names] = payoffs
   

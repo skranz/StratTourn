@@ -103,19 +103,14 @@ run.rep.game(delta = 0.9, game = game, strat = strat)
 
 ```
 ## $hist
-##   obs_a1 obs_a2 a1 a2 pi1 pi2
-## 1   <NA>   <NA>  C  C   1   1
-## 2      C      C  C  D  -1   2
-## 3      C      D  D  D   0   0
-## 4      D      D  D  C   2  -1
-## 5      D      C  C  C   1   1
-## 6      C      C  C  C   1   1
-## 7      C      C  C  D  -1   2
-## 8      C      D  D  D   0   0
-## 9      D      D  D  C   2  -1
+##   t obs_a1 obs_a2 a1 a2 pi1 pi2
+## 1 1   <NA>   <NA>  C  D  -1   2
+## 2 2      C      D  D  D   0   0
+## 3 3      D      D  D  C   2  -1
+## 4 4      D      C  C  C   1   1
 ## 
 ## $u
-## [1] 0.5556 0.5556
+## [1] 0.5 0.5
 ```
 
 This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
@@ -317,42 +312,32 @@ run.rep.game(delta = 0.9, game = game, strat = nlist(strange.defector, tit.for.t
 
 ```
 ## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
-## 1    <NA>   <NA>  C  C   1   1              0
-## 2       C      C  D  C   2  -1              4
-## 3       D      C  D  D   0   0              3
-## 4       D      D  D  D   0   0              2
-## 5       D      D  D  D   0   0              1
-## 6       D      D  D  D   0   0              0
-## 7       D      D  C  D  -1   2              0
-## 8       C      D  D  C   2  -1              4
-## 9       D      C  D  D   0   0              3
-## 10      D      D  D  D   0   0              2
-## 11      D      D  D  D   0   0              1
-## 12      D      D  D  D   0   0              0
-## 13      D      D  C  D  -1   2              0
-## 14      C      D  D  C   2  -1              4
-## 15      D      C  D  D   0   0              3
-## 16      D      D  D  D   0   0              2
-## 17      D      D  D  D   0   0              1
-## 18      D      D  D  D   0   0              0
-## 19      D      D  C  D  -1   2              0
-## 20      C      D  D  C   2  -1              4
-## 21      D      C  D  D   0   0              3
-## 22      D      D  D  D   0   0              2
-## 23      D      D  D  D   0   0              1
-## 24      D      D  D  D   0   0              0
-## 25      D      D  D  D   0   0              4
-## 26      D      D  D  D   0   0              3
-## 27      D      D  D  D   0   0              2
-## 28      D      D  D  D   0   0              1
-## 29      D      D  D  D   0   0              0
-## 30      D      D  D  D   0   0              4
-## 31      D      D  D  D   0   0              3
-## 32      D      D  D  D   0   0              2
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 still.defect_1
+## 1   1   <NA>   <NA>  D  C   2  -1              4
+## 2   2      D      C  D  D   0   0              3
+## 3   3      D      D  D  D   0   0              2
+## 4   4      D      D  D  D   0   0              1
+## 5   5      D      D  D  D   0   0              0
+## 6   6      D      D  D  D   0   0              4
+## 7   7      D      D  D  D   0   0              3
+## 8   8      D      D  D  D   0   0              2
+## 9   9      D      D  D  D   0   0              1
+## 10 10      D      D  D  D   0   0              0
+## 11 11      D      D  C  D  -1   2              0
+## 12 12      C      D  C  C   1   1              0
+## 13 13      C      C  C  C   1   1              0
+## 14 14      C      C  C  C   1   1              0
+## 15 15      C      C  C  C   1   1              0
+## 16 16      C      C  C  C   1   1              0
+## 17 17      C      C  C  C   1   1              0
+## 18 18      C      C  C  C   1   1              0
+## 19 19      C      C  C  C   1   1              0
+## 20 20      C      C  D  C   2  -1              4
+## 21 21      D      C  D  D   0   0              3
+## 22 22      D      D  D  D   0   0              2
 ## 
 ## $u
-## [1] 0.3432 0.1115
+## [1] 0.4096 0.1490
 ```
 
 
@@ -612,9 +597,9 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action))
 ```
 
 ```
-##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 1     NA     NA    C    C   1   1        0
-## 2     NA     NA <NA> <NA>  NA  NA       NA
+##    t obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
+## 1  1     NA     NA    C    D  -1   2        0
+## 2 NA     NA     NA <NA> <NA>  NA  NA       NA
 ```
 
 ```
@@ -641,7 +626,7 @@ obs
 ```
 ## $a
 ##  a1  a2 
-## "C" "C"
+## "C" "D"
 ```
 
 ```r
@@ -725,10 +710,10 @@ return(nlist(a = a, otherC))
 
 ```
 ## $a
-## [1] "C"
+## [1] "D"
 ## 
 ## $otherC
-## [1] 1
+## [1] 0
 ```
 
 You probably will see an error message after the last line that there is no function to return from, but we can ignore that one. Otherwise we see no more error. Yet, that does not mean that our function has no more bug.
@@ -776,13 +761,13 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ```
 
 ```
-##   obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
-## 3      D      D    D    C   2  -1        0
-## 4      D      C    C    C   1   1        1
-## 5      C      C    C    D  -1   2        2
-## 6      C      D    D    C   2  -1        2
-## 7      D      C    D    C   2  -1       NA
-## 8   <NA>   <NA> <NA> <NA>  NA  NA       NA
+##    t obs_a1 obs_a2   a1   a2 pi1 pi2 otherC_1
+## 3  3      D      D    D    C   2  -1        0
+## 4  4      D      C    C    C   1   1        1
+## 5  5      C      C    C    D  -1   2        2
+## 6  6      C      D    D    C   2  -1        2
+## 7  7      D      C    D    C   2  -1       NA
+## 8 NA   <NA>   <NA> <NA> <NA>  NA  NA       NA
 ```
 
 ```
@@ -870,30 +855,30 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 
 ```
 ## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
-## 1    <NA>   <NA>  C  D  -1   2        0
-## 2       C      D  D  D   0   0        0
-## 3       D      D  D  C   2  -1        0
-## 4       D      C  C  C   1   1        1
-## 5       C      C  C  D  -1   2        2
-## 6       C      D  D  C   2  -1        2
-## 7       D      C  D  C   2  -1        3
-## 8       D      C  D  D   0   0        4
-## 9       D      D  D  C   2  -1        4
-## 10      D      C  D  C   2  -1        5
-## 11      D      C  D  C   2  -1        6
-## 12      D      C  D  C   2  -1        7
-## 13      D      C  D  C   2  -1        8
-## 14      D      C  D  C   2  -1        9
-## 15      D      C  D  D   0   0       10
-## 16      D      D  D  C   2  -1       10
-## 17      D      C  D  C   2  -1       11
-## 18      D      C  D  D   0   0       12
-## 19      D      D  D  D   0   0       12
-## 20      D      D  D  D   0   0       12
-## 21      D      D  D  C   2  -1       12
-## 22      D      C  D  D   0   0       13
-## 23      D      D  D  D   0   0       13
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
+## 1   1   <NA>   <NA>  C  D  -1   2        0
+## 2   2      C      D  D  D   0   0        0
+## 3   3      D      D  D  C   2  -1        0
+## 4   4      D      C  C  C   1   1        1
+## 5   5      C      C  C  D  -1   2        2
+## 6   6      C      D  D  C   2  -1        2
+## 7   7      D      C  D  C   2  -1        3
+## 8   8      D      C  D  D   0   0        4
+## 9   9      D      D  D  C   2  -1        4
+## 10 10      D      C  D  C   2  -1        5
+## 11 11      D      C  D  C   2  -1        6
+## 12 12      D      C  D  C   2  -1        7
+## 13 13      D      C  D  C   2  -1        8
+## 14 14      D      C  D  C   2  -1        9
+## 15 15      D      C  D  D   0   0       10
+## 16 16      D      D  D  C   2  -1       10
+## 17 17      D      C  D  C   2  -1       11
+## 18 18      D      C  D  D   0   0       12
+## 19 19      D      D  D  D   0   0       12
+## 20 20      D      D  D  D   0   0       12
+## 21 21      D      D  D  C   2  -1       12
+## 22 22      D      C  D  D   0   0       13
+## 23 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043
@@ -936,30 +921,30 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 
 ```
 ## $hist
-##    obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
-## 1    <NA>   <NA>  C  D  -1   2        0
-## 2       C      D  D  D   0   0        0
-## 3       D      D  D  C   2  -1        0
-## 4       D      C  C  C   1   1        1
-## 5       C      C  C  D  -1   2        2
-## 6       C      D  D  C   2  -1        2
-## 7       D      C  D  C   2  -1        3
-## 8       D      C  D  D   0   0        4
-## 9       D      D  D  C   2  -1        4
-## 10      D      C  D  C   2  -1        5
-## 11      D      C  D  C   2  -1        6
-## 12      D      C  D  C   2  -1        7
-## 13      D      C  D  C   2  -1        8
-## 14      D      C  D  C   2  -1        9
-## 15      D      C  D  D   0   0       10
-## 16      D      D  D  C   2  -1       10
-## 17      D      C  D  C   2  -1       11
-## 18      D      C  D  D   0   0       12
-## 19      D      D  D  D   0   0       12
-## 20      D      D  D  D   0   0       12
-## 21      D      D  D  C   2  -1       12
-## 22      D      C  D  D   0   0       13
-## 23      D      D  D  D   0   0       13
+##     t obs_a1 obs_a2 a1 a2 pi1 pi2 otherC_1
+## 1   1   <NA>   <NA>  C  D  -1   2        0
+## 2   2      C      D  D  D   0   0        0
+## 3   3      D      D  D  C   2  -1        0
+## 4   4      D      C  C  C   1   1        1
+## 5   5      C      C  C  D  -1   2        2
+## 6   6      C      D  D  C   2  -1        2
+## 7   7      D      C  D  C   2  -1        3
+## 8   8      D      C  D  D   0   0        4
+## 9   9      D      D  D  C   2  -1        4
+## 10 10      D      C  D  C   2  -1        5
+## 11 11      D      C  D  C   2  -1        6
+## 12 12      D      C  D  C   2  -1        7
+## 13 13      D      C  D  C   2  -1        8
+## 14 14      D      C  D  C   2  -1        9
+## 15 15      D      C  D  D   0   0       10
+## 16 16      D      D  D  C   2  -1       10
+## 17 17      D      C  D  C   2  -1       11
+## 18 18      D      C  D  D   0   0       12
+## 19 19      D      D  D  D   0   0       12
+## 20 20      D      D  D  D   0   0       12
+## 21 21      D      D  D  C   2  -1       12
+## 22 22      D      C  D  D   0   0       13
+## 23 23      D      D  D  D   0   0       13
 ## 
 ## $u
 ## [1]  1.0000 -0.3043
@@ -969,3 +954,141 @@ run.rep.game(delta = 0.95, game = game, strat = nlist(exploiter, random.action),
 ### Exercise: Correct the remaining bugs in exploiter
 
 That was the tutorial. Take at the look at the upcoming problem sets that will describe the tournament tasks...
+
+
+## 7 Studying candidates for good strategies: fine-tuning the parameters 
+
+The package StratTourn contains the functions **study.strats.and.answers** and **study.actions.and.states** that can help to find promising strategies in the first stage and best answers in the second stage of a tournament. These functions are under active development and may change in future versions. 
+
+The development of strategies or best answers often involves two steps:
+
+  1. You develop a general idea of a strategy, which often involes some numeric parameters that affect the probability to cooperate or defect in certain situations.
+  2. You fine-tune the parameters of your strategy for the given scenarios
+
+Fine tuning means in the first stage that you want to find parameters that increase efficiency and stability of your strategy. In the second stage you want to find parameters for your answer strategy that allow the biggest stabilization of the original strategy. The function study.strats.and.answers can be helpful for both tasks.
+
+## study.strats.and.answers
+
+
+
+To illustrat, the function, we define a simple strategy called **mix** which randomly chooses "C" or "D".
+
+```r
+  mix = function(obs,t,i,game, probC = 0.5, ...) {
+    if (runif(1)<=probC) return(nlist(a="C"))
+    return(nlist(a="D"))
+  }
+```
+
+The function has parameter **probC** that specifies the probability to cooperate. W now graphically analyze the mean efficiency of this simple strategy class for different values of probC.
+
+
+```r
+  library(StratTourn)
+   
+  # A PD game 
+  game = make.pd.game()
+  
+  sim = NULL
+  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=10, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+```
+
+![plot of chunk unnamed-chunk-38](figure/unnamed-chunk-38.png) 
+
+You can call the function one more time to get more simulations, which will be added to the earlier simulations stored in sim. This reduces the sampling uncertainty. We also increase R from 10 to 50 to add 50 additional simulations instead of only 10.
+
+
+```r
+  # Study efficiency of mix for different values of probC 
+  sim = study.strats.and.answers(
+    strats = nlist(mix),
+    strat.par = list(probC = seq(0,1,length=11)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+```
+
+![plot of chunk unnamed-chunk-39](figure/unnamed-chunk-39.png) 
+
+
+Non-surprisingly, our strategy **mix** has the highest efficiency if probC=1, i.e. when it always cooperates. Yet, not only efficiency matters but also stability. Consider the following code:
+
+```r
+sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(mix), answers = nlist(mix), strat.par = list(probC = 1), 
+    answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, sim = sim, 
+    game = game)
+```
+
+```
+## Strategies vs answers...
+```
+
+```r
+plot(sim)
+```
+
+![plot of chunk unnamed-chunk-40](figure/unnamed-chunk-40.png) 
+
+The blue line shows the payoff of our strategy mix with probC=1. The red line shows the payoffs of candidates for best answers against the strategy mix with probC=1. Here the considered answer strategies are variants of mix with 11 different mixing probabilities between 0 and 1 (provided in the argument answer.par in the function call and shown on the x-axis of the plot.). Non-surprisingly, the strategy with mix=0 (i.e. always defect) achieves the highest payoff against our always.coop strategy and highly destabilizes it.
+
+The following code studies payoffs and answer payoffs for 4 different mix-variants with probC = 0,0.1, 0.5 and 1.
+
+```r
+sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(mix), answers = nlist(mix), strat.par = list(probC = c(0, 
+    0.1, 0.5, 1)), answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, 
+    sim = sim, game = game)
+```
+
+```
+## Strategies vs answers...
+```
+
+```r
+plot(sim)
+```
+
+![plot of chunk unnamed-chunk-41](figure/unnamed-chunk-41.png) 
+
+
+The plot shows the payoffs and answer payoff for all 4 variants of mix. In the plots for probC=0 and probC=0.1, you also see a green line. This is the **score** of the strategy computed from its efficiency and instability (see the rules of the tournament described earlier in this tutorial). For probC=0.5 and probC=1 the score is so strongly negative that it is not shown anymore in the plot. (Note that we don't have yet confidence intervals for the score.)
+
+Our analysis confirms the idea that among different variants of mix, the variant with probC=0 (always defect) gets the highest score if we search for best answers also among different variants of mix.
+
+Of course, "mix" is not a very clever class of strategies in the repeated prisoners' dilemma game. For example, tit.for.tat has the same efficiency as always.coop (mix for probC=1) while being much more stable. In the first problem set, you will be asked to consider a variant of the prisoners' dilemma where with probability err.D.prob an action "C" is wrongly observed as "D". This will make cooperation much harder to sustain and tit.for.tat loses its appeal quite quickly. We can also use the function study.strats.and.answers to explore the effect of changes in parameters of the game:
+
+
+```r
+sim = NULL  # reset sim
+
+# Study which mix variant is a best answer against mix with probC=1
+sim = study.strats.and.answers(strats = nlist(tit.for.tat), answers = nlist(mix), 
+    answer.par = list(probC = seq(0, 1, length = 11)), R = 50, delta = 0.95, sim = sim, 
+    game.fun = make.pd.game, game.par = list(err.D.prob = c(0, 0.1, 0.3)))
+```
+
+```
+## Strategies vs answers...
+```
+
+```r
+plot(sim)
+```
+
+![plot of chunk unnamed-chunk-42](figure/unnamed-chunk-42.png) 
+
+
+We see that tit-for-tat becomes less efficient and quite instable once we introduce the observation error. Interestingly, it is most strongly destabilized by the very cooperative variant of mix with probC=1.
+
+Hope you enjoyed the tutorial. Have fun in the challenge that lie ahead! 

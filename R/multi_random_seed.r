@@ -38,10 +38,24 @@ draw.seed = function(n=1) {
   ceiling(runif(n,0,.Machine$integer.max))  
 }
 
+examples.set.random.state = function() {
+  set.seed(12345)
+  mean(.Random.seed)
+  set.random.state()
+  mean(.Random.seed)
+  runif(1)  
+}
+
 #' Sets the random number state to a state specified by name
 set.random.state = function(name=".GLOBAL", seed = NULL) {
+  restore.point("set.random.state")
   env = ._RST
 
+  # Don't do anything if the random state has not changed
+  if (env$current.state == name)
+    return()
+  
+  
   # Store current random number internal state under the name current.state
   env$random.states[[env$current.state]] = get(".Random.seed",.GlobalEnv)
   

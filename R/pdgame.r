@@ -34,24 +34,24 @@ examples.pd = function() {
 
 
 # A strategy that always cooperates
-always.coop = function(obs,i,t,game) {
+always.coop = function(obs,i,t,game,...) {
   return(list(a="C"))
 }
 
 # A strategy that always defects
-always.defect = function(obs,i,t,game) {
+always.defect = function(obs,i,t,game,...) {
   return(list(a="D"))
 }
 
 # A strategy that randomly chooses an action
-random.action = function(obs,i,t,game) {
+random.action = function(obs,i,t,game,...) {
   a = sample( c("C","D"),  1)
   return(list(a=a))
 }
 
 
 # The famous tit.for.tat strategy: winner of Axelrod's original tournament
-tit.for.tat = function(obs,i,t,game) {
+tit.for.tat = function(obs,i,t,game,...) {
   debug.store("tit.for.tat",i,t) # Store each call for each player
   debug.restore("tit.for.tat",i=1,t=2) # Restore call for player i in period t
   
@@ -65,7 +65,7 @@ tit.for.tat = function(obs,i,t,game) {
 }
 
 # Strategy from the tutorial without much meaning
-strange.defector <- function(obs, i, t, game, still.defect=0){
+strange.defector <- function(obs, i, t, game, still.defect=0,...){
   debug.store("strange.defector",i,t) # Store each call for each player
   debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
   
