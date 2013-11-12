@@ -1,6 +1,7 @@
 # Utilities for helping to find best answers
 
 examples.study.strats.and.answers.par = function() {
+  library(StratTourn)
   # A strategy that cooperates with probability probC
   # The function nests always.coop (probC=1) and always.defect (probC=0)
   mix = function(obs,t,i,game, probC = 0.5, ...) {
@@ -11,7 +12,19 @@ examples.study.strats.and.answers.par = function() {
   # A noisy PD game
   set.storing(TRUE)
   
-  game = make.pd.game(err.D.prob=0.05)
+  game = make.pd.game(err.D.prob=0.15)
+
+  sim = NULL
+  # Study performance of mix for different parameters
+  sim = study.strats.and.answers(
+    strats = nlist(mix), answers=nlist(mix),
+    strat.par = list(probC = c(0,0.1,0.5,1)),
+    answer.par=list(probC = seq(0,1,length=5)),
+    R=50, delta=0.95, sim=sim,game=game
+  )
+  plot(sim)
+  
+  
   
   sim = NULL
   # Study performance of tit.for.tat against variants of mix
@@ -19,7 +32,7 @@ examples.study.strats.and.answers.par = function() {
     strats = nlist(tit.for.tat), answers=nlist(mix),
     strat.par = NULL,
     answer.par=list(probC = seq(0,1,length=5)),
-    R=50, delta=0.95, sim=sim,game=game
+    R=5, delta=0.95, sim=sim,game=game
   )
   head(sim)
   plot(sim)
@@ -153,7 +166,7 @@ plot.StratsStudy = function(sim) {
 #' @param game.par either NULL or a list with values for game parameters that shall be studied (a game parameter is an argument of game.fun)
 #' @export
 
-study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.par=NULL, game=NULL, delta=0.9, R = 5, extra.strat.par = NULL,extra.answer.par=NULL, ci = 0.9, sim, score.fun = "efficiency-2*instability-20*instability^2", game.fun=NULL, game.par=NULL, verbose=interactive()) {
+study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.par=NULL, game=NULL, delta=0.9, R = 5, extra.strat.par = NULL,extra.answer.par=NULL, ci = 0.9, sim, score.fun = "efficiency-2*instability-20*instability^2", game.fun=NULL, game.par=NULL, verbose=interactive(), disable.restore.point=TRUE) {
   restore.point("study.strats.and.answers")
   
   seeds = draw.seed(R)
@@ -169,10 +182,10 @@ study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.
     sim$answers = union(sim$answers, answer.names)
   }
 
-  sim$s = study.strats(strats, R, strat.par=strat.par, extra.strat.par=NULL, sim=sim$s, game, delta, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci)
+  sim$s = study.strats(strats, R, strat.par=strat.par, extra.strat.par=NULL, sim=sim$s, game, delta, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
   
   if (length(answer.names)>0) {
-    sim$sa = study.answers(strats,answers, R, strat.par,answer.par,  extra.strat.par, extra.answer.par, sim$sa, game, delta,verbose, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci)
+    sim$sa = study.answers(strats,answers, R, strat.par,answer.par,  extra.strat.par, extra.answer.par, sim$sa, game, delta,verbose, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
   
   }
   if (length(sim$answers)>0)  {
@@ -214,7 +227,7 @@ add.score.to.study = function(sim, score.fun) {
   return(sim)
 }
 
-study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL,  extra.strat.par=NULL, extra.answer.par=NULL, sim=NULL, game=NULL, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par=NULL,ci=0.9) {
+study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL,  extra.strat.par=NULL, extra.answer.par=NULL, sim=NULL, game=NULL, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par=NULL,ci=0.9, disable.restore.point=TRUE) {
   restore.point("study.answers")
 
   strat.names = names(strats)
@@ -250,7 +263,7 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
     cat(paste0("Strategies vs answers... \n"))
   
   
-  was.storing = is.storing();set.storing(FALSE);enableJIT(3)
+  was.storing = is.storing();set.storing(!disable.restore.point);library(compiler);enableJIT(3)
   dat = simulation.study(run.one.game, par = c(list(strat=strat.names, answer=answer.names, delta=delta),par), repl=R, seeds = seeds)
   enableJIT(0); set.storing(was.storing)
   colnames(dat)[NCOL(dat)] = "u"
@@ -278,7 +291,7 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
   sim
 }
 
-study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=NULL, game, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par = NULL, ci=0.9) {
+study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=NULL, game, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par = NULL, ci=0.9, disable.restore.point=TRUE) {
   restore.point("study.strats")
   
   strat.names = names(strats)
@@ -313,7 +326,7 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
   if (verbose)
     cat(paste0("Strategies play against themselves... \n"))
   
-  was.storing = is.storing(); set.storing(FALSE); enableJIT(3)
+  was.storing = is.storing(); set.storing(!disable.restore.point);library(compiler); enableJIT(3)
   dat = simulation.study(run.against.itself,par=c(list(strat=strat.names, delta=delta),strat.par, game.par), repl=R, seeds = seeds)
   enableJIT(0); set.storing(was.storing)
         
@@ -343,7 +356,7 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
 study.actions.and.states = function(strats, game, delta, T=100, R=1, sim=NULL, strat.par=NULL, verbose=interactive()) {
   restore.point("study.actions.and.states")
   
-  was.storing = is.storing(); set.storing(FALSE); enableJIT(3)
+  was.storing = is.storing(); set.storing(FALSE);library(compiler); enableJIT(3)
   cat("\n")
   li = replicate(n=R,simplify=FALSE, {
     cat(".")

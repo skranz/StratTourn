@@ -21,13 +21,13 @@ examples.import.stage1.strats = function() {
   
   
   game = make.pd.game(err.D.prob = 0.15)
-  strat = c(scen.strat$strat,nlist(nn))
-  team = substring(c(scen.strat$team,"prof"),1,8)
+  strat = scen.strat$strat
+  team = scen.strat$team
   
   set.storing(FALSE)
   tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
   enableJIT(3)
-  tourn = run.tournament(tourn=tourn, R=300)
+  tourn = run.tournament(tourn=tourn, R=2)
   
   
   setwd("D:/lehre/cooperation seminar/")
@@ -54,6 +54,10 @@ import.stage1.strats = function(dir, num.scen) {
   
   num.team = length(team.li)
   for (s in 1:num.scen) {
+    scen.li[[s]]$code = lapply(1:num.team, function(t) {
+      team.li[[t]]$code[[s]]
+    })
+    
     scen.li[[s]]$strat = lapply(1:num.team, function(t) {
       team.li[[t]]$strat[[s]]
     })

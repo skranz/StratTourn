@@ -1,0 +1,111 @@
+Analyse von Kooperationstrategien mit Spieltheorie and Simulation
+========================================================================
+Antworten auf Strategien fuer Herausforderungen 1: Noisy Prisoners' Dilemma
+========================================================================
+
+**Team-Name:** {{team_name}}
+
+**Team:**
+  1. Name des ersten Teammitglieds, Email
+  2. Name des zweiten Teammitglieds, Email
+  
+
+**Abgabe:** Tragt eure Loesungen und Beschreibungen ein, speichert diese Datei unter den Dateinamen "coop1_answerstrats Name eures Teams.Rmd" und sendet sie gemaess des in der Vorlesung genannten Zeitplans per Email an martin.kies@uni-ulm.de mit CC an sebastian.kranz@uni-ulm.de
+
+Szenario 1: Baseline
+-------------------------------------------------------------------
+
+### R-Code eurer Antwortstrategien
+```{r answer_strats_scen1, eval=FALSE}
+# Fuegt hier eure Antwortstrategien ein
+
+
+```
+
+
+```{r answer_for_scen1, eval=FALSE}
+# Passt bitte die Liste unten an
+answer.for = list(
+  {{answer_for_1}}
+)
+
+```
+
+### Beschreibung eurer Antwortstrategie
+
+Beschreibt hier bitte eure Antwortstrategien. Was ist die Grundidee? Wie seid Ihr vorgegangen um beste Antwort Strategien zu entwickeln und zu optimieren?
+
+
+Szenario 2: High err.D.prob
+-------------------------------------------------------------------
+
+### R-Code eurer Antwortstrategien
+```{r answer_strats_scen2, eval=FALSE}
+# Fuegt hier eure Antwortstrategien ein
+
+
+```
+
+
+```{r answer_for_scen2, eval=FALSE}
+# Passt bitte die Liste unten an
+answer.for = list(
+  {{answer_for_2}}
+)
+
+```
+
+### Beschreibung eurer Antwortstrategie
+
+Beschreibt hier bitte eure Antwortstrategien. Was ist die Grundidee? Wie seid Ihr vorgegangen um beste Antwort Strategien zu entwickeln und zu optimieren?
+
+
+Szenario 3: err.C.prob
+-------------------------------------------------------------------
+
+Ihr koennt freiwillig fuer dieses Szenario Antwortstrategien entwickeln.
+
+### R-Code eurer Antwortstrategien
+```{r answer_strats_scen1, eval=FALSE}
+# Fuegt hier eure Antwortstrategien ein
+
+
+```
+
+
+```{r answer_for_scen1, eval=FALSE}
+# Passt bitte die Liste unten an
+answer.for = list(
+  {{answer_for_3}}
+)
+
+```
+
+### Optionale Beschreibung eurer Antwortstrategien
+
+ 
+
+Szenario 4: Low $\delta$
+-------------------------------------------------------------------
+
+Ihr koennt freiwillig fuer dieses Szenario Antwortstrategien entwickeln.
+
+### R-Code eurer Antwortstrategien
+```{r answer_strats_scen1, eval=FALSE}
+# Fuegt hier eure Antwortstrategien ein
+
+
+```
+
+
+```{r answer_for_scen1, eval=FALSE}
+# Passt bitte die Liste unten an
+answer.for = list(
+  {{answer_for_4}}
+)
+
+```
+
+### Optionale Beschreibung eurer Antwortstrategien
+
+ 
