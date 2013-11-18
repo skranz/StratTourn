@@ -95,7 +95,10 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
     # 1. Evaluate strategies of each player
     for (i in strat.id) {
       obs.i = get.obs.i(obs = obs, i = i, game = game)
-      args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]], strat.par[[i]])
+    
+      # Use only those strat.par that are not returned as a strat.state
+      act.strat.par = strat.par[[i]][setdiff(names(strat.par),names(strat.states[[i]]))]
+      args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]], act.strat.par)
       
       
       tryCatch(
