@@ -2,12 +2,13 @@
 \alias{study.strats.and.answers}
 \title{A helper function to find best answers to a strategy}
 \usage{
-  study.strats.and.answers(strats, answers,
+  study.strats.and.answers(strats, answers = NULL,
     strat.par = NULL, answer.par = NULL, game = NULL,
     delta = 0.9, R = 5, extra.strat.par = NULL,
     extra.answer.par = NULL, ci = 0.9, sim,
     score.fun = "efficiency-2*instability-20*instability^2",
-    game.fun = NULL, game.par = NULL)
+    game.fun = NULL, game.par = NULL,
+    verbose = interactive(), disable.restore.point = TRUE)
 }
 \arguments{
   \item{strats}{a named list of strategies to study}

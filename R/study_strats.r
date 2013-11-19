@@ -16,11 +16,12 @@ examples.study.strats.and.answers.par = function() {
 
   sim = NULL
   # Study performance of mix for different parameters
+  
   sim = study.strats.and.answers(
     strats = nlist(mix), answers=nlist(mix),
     strat.par = list(probC = c(0,0.1,0.5,1)),
     answer.par=list(probC = seq(0,1,length=5)),
-    R=50, delta=0.95, sim=sim,game=game
+    R=2, delta=0.95, sim=sim,game=game
   )
   plot(sim)
   
@@ -374,13 +375,79 @@ study.actions.and.states = function(strats, game, delta, T=100, R=1, sim=NULL, s
 
 examples.study.actions.and.states = function() {
   
+
+  probably.nice <- function(obs,i,t,game,P_i=0.5,P_a=0.5, threshold=0.25, Fratio=0.4){
+    #Fratio: Familiarity Ratio -> 1 means "nice guy" 0 means "Anti nice guy"
+    
+    debug.store("probably.nice",i,t)
+    debug.restore("probably.nice",i=2,t=2)
+    
+    j=3-i
+    P_D <- game$params$err.D.prob
+    P_C <- 0
+    
+    
+    #Update beliefs
+    if(t==1){
+      #do nothing
+    } else {
+      #Update of P_a
+      P_a_old <- P_a
+      #The other guy would assume, that I am me, given what he knows about me, given that he is me
+      if(P_i>=threshold){
+        if(obs$a[j] == "C"){
+          P_a <- P_a*(1-P_D)/(P_a*(1-P_D)+(1-P_a)*(P_C+Fratio*(1-P_D-P_C)))
+        } else { # Case Defect
+          P_a <- P_a*P_D/(P_a*(P_D)+(1-P_a)*(P_D + (1-Fratio)*(1-P_D-P_C)))
+        }
+      } else { # other guy thinks I am evil
+        if(obs$a[j] == "C"){
+          P_a <- P_a*P_C/(P_a*P_C + (1-P_a)*(P_C + (1-Fratio)*(1-P_D-P_C)))
+        } else {
+          P_a <- P_a*(1-P_C)/(P_a*(1-P_C)+(1-P_a)*(P_D + Fratio*(1-P_D-P_C)))
+        }
+      }
+      #Update my view of myself based on his knowledge
+      if(P_a_old>=threshold){
+        if(obs$a[i] == "C"){
+          P_i <- P_i*(1-P_D)/(P_i*(1-P_D)+(1-P_i)*(P_C+Fratio*(1-P_D-P_C)))
+        } else { # Case Defect
+          P_i <- P_i*P_D/(P_i*(P_D)+(1-P_i)*(P_D + (1-Fratio)*(1-P_D-P_C)))
+        }
+      } else { # other guy thinks I am evil so he should play D
+        if(obs$a[i] == "C"){
+          P_i <- P_i*P_C/(P_i*P_C + (1-P_i)*(P_C + (1-Fratio)*(1-P_D-P_C)))
+        } else {
+          P_i <- P_i*(1-P_C)/(P_i*(1-P_C)+(1-P_i)*(P_D + Fratio*(1-P_D-P_C)))
+        }
+      }    
+    }  
+    #If I think he is me, than cooperate
+    if(P_a>=threshold){
+      return(list(a="C",P_i=P_i,P_a=P_a, threshold=threshold))
+    } else {
+      return(list(a="D",P_i=P_i,P_a=P_a, threshold=threshold))
+    }
+  }
+  
+
   game = make.pd.game(err.D.prob=0.15)
   delta = 0.95
   sim = NULL
   
   set.storing(TRUE)
-  sim = study.actions.and.states(strats=nlist(tit.for.tat,tit.for.tat),game=game, delta=delta, T=20, R = 10, sim=sim)
-
+  sim = study.actions.and.states(strats=nlist(net.nice0, ),game=game, delta=delta, T=20, R = 50, sim=sim)
+sim
+  # Show histogram
+  ts = c(2,3,4,5,10,20)
+  dat = sim[sim$t %in% ts,]
+  qplot(P_a_1,data=dat, geom="histogram", color=as.factor(t), fill=as.factor(t), facets = ~t, main="Distribution of P_a_1 by period")
+  
+  # Show quantile
+  agg = quick.by(sim,by="t", "q5 = quantile(P_a_1,0.05)")
+  qplot(agg$t,agg$q5, geom="line")
+  
+  
   # Show histogram
   ts = c(2,3,4,5,10,20)
   dat = sim[sim$t %in% ts,]
