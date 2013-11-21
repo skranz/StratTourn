@@ -19,7 +19,7 @@ Task Set 2: Noisy Prisoners' Dilemma with Payments, Messages and Private Signals
   - **Th. 05.12.** Please send us preliminary strategies for all three scenarios
   - **Mo. 09.12.** Help Session 2 and presentation of preliminary results
   - **Th. 12.12.** Please send us your final strategies for all scenarios
-  - **Mo. 16.12.** Discussion of final strategies for scenario 3.
+  - **Mo. 16.12.** Discussion of final strategies.
   - **Th. 09.01.** Send your answer strategies
   - **Mo. 13.01.** Presentation of final results
 
@@ -53,8 +53,8 @@ secret.code = function(obs, i, t, game, ...) {
     debug.restore("secret.code", i = 1, t = 2)
     
     
-    # In t=0, cooperate, make a random payment, and send message with code.word
-    # (There is abolutely no reason for this payment)
+    # In t=0, cooperate, make a random payment, and send message with
+    # code.word (There is abolutely no reason for this payment)
     if (t == 1) 
         return(nlist(a = "C", pay = round(runif(1, 0, 2), 1), m = list(code.word = 42)))
     
@@ -87,7 +87,7 @@ A strategy must return the following objects:
   - a payment *pay >= 0* to the other player. A positive payment by player i will be simply subtracted from i's payoff and added to j's  payoff, i.e. players are risk-neutral.
   - a message *m* that can be a single variable or a list of different components. A message has no direct payoff impact, but may be used to exchange information.
   
-The observations *obs* contain corresponding elements obs$a, obs$m, and obs$pay. Furthermore, players observe a variable obs$prand, which is just a random number between 0 and 1, which is the same for both players. (Game theorists call such a random number a *public randomization device*. It might be useful in some scenarios by allowing players to act in a coordinated fashion.)
+The observations *obs* contain corresponding elements *obs$a*, *obs$m*, and *obs$pay*. Furthermore, players observe a variable *obs$prand*, which is just a random number between 0 and 1, which is the same for both players. (Game theorists call such a random number a *public randomization device*. It might be useful in some scenarios by allowing players to act in a coordinated fashion.)
 
 A game object is generated with the following function call.
 
@@ -108,39 +108,39 @@ res
 ```
 ## $hist
 ##     t obs_a1 obs_a2 obs_pay1 obs_pay2 obs_m1 obs_m2 obs_prand a1 pay1 m1
-## 1   1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.7 42
-## 2   2      D      C      0.7        1     42     42     0.077  C    1 42
-## 3   3      C      C        1      0.7     42     42     0.701  C  0.7 42
-## 4   4      C      D      0.7        1     42     42       0.3  C    1 42
-## 5   5      C      C        1      0.7     42     42     0.194  C  0.7 42
-## 6   6      D      C      0.7        1     42     42     0.569  C    1 42
-## 7   7      C      C        1      0.7     42     42     0.269  C  0.7 42
-## 8   8      C      D      0.7        1     42     42      0.42  C    1 42
-## 9   9      C      C        1      0.7     42     42      0.97  C  0.7 42
-## 10 10      C      C      0.7        1     42     42     0.226  C    1 42
-##    a2 pay2 m2 pi1 pi2
-## 1   C    1 42 1.3 0.7
-## 2   C  0.7 42 0.7 1.3
-## 3   C    1 42 1.3 0.7
-## 4   C  0.7 42 0.7 1.3
-## 5   C    1 42 1.3 0.7
-## 6   C  0.7 42 0.7 1.3
-## 7   C    1 42 1.3 0.7
-## 8   C  0.7 42 0.7 1.3
-## 9   C    1 42 1.3 0.7
-## 10  C  0.7 42 0.7 1.3
+## 1   1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  1.5 42
+## 2   2      C      C      1.5      0.4     42     42     0.547  C  0.4 42
+## 3   3      C      C      0.4      1.5     42     42     0.293  C  1.5 42
+## 4   4      D      D      1.5      0.4     42     42     0.558  C  0.4 42
+## 5   5      C      C      0.4      1.5     42     42     0.166  C  1.5 42
+## 6   6      D      C      1.5      0.4     42     42     0.048  C  0.4 42
+## 7   7      C      D      0.4      1.5     42     42     0.414  C  1.5 42
+## 8   8      D      C      1.5      0.4     42     42     0.793  C  0.4 42
+## 9   9      C      C      0.4      1.5     42     42     0.135  C  1.5 42
+## 10 10      C      D      1.5      0.4     42     42     0.224  C  0.4 42
+##    a2 pay2 m2  pi1  pi2
+## 1   C  0.4 42 -0.1  2.1
+## 2   C  1.5 42  2.1 -0.1
+## 3   C  0.4 42 -0.1  2.1
+## 4   C  1.5 42  2.1 -0.1
+## 5   C  0.4 42 -0.1  2.1
+## 6   C  1.5 42  2.1 -0.1
+## 7   C  0.4 42 -0.1  2.1
+## 8   C  1.5 42  2.1 -0.1
+## 9   C  0.4 42 -0.1  2.1
+## 10  C  1.5 42  2.1 -0.1
 ## 
 ## $u
-## [1] 1.0077 0.9923
+## [1] 0.9718 1.0282
 ```
 
-The ouptut shows the history of the different actions a, messages m and payments pay.
+The output shows the history of the different actions *a*, messages *m* and payments *pay*.
 
 #### Avoiding errors when handling messages
 
-The strategy *secret.code* implements an obvious idea given that messages are possible: players send a code word in their message: m$code.word=42. If also the other player sends a message with the correct code word, the player cooperates and otherwise the player defects. (If the message is correct a player may also make a payment. There is no special reason for this, except to illustrate that payments are possibly),
+The strategy *secret.code* implements an obvious idea given that messages are possible: Each player uses their message to send a code word: m$code.word=42. If also the other player sends a message with the correct code word, the player cooperates and otherwise the player defects. (If the message is correct a player may also make a payment. There is no special reason for this, except to illustrate that payments are possible).
 
-If your strategy interprets messages, you have to be careful, that your strategy does not create an error when it plays against a strategy that sends different messages. Consider, the case that our strategy secret.code would just check for the code.word by typing:
+If your strategy interprets messages, you have to be careful, that your strategy does not create an error when it plays against a strategy that sends different messages. Consider the case that our strategy secret.code would just check for the code.word by typing:
 
 
 ```r
@@ -149,7 +149,7 @@ if (m[[j]]$code.word == 42) {
 }
 ```
 
-Now assume it plays against a strategy that has a message m="hi". We would get an error, since the message has no field code.word.
+Now assume it plays against a strategy that has a message m="hi". We would get an error, since the message has no field "code.word".
 
 ```r
 m = list(list(code.word = 42), "hi")
@@ -163,7 +163,7 @@ if (m[[j]]$code.word == 42) {
 ## Error: $ operator is invalid for atomic vectors
 ```
 
-For this purpose there is the function has.field that can check whether a message has a particular field. The function can also check whether that field is of a particular data type (you get the type of variable x, by typing class(x)) and length. The code we actually used therefore first calls has.field. It runs without error for all sorts of messages.
+For this purpose the function *has.field* exists that checks whether a message has a particular field. The function can also check whether that field is of a particular data type (you get the type of variable x, by typing class(x)) and length. Therefore we call has.field previous to other checks. It runs without error for all sorts of messages.
 
 ```r
 m = list(list(code.word = 42), "hi")
@@ -179,7 +179,7 @@ if (has.field(m[[j]], "code.word", type = "numeric", length = 1)) {
 
 #### Using messages for secret codes is a bit boring... 
 
-While a strategy will secret.code probably look like a winner in the first stage of the tournament, it won't remain stable, once we run the second stage, where the competing teams see the code of your strategy and can device a best reply. For example, the following strategy is a simple best reply that extremely destabilizes *secret.code*:
+While a strategy like secret.code probably looks like a winner in the first stage of the tournament, it won't remain stable once we run the second stage, where the competing teams see the code of your strategy and can device a best reply. For example, the following strategy is a simple best reply that extremely destabilizes *secret.code*:
 
 
 ```r
@@ -198,27 +198,27 @@ res
 ```
 ## $hist
 ##   t obs_a1 obs_a2 obs_pay1 obs_pay2 obs_m1 obs_m2 obs_prand a1 pay1 m1 a2
-## 1 1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.5 42  D
-## 2 2      C      D      0.5        0     42     42      0.92  C    0 42  D
-## 3 3      D      D        0        0     42     42      0.81  C    0 42  D
-## 4 4      C      D        0        0     42     42      0.88  C    0 42  D
-## 5 5      C      D        0        0     42     42      0.18  C    0 42  D
+## 1 1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.6 42  D
+## 2 2      C      D      0.6        0     42     42     0.691  C    0 42  D
+## 3 3      C      D        0        0     42     42     0.977  C    0 42  D
+## 4 4      D      D        0        0     42     42     0.762  C    0 42  D
+## 5 5      C      D        0        0     42     42     0.474  C    0 42  D
 ##   pay2 m2  pi1 pi2
-## 1    0 42 -1.5 2.5
+## 1    0 42 -1.6 2.6
 ## 2    0 42 -1.0 2.0
 ## 3    0 42 -1.0 2.0
 ## 4    0 42 -1.0 2.0
 ## 5    0 42 -1.0 2.0
 ## 
 ## $u
-## [1] -1.104  2.104
+## [1] -1.125  2.125
 ```
 
 
 
 
 
-In a sense, secret codes are boring in our setting, since your strategies will be make known to all other teams. Of course, you could write your strategy in a fashion that is very hard to understand for other teams, so that it will be complicated to understand your secret code. However, you are asked to describe your strategy  very well, to make it easy to understand for everybody. Since this is add odds with hidding somewhere a secret code, we have the following guide line:
+In a sense, secret codes are boring in our setting, since your strategies will be made known to all other teams. Of course, you could write your strategy in a fashion that is very hard to understand for other teams, so that it will be complicated to understand your secret code. However, you are asked to describe your strategy very well, and to make it easy to understand it for everybody. Since this is at odds with hidding somewhere a secret code, we have the following guide line:
 
     **Try not to win by hiding secret code phrases that strategies use to identify each other. Describe your strategy as clearly as possible. Don't try to win by hoping that other teams don't understand your strategy!**
 
@@ -251,9 +251,9 @@ coop.strat = function(obs, i, t, game, ...) {
     return(nlist(a = "C", pay = 0, m = ""))
 }
 
-# Run coop.strat vs coop.strat and analyze output Note that I fix the number
-# of rounds to 10 and provide a game.seed parameter which causes the random
-# number generator to always return the same results.
+# Run coop.strat vs coop.strat and analyze output Note that I fix the
+# number of rounds to 10 and provide a game.seed parameter which causes
+# the random number generator to always return the same results.
 res = run.rep.game(strat = nlist(coop.strat, coop.strat), game = game, delta = 0.98, 
     T.min = 10, T.max = 10, game.seed = 12345)
 res
@@ -316,7 +316,7 @@ While one can in principle use messages to tell the other player about the obser
 
 Another real world problem is that signals about behavior can sometimes be manipulated. One can try to make the own actions look good or sometimes sabotage the other parties appearance by making their actions look bad. Such possibilities can provide a severe challenge for cooperation. This scenario analyzes these issues in a simple setting. We are back to the case of imperfect public monitoring, like in Scenario 1, i.e. both players make the same observation. Yet, in addition to choosing an action a, payment pay and message m, players can choose to sabotage or not. This is decided by returning an action **sab** which can be TRUE (perform sabotage) or FALSE (no sabotage).
 
-If player chooses to sabotage (sab=TRUE), we have the following effects:
+If player i chooses to sabotage (sab=TRUE), we have the following effects:
 
   - In the next period players always observe that player j has defected (D). This means sabotage makes the other  player always look like a defector.
   
@@ -371,6 +371,6 @@ run.rep.game(strat = c(random.sabotage, random.sabotage), game = game, delta = d
 ## [1] 0.9322 0.9679
 ```
 
-You see that player 1 sabotages in periods 1 and 5 and that consequently in periods 2 and 6 it is observed that player 2 has defected. Furthermore, the payoff of player 1 the periods of sabotage is only 0.7 instead of 1. Similarly, player 2 sabotages in period 4 and in period 5 it is observed that player 1 defects. The observed defection of player 2 has nothing to do with sabotage but is simply a random observation error, caused by the positive err.D.prob.
+You see that player 1 sabotages in periods 1 and 5 and that consequently in periods 2 and 6 it is observed that player 2 has defected. Furthermore, the payoff of player 1 in the periods of sabotage is only 0.7 instead of 1. Similarly, player 2 sabotages in period 4 and in period 5 it is observed that player 1 defects. The observed defection of player 2 has nothing to do with sabotage but is simply a random observation error, caused by the positive err.D.prob.
 
-Also note that **sabotage actions are not directly observed**.
+Also note that **sabotage actions are not directly observable**.
