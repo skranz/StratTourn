@@ -436,7 +436,7 @@ examples.study.actions.and.states = function() {
   sim = NULL
   
   set.storing(TRUE)
-  sim = study.actions.and.states(strats=nlist(net.nice0, ),game=game, delta=delta, T=20, R = 50, sim=sim)
+  sim = study.actions.and.states(strats=nlist(net.nice,net.nice ),game=game, delta=delta, T=20, R = 50, sim=sim)
 sim
   # Show histogram
   ts = c(2,3,4,5,10,20)

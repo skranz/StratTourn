@@ -2,12 +2,13 @@ get.obs.i = function(i,obs, game) {
   if (is.null(obs))
     return(NULL)
   if (game$private.signals) {
+    return(obs[[i]])
     if (is.null(game$private.obs)) {
       obs.i = obs[[i]]  
     } else {
       obs.i = obs
       for (po in game$private.obs) {
-        obs.i[[po]] = obs[[po]][[1]]
+        obs.i[[po]] = obs[[po]][[i]]
       }
     }
   } else {
@@ -83,7 +84,8 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
   delta.compound = 1
   t = 1
   for (t in 1:T) {
-    
+    #if (t==2)
+    #  stop()
     if (detailed.return) {
       start.strat.states = strat.states
       start.game.states = game.states
@@ -116,6 +118,7 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
         }
       )
       strat.res = format.strat.res(t=t,i=i,game=game,strat.res=strat.res)
+      
       
       a[[i]] = strat.res$a
       strat.states[[i]] = strat.res$strat.states
@@ -177,6 +180,18 @@ format.strat.res = function(t,i,game,strat.res, sts.names=NULL) {
   }  
 }
 
+# Helper function to add indices to vector obs
+obs.names.to.cols = function(obs.names, obs.len) {
+  obs.cols = unlist(lapply(seq_along(obs.names), function(j) {
+    len = obs.len[j]
+    if (len > 1) {
+      str.combine(obs.names[j],1:len)
+    } else {
+      obs.names[j]
+    }
+  }))
+  obs.cols
+}
 
 rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.states,next.strat.states, game.states,next.game.states,denv,T, game, max.state.vector.size = 4, strat) {
   restore.point("rep.game.store.detailed.return")
@@ -200,31 +215,23 @@ rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.state
     if (!game$private.signals) {
       obs.names = str.combine("obs_",names(ex.obs))
       obs.len = sapply(ex.obs,length)
-      obs.cols = unlist(lapply(seq_along(obs.names), function(j) {
-        len = obs.len[j]
-        if (len > 1) {
-          str.combine(obs.names[j],1:len)
-        } else {
-          obs.names[j]
-        }
-      }))
+      obs.cols = obs.names.to.cols(obs.names,obs.len)
       
     } else {
-      obs.names = lapply(1:n, function(i) {
-        str.combine("obs",i,"_",names(ex.obs[[i]]))
+      public.obs.names = str.combine("obs_",game$public.obs)
+      private.obs.names = lapply(1:n, function(i) {
+        str.combine("obs",i,"_",game$private.obs[[i]])
       })
-      obs.len = lapply(1:n, function(i) {
-        sapply(ex.obs[[i]], length)
+      public.obs.len = sapply(ex.obs[[1]][game$public.obs],length)
+      names(public.obs.len) = game$public.obs
+      private.obs.len = lapply(1:n, function(i) {
+        ret = sapply(ex.obs[[i]][game$private.obs[[i]]], length)
+        names(ret) = game$private.obs[[i]]
+        ret
       })
-      obs.cols = unlist(lapply(1:n, function(i) {
-        sapply(seq_along(obs.names[[i]]), function(j) {
-          len = obs.len[[i]][j]
-          if (len > 1) {
-            str.combine(obs.names[[i]][j],"_",1:len)
-          } else {
-            obs.names[[i]][j]
-          }
-        })
+      public.obs.cols = obs.names.to.cols(public.obs.names,public.obs.len)
+      private.obs.cols = unlist(lapply(1:n, function(i) {
+        obs.names.to.cols(private.obs.names[[i]],private.obs.len[[i]])
       }))
     }
     
@@ -258,24 +265,24 @@ rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.state
     
     game.states.names = names(game.states)
     game.states.len = sapply(game.states,length)
-    game.states.cols = unlist(lapply(seq_along(game.states.names), function(j) {
-      len = min(game.states.len[j],max.state.vector.size)
-      if (len > 1) {
-        str.combine(game.states.names[j],"_",
-                    1:len)
-      } else {
-        game.states.names[j]
-      }
-    }))
+    game.states.cols = obs.names.to.cols(game.states.names, pmin(game.states.len,max.state.vector.size))
     next.game.states.cols = str.combine("next_",game.states.cols)
+    if (!game$private.signals) {
+      denv$obs.len = obs.len
+      denv$obs.cols = obs.cols
+      col.names = c("t",unlist(c(game.states.cols,obs.cols,a.names,payoff.names,strat.states.cols)))  
+    } else {
+      denv$public.obs.len = public.obs.len
+      denv$public.obs.cols = public.obs.cols
+      denv$private.obs.len = private.obs.len
+      denv$private.obs.cols = private.obs.cols
+      col.names = c("t",unlist(c(game.states.cols,public.obs.cols,private.obs.cols,a.names,payoff.names,strat.states.cols)))  
+    }
     
-    col.names = c("t",unlist(c(game.states.cols,obs.cols,a.names,payoff.names,strat.states.cols)))
     df = as.data.frame(matrix(NA,T,length(col.names)))
     names(df)=col.names
     denv$df = df
     denv$a.names = a.names
-    denv$obs.len = obs.len
-    denv$obs.cols = obs.cols
     denv$payoff.names = payoff.names
     denv$strat.states.len = strat.states.len
     denv$strat.states.cols = strat.states.cols
@@ -291,17 +298,24 @@ rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.state
   denv$df[t,denv$payoff.names] = payoffs
   
   if (game$private.signals) {
-    denv$df[t,denv$obs.cols] = unlist(lapply(1:n, function(i) {
-      sapply(seq_along(denv$obs.len[[i]]), function(j) {
-        if (j > length(obs[[i]][[j]]))
-          return(rep(NA,denv$obs.len[[i]][j]))
-        to.length(obs[[i]][[j]],denv$obs.len[[i]][j])
+    denv$df[t,denv$public.obs.cols] = 
+      unlist(lapply(game$public.obs, function(j) {
+        if (!(j %in% names(obs[[1]])))
+          return(rep(NA,denv$public.obs.len[j]))  
+        to.length(obs[[1]][[j]],denv$public.obs.len[j])
+      }))
+    
+    denv$df[t,denv$private.obs.cols] = unlist(lapply(1:n, function(i) {
+      sapply(game$private.obs[[i]], function(j) {
+        if (!(j %in% names(obs[[1]])))
+          return(rep(NA,denv$private.obs.len[[i]][j]))
+        to.length(obs[[i]][[j]],denv$private.obs.len[[i]][j])
       })
     }))  
   } else {
     denv$df[t,denv$obs.cols] = 
       unlist(lapply(seq_along(denv$obs.len), function(j) {
-        if (j > length(obs[[j]]))
+        if (j > length(obs))
           return(rep(NA,denv$obs.len[j]))  
         to.length(obs[[j]],denv$obs.len[j])
       }))

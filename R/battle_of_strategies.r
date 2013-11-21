@@ -18,6 +18,55 @@
 #   
 # } 
 
+# Try to get a named field from an object x. If x does not have that field, return NULL  
+get.field = function(x, field.name, type=NULL) {
+  if (!(field.name %in% names(x))) {
+    return(NULL)
+  }
+  val = x[[field.name]]
+  if (!is.null(type)) {
+    if (is(val,type)) {
+      return(val)
+    } else {
+      return(NULL)
+    }
+  }
+  return(val)
+}
+
+
+# Try to get a named field from an object x. If x does not have that field, return NULL  
+has.field = function(x, field.name, type=NULL, value=NULL, length=NULL) {
+  if (!(field.name %in% names(x))) {
+    return(FALSE)
+  }
+  val = x[[field.name]]
+  if (!is.null(type)) {
+    if (!is(val,type)) {
+      return(FALSE)
+    }
+  }
+  if (!is.null(value)) {
+    if (!all(value=val)) {
+      return(FALSE)
+    }
+  }
+  if (!is.null(length)) {
+    if (!length(val)==length) {
+      return(FALSE)
+    }
+  }
+  
+  return(TRUE)
+}
+
+
+example.get.field = function() {
+  get.field("gdh","b")
+  
+  get.field(c(b="Hi"),"b")
+  
+}
 
 is.true = function(val) {
   if (is.null(val))
@@ -45,7 +94,7 @@ df.signif = function(df,digits=3,fun=signif) {
 }
 
 #' store objects when called from a function
-debug.store = function(strat,i,t, stage = NULL, do.store = is.true(gbos$do.store)) {
+debug.store = function(strat,i,t, stage = NULL, do.store = TRUE) {
   if (!do.store) return()
   #message("Store...", do.store)
   store = !identical(.GlobalEnv,sys.frame(-1))  
