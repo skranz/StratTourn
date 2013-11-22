@@ -220,7 +220,7 @@ first.vs.all.matchings = function(strat,game) {
 }
 
 #' Inits a tournament object
-init.tournament = function(strat, game,strat.dev = NULL,delta=game$param$delta, type=ifelse(is.null(strat.dev),"stage1","stage2"), score.fun = "efficiency - 2*instability - 20*instability^2", team=NULL) {
+init.tournament = function(strat, game,answers = NULL,delta=game$param$delta, type=ifelse(is.null(answers),"stage1","stage2"), score.fun = "efficiency - 2*instability - 20*instability^2", team=NULL) {
   restore.point("init.tournament")
   
   strat.id = seq_along(strat)
@@ -233,8 +233,8 @@ init.tournament = function(strat, game,strat.dev = NULL,delta=game$param$delta, 
   if (is.null(names(strat)))
     names(strat) = paste0("strat", strat.id)
   
-  if (!is.null(strat.dev)) {
-    strat.dev = strat.dev[names(strat)]
+  if (!is.null(answers)) {
+    answers = answers[names(strat)]
   }
   
   time.str = gsub("[-:]","",as.character(now()))
@@ -243,7 +243,12 @@ init.tournament = function(strat, game,strat.dev = NULL,delta=game$param$delta, 
   
   if (is.null(team))
     team = rep("", length(strat))
-  tourn = list(id=id,type=type,strat = strat, strat.dev = strat.dev, game = game, delta = delta, team=team, matchings = matchings, dt=NULL,prev.backup.num=0, score.fun = score.fun)
+  
+  for (s in seq_along(strat)) {
+    attr(strat[[s]],"team.name")=team[s]
+  }
+  
+  tourn = list(id=id,type=type,strat = strat, answers = answers, game = game, delta = delta, team=team, matchings = matchings, dt=NULL,prev.backup.num=0, score.fun = score.fun)
   class(tourn) = c("Tournament","list")
   return(tourn)
 }
@@ -251,11 +256,11 @@ init.tournament = function(strat, game,strat.dev = NULL,delta=game$param$delta, 
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.tournament = function(tourn, strat=tourn$strat, strat.dev=tourn$strat.dev, matchings=tourn$matchings, game=tourn$game, delta=tourn$delta, R = 1, LAPPLY=lapply, backup.each.R=NULL, backup.path = getwd(),T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store=FALSE) {
+run.tournament = function(tourn, strat=tourn$strat, answers=tourn$answers, matchings=tourn$matchings, game=tourn$game, delta=tourn$delta, R = 1, LAPPLY=lapply, backup.each.R=NULL, backup.path = getwd(),T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store=FALSE) {
   restore.point("run.tournament")
    
   if (tourn$type=="stage2") {
-    return(run.stage2.tournament(tourn=tourn, strat=strat, strat.dev=strat.dev,  game=game, delta=delta, R=R, LAPPLY=LAPPLY, backup.each.R=backup.each.R, backup.path=backup.path,T.min=T.min, verbose=verbose, do.store=do.store))
+    return(run.stage2.tournament(tourn=tourn, strat=strat, answers=answers,  game=game, delta=delta, R=R, LAPPLY=LAPPLY, backup.each.R=backup.each.R, backup.path=backup.path,T.min=T.min, verbose=verbose, do.store=do.store))
   }
   
   num.chunks = 1
@@ -320,7 +325,7 @@ run.one.match = function(match.strat,r=1, verbose=TRUE,game.seed,T.min, do.store
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.stage2.tournament = function(tourn, strat=tourn$strat, strat.dev=NULL, game=tourn$game,delta=tourn$delta, R = 1, LAPPLY=lapply, backup.each.R=NULL, backup.path = getwd(),T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store = FALSE) {
+run.stage2.tournament = function(tourn, strat=tourn$strat, answers=tourn$answers, game=tourn$game,delta=tourn$delta, R = 1, LAPPLY=lapply, backup.each.R=NULL, backup.path = getwd(),T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store = FALSE) {
   
   restore.point("run.stage2.tournament")
   num.chunks = 1
@@ -341,7 +346,7 @@ run.stage2.tournament = function(tourn, strat=tourn$strat, strat.dev=NULL, game=
       if (verbose)
         message(paste0("game.seed = ", game.seed))
       ul = lapply(seq_along(strat), function(s) {
-        act.strat = c(strat[s],strat.dev[[s]])
+        act.strat = c(strat[s],answers[[s]])
         u = sapply(seq_along(act.strat), function(s2) {
           
           ret1 = run.one.match(act.strat[c(1,s2)],r=r,verbose=verbose,game.seed=game.seed,T.min=T.min, do.store=do.store)
@@ -449,9 +454,10 @@ add.tournament.stats = function(tourn) {
 
 #' Add result statistics to a tournament object
 add.stage2.tournament.stats = function(tourn) {
-  restore.point("add.stage2.tournament.stats")
+  restore.point("add.stage2.tournament.stats", force=TRUE)
   
   strat = tourn$strat
+  answers = tourn$answers
   n=tourn$game$n
   
   efficiency = sapply(tourn$uv.list, function(uv) uv[1])
@@ -459,13 +465,30 @@ add.stage2.tournament.stats = function(tourn) {
   u.average = rep(NA,length(strat))
   score = get.score(tourn$score.fun, efficiency, instability, u.average)
   
+  # All best answers
+  ba.payoff = sapply(seq_along(tourn$strat), function(s) {
+    max(tourn$uv.list[[s]])
+  })
+  
+  all.ba = lapply(seq_along(tourn$strat), function(s) {
+    ind = which(tourn$uv.list[[s]]==ba.payoff[s])
+    sa = c(strat[s], answers[[s]])[ind]
+    ba.names = names(sa)
+    ba.teams = sapply(sa, function(strat) attr(strat,"team.name"))
+    quick.df(strat=rep(names(strat)[s],length(ind)), instability=signif(instability[s],4), best.answer=ba.names, best.answer.team=ba.teams)
+  })
+  all.ba = do.call(rbind,all.ba)
+  tourn$all.best.answers = all.ba
+  
+  # A single best answer
   br = sapply(seq_along(tourn$strat), function(s) {
-    c(names(strat)[s],names(strat.dev[[s]]))[which.max(tourn$uv.list[[s]])]
+    c(names(strat)[s],names(answers[[s]]))[which.max(tourn$uv.list[[s]])]
   })
   br[instability==0] = names(strat)[instability==0]
   
+  
   ord = order(score,decreasing=TRUE)
-  res = data.frame(rank = rank(round(-score,8),ties="min"),score=score, efficiency=efficiency, instability=instability, u.average=u.average, best.answer=br)
+  res = data.frame(rank = rank(round(-score,8),ties="min"),team=tourn$team,score=score, efficiency=efficiency, instability=instability, u.average=u.average, best.answer=br)
   rownames(res) = names(strat)
   tourn$res = res[ord,,drop=FALSE]
   tourn$stats.are.current = TRUE
@@ -483,12 +506,15 @@ print.stage2.tournament = function(tourn) {
     cat(str)
     #tourn = add.tournament.stats(tourn)
     for (i in seq_along(tourn$uv.list)) {
-      cat("Against ",names(tourn$strat)[i],":\n")
+      cat("\nAgainst ",names(tourn$strat)[i],":\n")
       uv = signif(tourn$uv.list[[i]],3)
-      names(uv) = c(names(tourn$strat)[i],names(tourn$strat.dev[[i]]))
+      names(uv) = c(names(tourn$strat)[i],names(tourn$answers[[i]]))
       uv = sort(uv,decreasing=TRUE)
       print(uv)
     }
+    cat("\nAll best answers:\n")
+    print(df.signif(tourn$all.best.answers, fun=round))
+    
     if (is.character(tourn$score.fun)) {
       cat(paste0("\nRanking with score = ",tourn$score.fun,"\n\n"))
     } else {
