@@ -137,9 +137,9 @@ examples.import.stage2.strats = function() {
   
   set.storing(TRUE)
   s2 = import.stage2.strats(stage1.dir, stage2.dir, num.scen)
-  game = make.pd.game(err.D.prob = 0.3)
+  game = make.pd.game(err.D.prob = 0.15)
   
-  s = 2
+  s = 1
   strat = s2[[s]]$strat
   answers = s2[[s]]$answers
   strat.team = s2[[s]]$strat.team

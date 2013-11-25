@@ -3,7 +3,7 @@ Analyzing Cooperation with Game Theory and Simulation
 Task Set 2: Noisy Prisoners' Dilemma with Payments, Messages and Private Signals
 ================================================================================
 
-**Date: 2013-11-19**
+**Date: 2013-11-25**
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
 
 
@@ -22,6 +22,16 @@ Task Set 2: Noisy Prisoners' Dilemma with Payments, Messages and Private Signals
   - **Mo. 16.12.** Discussion of final strategies.
   - **Th. 09.01.** Send your answer strategies
   - **Mo. 13.01.** Presentation of final results
+
+### Please install the newest version of StratTourn for this task
+
+```r
+library(devtools)
+install_github(repo = "sktools", username = "skranz")
+install_github(repo = "StratTourn", username = "skranz")
+```
+
+
 
   
 ## Task 2 
@@ -53,8 +63,8 @@ secret.code = function(obs, i, t, game, ...) {
     debug.restore("secret.code", i = 1, t = 2)
     
     
-    # In t=0, cooperate, make a random payment, and send message with
-    # code.word (There is abolutely no reason for this payment)
+    # In t=0, cooperate, make a random payment, and send message with code.word
+    # (There is abolutely no reason for this payment)
     if (t == 1) 
         return(nlist(a = "C", pay = round(runif(1, 0, 2), 1), m = list(code.word = 42)))
     
@@ -108,30 +118,30 @@ res
 ```
 ## $hist
 ##     t obs_a1 obs_a2 obs_pay1 obs_pay2 obs_m1 obs_m2 obs_prand a1 pay1 m1
-## 1   1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  1.5 42
-## 2   2      C      C      1.5      0.4     42     42     0.547  C  0.4 42
-## 3   3      C      C      0.4      1.5     42     42     0.293  C  1.5 42
-## 4   4      D      D      1.5      0.4     42     42     0.558  C  0.4 42
-## 5   5      C      C      0.4      1.5     42     42     0.166  C  1.5 42
-## 6   6      D      C      1.5      0.4     42     42     0.048  C  0.4 42
-## 7   7      C      D      0.4      1.5     42     42     0.414  C  1.5 42
-## 8   8      D      C      1.5      0.4     42     42     0.793  C  0.4 42
-## 9   9      C      C      0.4      1.5     42     42     0.135  C  1.5 42
-## 10 10      C      D      1.5      0.4     42     42     0.224  C  0.4 42
+## 1   1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.1 42
+## 2   2      C      D      0.1      1.6     42     42      0.19  C  1.6 42
+## 3   3      D      C      1.6      0.1     42     42     0.624  C  0.1 42
+## 4   4      C      C      0.1      1.6     42     42     0.021  C  1.6 42
+## 5   5      C      C      1.6      0.1     42     42     0.693  C  0.1 42
+## 6   6      C      C      0.1      1.6     42     42     0.817  C  1.6 42
+## 7   7      D      C      1.6      0.1     42     42     0.021  C  0.1 42
+## 8   8      C      C      0.1      1.6     42     42     0.629  C  1.6 42
+## 9   9      C      C      1.6      0.1     42     42     0.306  C  0.1 42
+## 10 10      C      C      0.1      1.6     42     42     0.479  C  1.6 42
 ##    a2 pay2 m2  pi1  pi2
-## 1   C  0.4 42 -0.1  2.1
-## 2   C  1.5 42  2.1 -0.1
-## 3   C  0.4 42 -0.1  2.1
-## 4   C  1.5 42  2.1 -0.1
-## 5   C  0.4 42 -0.1  2.1
-## 6   C  1.5 42  2.1 -0.1
-## 7   C  0.4 42 -0.1  2.1
-## 8   C  1.5 42  2.1 -0.1
-## 9   C  0.4 42 -0.1  2.1
-## 10  C  1.5 42  2.1 -0.1
+## 1   C  1.6 42  2.5 -0.5
+## 2   C  0.1 42 -0.5  2.5
+## 3   C  1.6 42  2.5 -0.5
+## 4   C  0.1 42 -0.5  2.5
+## 5   C  1.6 42  2.5 -0.5
+## 6   C  0.1 42 -0.5  2.5
+## 7   C  1.6 42  2.5 -0.5
+## 8   C  0.1 42 -0.5  2.5
+## 9   C  1.6 42  2.5 -0.5
+## 10  C  0.1 42 -0.5  2.5
 ## 
 ## $u
-## [1] 0.9718 1.0282
+## [1] 1.0385 0.9615
 ```
 
 The output shows the history of the different actions *a*, messages *m* and payments *pay*.
@@ -198,20 +208,20 @@ res
 ```
 ## $hist
 ##   t obs_a1 obs_a2 obs_pay1 obs_pay2 obs_m1 obs_m2 obs_prand a1 pay1 m1 a2
-## 1 1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.6 42  D
-## 2 2      C      D      0.6        0     42     42     0.691  C    0 42  D
-## 3 3      C      D        0        0     42     42     0.977  C    0 42  D
-## 4 4      D      D        0        0     42     42     0.762  C    0 42  D
-## 5 5      C      D        0        0     42     42     0.474  C    0 42  D
+## 1 1   <NA>   <NA>     <NA>     <NA>   <NA>   <NA>      <NA>  C  0.5 42  D
+## 2 2      C      D      0.5        0     42     42     0.324  C    0 42  D
+## 3 3      C      D        0        0     42     42     0.757  C    0 42  D
+## 4 4      C      D        0        0     42     42     0.602  C    0 42  D
+## 5 5      C      D        0        0     42     42     0.969  C    0 42  D
 ##   pay2 m2  pi1 pi2
-## 1    0 42 -1.6 2.6
+## 1    0 42 -1.5 2.5
 ## 2    0 42 -1.0 2.0
 ## 3    0 42 -1.0 2.0
 ## 4    0 42 -1.0 2.0
 ## 5    0 42 -1.0 2.0
 ## 
 ## $u
-## [1] -1.125  2.125
+## [1] -1.104  2.104
 ```
 
 
@@ -251,9 +261,9 @@ coop.strat = function(obs, i, t, game, ...) {
     return(nlist(a = "C", pay = 0, m = ""))
 }
 
-# Run coop.strat vs coop.strat and analyze output Note that I fix the
-# number of rounds to 10 and provide a game.seed parameter which causes
-# the random number generator to always return the same results.
+# Run coop.strat vs coop.strat and analyze output Note that I fix the number
+# of rounds to 10 and provide a game.seed parameter which causes the random
+# number generator to always return the same results.
 res = run.rep.game(strat = nlist(coop.strat, coop.strat), game = game, delta = 0.98, 
     T.min = 10, T.max = 10, game.seed = 12345)
 res

@@ -260,7 +260,7 @@ run.tournament = function(tourn, strat=tourn$strat, answers=tourn$answers, match
   restore.point("run.tournament")
    
   if (tourn$type=="stage2") {
-    return(run.stage2.tournament(tourn=tourn, strat=strat, answers=answers,  game=game, delta=delta, R=R, LAPPLY=LAPPLY, backup.each.R=backup.each.R, backup.path=backup.path,T.min=T.min, verbose=verbose, do.store=do.store))
+    return(run.stage2.tournament(tourn=tourn, strat=strat, answers=answers,  game=game, delta=delta, R=R, LAPPLY=LAPPLY,T.min=T.min, verbose=verbose, do.store=do.store))
   }
   
   num.chunks = 1
@@ -325,55 +325,53 @@ run.one.match = function(match.strat,r=1, verbose=TRUE,game.seed,T.min, do.store
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.stage2.tournament = function(tourn, strat=tourn$strat, answers=tourn$answers, game=tourn$game,delta=tourn$delta, R = 1, LAPPLY=lapply, backup.each.R=NULL, backup.path = getwd(),T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store = FALSE) {
+run.stage2.tournament = function(tourn, strat=tourn$strat, answers=tourn$answers, game=tourn$game,delta=tourn$delta, R = 1, LAPPLY=lapply, T.min = ceiling(log(0.01)/log(delta)), verbose=interactive(), do.store = FALSE) {
   
-  restore.point("run.stage2.tournament")
-  num.chunks = 1
-  if (!is.null(backup.each.R)) {
-    num.chunks = ceiling(R / backup.each.R)
-  }
-  R.chunk = ceiling(R / num.chunks)
+  restore.point("run.stage2.tournament", force=TRUE)
   
-  for (chunk in 1:num.chunks) {
-    
-    if (chunk == num.chunks) {
-      R.chunk = R -(R.chunk*(num.chunks-1))
-    }
-    
-    ul.li = LAPPLY(1:R.chunk, function(r) {
-      set.random.state(".GLOBAL")
-      game.seed = draw.seed()
-      if (verbose)
-        message(paste0("game.seed = ", game.seed))
-      ul = lapply(seq_along(strat), function(s) {
-        act.strat = c(strat[s],answers[[s]])
-        u = sapply(seq_along(act.strat), function(s2) {
-          
-          ret1 = run.one.match(act.strat[c(1,s2)],r=r,verbose=verbose,game.seed=game.seed,T.min=T.min, do.store=do.store)
-          ret2 = run.one.match(act.strat[c(s2,1)],r=r,verbose=verbose,game.seed=game.seed,T.min=T.min, do.store=do.store)
-          (ret1[2]+ret2[1]) / 2 # average payoff of s2 against the original strategy 
-        })
-        u        
+ 
+  ul.li = LAPPLY(1:R, function(r) {
+    set.random.state(".GLOBAL")
+    game.seed = draw.seed()
+    if (verbose)
+      message(paste0("game.seed = ", game.seed))
+    ul = lapply(seq_along(strat),r=r, function(s,r) {
+      act.strat = c(strat[s],answers[[s]])
+      u = sapply(seq_along(act.strat),r=r, function(r,s2) {
+        
+        ret1 = run.one.match(act.strat[c(1,s2)],r=r,verbose=verbose,game.seed=game.seed,T.min=T.min, do.store=do.store)
+        ret2 = run.one.match(act.strat[c(s2,1)],r=r,verbose=verbose,game.seed=game.seed,T.min=T.min, do.store=do.store)
+        (ret1[2]+ret2[1]) / 2 # average payoff of s2 against the original strategy 
       })
-      ul
+      u        
     })
-    # Compute mean over all repetitions
-    ul = ul.li[[1]]
-    for (r in (1:R)[-1]) {
-      for (s in 1:length(ul)) {
-        ul[[s]] = ul[[s]]+ul.li[[r]][[s]]
-      }
+    ul
+  })
+  # Compute sum over all repetitions
+  ul = ul.li[[1]]
+  for (r in (1:R)[-1]) {
+    for (s in 1:length(ul)) {
+      ul[[s]] = ul[[s]]+ul.li[[r]][[s]]
     }
+  }
+  
+  # tourn is used first time
+  if (length(tourn$uv.list)==0) {
     for (s in 1:length(ul)) {
       ul[[s]] = ul[[s]]/R
     }
     tourn$uv.list = ul
-    tourn = add.tournament.stats(tourn)
-    tourn$R = tourn$R+R.chunk
-    if (!is.null(backup.each.R)) {
-      tourn = save.tournament(tourn,path=backup.path)
+    tourn$R = R
+  # tourn was used before
+  } else {
+    for (s in 1:length(ul)) {
+      tourn$uv.list[[s]] = (tourn$uv.list[[s]]*tourn$R + ul[[s]])/(tourn$R+R)
     }
+    tourn$R = tourn$R + R
+    
   }
+    
+  tourn = add.tournament.stats(tourn)
   
   return(tourn)
 }
