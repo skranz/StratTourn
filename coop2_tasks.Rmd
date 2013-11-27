@@ -3,7 +3,7 @@ Analyzing Cooperation with Game Theory and Simulation
 Task Set 2: Noisy Prisoners' Dilemma with Payments, Messages and Private Signals
 ================================================================================
 
-**Date: 2013-11-19**
+**Date: 2013-11-25**
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
 
 
@@ -22,6 +22,15 @@ Task Set 2: Noisy Prisoners' Dilemma with Payments, Messages and Private Signals
   - **Mo. 16.12.** Discussion of final strategies.
   - **Th. 09.01.** Send your answer strategies
   - **Mo. 13.01.** Presentation of final results
+
+### Please install the newest version of StratTourn for this task
+
+```{r eval=FALSE}
+library(devtools)
+install_github(repo = "sktools", username = "skranz")
+install_github(repo = "StratTourn", username = "skranz")
+```
+
 
   
 ## Task 2 

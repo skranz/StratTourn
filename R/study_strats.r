@@ -118,6 +118,8 @@ plot.StratsAnswersStudy = function(sim,...) {
 
 
 plot.StratsStudy = function(sim) {
+  restore.point("plot.StratsStudy")
+  
   library(ggplot2)
 
   par = c(sim$strat.par,"delta",sim$game.par,"strat")
@@ -127,6 +129,15 @@ plot.StratsStudy = function(sim) {
     message(paste0("Sorry we can plot so far only variations in 3 dimension, yet you have variations in ", paste0(par[need.facet], collapse=",")))
     return(NULL)
   } 
+  
+  if (sum(need.facet)==0) {
+    strat.name = unique(sim$agg$strat) 
+    print(qplot(u, data=sim$dat, geom="bar", fill=I("red"),
+           main=paste0("Payoffs ", strat.name, " mean = ", signif(sim$agg$u.mean,3))))
+    return()
+  }
+  
+  
   ord = order(need.facet, decreasing = TRUE)
   par = par[ord]
   
@@ -139,7 +150,6 @@ plot.StratsStudy = function(sim) {
   diff = (max.y-min.y)
   min.y = min.y - 0.03*diff
   max.y = max.y + 0.03*diff
-  
   
   ggplot(data=sim$agg) + aes +
    # geom_line(colour="red")+
