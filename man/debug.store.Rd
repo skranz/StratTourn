@@ -2,8 +2,7 @@
 \alias{debug.store}
 \title{store objects when called from a function}
 \usage{
-  debug.store(strat, i, t, stage = NULL,
-    do.store = is.true(gbos$do.store))
+  debug.store(strat, i, t, stage = NULL, do.store = TRUE)
 }
 \description{
   store objects when called from a function
