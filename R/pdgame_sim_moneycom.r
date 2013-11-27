@@ -204,7 +204,7 @@ make.payment.message.sabotage.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.
   public.obs = c("pay","m","prand")
   private.obs = list("a","a")
   
-  nlist(results.fun, check.action,example.action,example.obs, n=2, private.signals, public.obs, private.obs, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, name="Noisy PD with messages and transfers", score.fun = "efficiency-2*instability- 20*instability^2")
+  nlist(results.fun, check.action,example.action,example.obs, n=2, private.signals, public.obs, private.obs, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, name="Noisy PD with messages, transfers and sabotage.", score.fun = "efficiency-2*instability- 20*instability^2")
 }
 
 
