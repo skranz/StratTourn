@@ -178,7 +178,7 @@ I want to exemplify the information structure with a simple example with two str
 ```{r cache=TRUE}
 library(StratTourn)
 # Initialize game with private monitoring, by setting private.signals=TRUE
-game = make.payment.message.pd.game(err.D.prob=0.2, private.signals=TRUE)
+game = make.payment.message.pd.game(err.D.prob=0.15, private.signals=TRUE)
 
 # A simple strategy that always cooperates sends no message and makes no payment
 coop.strat = function(obs,i,t,game,...) {
@@ -219,7 +219,7 @@ Here is an example run with a strategy that randomly sabotages.
 ```{r}
 random.sabotage = function(obs,i,t,game,...) {
   # Sabotages with 30% probability 
-  return(nlist(a="C",pay=0,m="", sab=runif(1)<=0.3))
+  return(nlist(a="C",pay=0,m="", sab=runif(1)<0.3))
 }
 
 run.rep.game(strat=c(random.sabotage,random.sabotage), game=game, delta=delta, T.min=10,T.max=10, game.seed=1235, strat.seed=9876543)

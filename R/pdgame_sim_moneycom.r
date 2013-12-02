@@ -127,6 +127,20 @@ make.payment.message.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0,
       return(list(payoff=payoff,obs=obs))
   }  
   check.action = function(ai,i,t,...) {
+    #restore.point("check.action")
+    a = ai$a
+    if (!is.character(a))   
+      stop(paste0("You must return 'C' or 'D' as a. You returned a = ", paste0(a,collapse=",")))
+    if (a != "C" & a != "D")
+      stop(paste0("You must return 'C' or 'D' as a. You returned a = ", paste0(a,collapse=",")))
+    
+    pay = ai$pay
+    if (!is.numeric(pay))
+      stop(paste0("You must return a single number for pay. You returned pay = ", paste0(pay,collapse=",")))
+    if (pay<0)
+      stop(paste0("You must return a non-negative payment. You returned pay = ", paste0(pay,collapse=",")))
+    
+    #restore.point("check.action.pd")
     return()
   }
   example.action = function(i,t,...) {
@@ -191,8 +205,29 @@ make.payment.message.sabotage.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.
     return(list(payoff=payoff,obs=obs))
   }  
   check.action = function(ai,i,t,...) {
+    #restore.point("check.action")
+    a = ai$a
+    if (!is.character(a))   
+      stop(paste0("You must return 'C' or 'D' as a. You returned a = ", paste0(a,collapse=",")))
+    if (a != "C" & a != "D")
+      stop(paste0("You must return 'C' or 'D' as a. You returned a = ", paste0(a,collapse=",")))
+    
+    pay = ai$pay
+    if (!is.numeric(pay))
+      stop(paste0("You must return a single number for pay. You returned pay = ", paste0(pay,collapse=",")))
+    if (pay<0)
+      stop(paste0("You must return a non-negative payment. You returned pay = ", paste0(pay,collapse=",")))
+    
+    sab = ai$sab
+    
+    if (!is.logical(sab))
+      stop(paste0("You must return sab=FALSE or sab=TRUE. You returned sab = ", paste0(sab,collapse=",")))
+    
+    
+    #restore.point("check.action.pd")
     return()
   }
+  
   example.action = function(i,t,...) {
     return(list(a="C",pay=5,m="Hi", sab=FALSE))
   }
