@@ -5,7 +5,8 @@
   run.rep.game(delta = game$param$delta, game, strat,
     T.min = 1, T.max = round(runif(1, 10000, 12000)),
     detailed.return = TRUE, strat.seed = NULL,
-    game.seed = NULL, do.store = TRUE, strat.par = NULL)
+    game.seed = NULL, do.store = TRUE, strat.par = NULL,
+    cap.numbers = FALSE)
 }
 \arguments{
   \item{delta}{discount factor}
@@ -21,6 +22,8 @@
   discounted with delta^(T-1).}
 
   \item{T.max}{optionally a maximum number of rounds}
+  
+  \item{cap.numbers}{defines whether and to which extend all numerics of the result are returned. You may choose between FALSE (= off), TRUE (= rounding to 2 digits) and a single number indicating the number of digits. Activating cap.numbers does not influence the behavior within the game.}
 }
 \description{
   Runs a repeated game
