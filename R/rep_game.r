@@ -177,11 +177,14 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
 
 
 format.strat.res = function(t,i,game,strat.res, sts.names=NULL) {
+  #Note: This function relies fully on the example action. Here we can ensure a certain order of the arguments.
+  #It is not obvious though, that the player accepts this order, so we have to match via names
+  # This does not allow for unnamed arguments
   ai.names = names(game$example.action(i=i,t=t))
   if (length(ai.names)==1) {
-    return(list(a=strat.res[[1]], strat.states=strat.res[-1]))
+    return(list(a=strat.res[[ai.names]], strat.states=strat.res[-match(ai.names,names(strat.res))]))
   } else {
-    return(list(a = strat.res[1:length(ai.names)], strat.states = strat.res[-(1:length(ai.names))]))
+    return(list(a = strat.res[match(ai.names,names(strat.res))], strat.states = strat.res[-match(ai.names,names(strat.res))]))
   }  
 }
 
