@@ -23,7 +23,7 @@
 
   \item{T.max}{optionally a maximum number of rounds}
   
-  \item{cap.numbers}{defines whether and to which extend all numerics of the result are returned. You may choose between FALSE (= off), TRUE (= rounding to 2 digits) and a single number indicating the number of digits. Activating cap.numbers does not influence the behavior within the game.}
+  \item{cap.numbers}{defines whether and to which extend all numerics (except the utility u) of the result are returned. You may choose between FALSE (= off), TRUE (= rounding to 2 digits) and a single number indicating the number of digits. Activating cap.numbers does not influence the behavior within the game.}
 }
 \description{
   Runs a repeated game
