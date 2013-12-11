@@ -118,7 +118,7 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
           stop(as.character(e), call.=FALSE)
         }
       )
-      strat.res = format.strat.res(t=t,i=i,game=game,strat.res=strat.res)
+      strat.res = format.strat.res(t=t,i=i,game=game,strat.res=strat.res,sts.names=sts.names,formals=formals(strat[[i]]))
       
       
       a[[i]] = strat.res$a
@@ -176,11 +176,20 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
 }  
 
 
-format.strat.res = function(t,i,game,strat.res, sts.names=NULL) {
+format.strat.res = function(t,i,game,strat.res,sts.names,formals) {
+  restore.point(paste("format.strat.res"),t=3)
   #Note: This function relies fully on the example action. Here we can ensure a certain order of the arguments.
   #It is not obvious though, that the player accepts this order, so we have to match via names
   # This does not allow for unnamed arguments
+  # Arguments which are not provided, but should be provided are seen as their default value
   ai.names = names(game$example.action(i=i,t=t))
+  pl.names <- sts.names[[i]]
+  missing.names <- setdiff(c(ai.names,pl.names),names(strat.res))
+  missing.elements <- as.list(rep(NA,length(missing.names)))
+  names(missing.elements) <- missing.names
+  missing.elements[intersect(missing.names,names(formals))] <- formals[intersect(missing.names,names(formals))]
+  strat.res <- append(strat.res,missing.elements)
+  strat.res <- strat.res[c(ai.names,pl.names)]
   if (length(ai.names)==1) {
     return(list(a=strat.res[[ai.names]], strat.states=strat.res[-match(ai.names,names(strat.res))]))
   } else {
