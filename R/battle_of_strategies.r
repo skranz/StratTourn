@@ -145,10 +145,14 @@ to.length = function(vec,len,fill=NA) {
   restore.point("to.length")
   if (len <= 0)
     return(vector("any",0))
+  # Transform lists to vectors
+  if (is.list(vec))
+    vec = unlist(vec)
   if (length(vec)==len) {
     return(vec)
   }
   if (length(vec)>len) {
+    vec[len] = paste0(vec[len:length(vec)], collapse=" ")
     return(vec[1:len])
   }
   if (length(vec)<len) {

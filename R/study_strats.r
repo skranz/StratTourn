@@ -64,7 +64,7 @@ plot.StratsAnswersStudy = function(sim,...) {
   library(ggplot2)
     
   answer.par.names = str.combine("answer_",sim$answer.par)
-  par = c(answer.par.names,sim$strat.par,sim$game.par, "strat","delta", "answer")
+  par = c(sim$strat.answer.par,answer.par.names,sim$strat.par,sim$game.par, "strat","delta", "answer")
   
   
   par.len = sapply(par, function(p) length(unique(sim$sa$agg[,p])))
@@ -77,7 +77,7 @@ plot.StratsAnswersStudy = function(sim,...) {
   par = par[ord]; need.facet = need.facet[ord]
   
   if (par[1]=="answer" | par[1]=="strat") {
-    message("Sorry, plotting so far only works if you have a strat.par, answer.par, or game.par with more than one numeric level that can be plotted to the x-Axis. Here is just the data: ")
+    message("Sorry, plotting so far only works if you have a strat.par, answer.par, strat.answer.par or game.par with more than one numeric level that can be plotted to the x-Axis. Here is just the data: ")
     return(sim$sa$agg)
     #aes = aes_string(x=par[1],y="u.mean")
     #facet = facet_grid(paste0(par[2],"~",par[1]),labeller = label_both)
@@ -177,7 +177,7 @@ plot.StratsStudy = function(sim) {
 #' @param game.par either NULL or a list with values for game parameters that shall be studied (a game parameter is an argument of game.fun)
 #' @export
 
-study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.par=NULL, game=NULL, delta=0.9, R = 5, extra.strat.par = NULL,extra.answer.par=NULL, ci = 0.9, sim, score.fun = "efficiency-2*instability-20*instability^2", game.fun=NULL, game.par=NULL, verbose=interactive(), disable.restore.point=TRUE) {
+study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.par=NULL, strat.answer.par = NULL, game=NULL, delta=0.9, R = 5, extra.strat.par = NULL,extra.answer.par=NULL, ci = 0.9, sim, score.fun = "efficiency-2*instability-20*instability^2", game.fun=NULL, game.par=NULL, verbose=interactive(), disable.restore.point=TRUE) {
   restore.point("study.strats.and.answers")
   
   seeds = draw.seed(R)
@@ -186,23 +186,23 @@ study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.
   answer.names = names(answers)  
   
   if (is.null(sim)) {
-    sim = list(strats=strat.names, answers = answer.names, answer.par = names(answer.par), strat.par = names(strat.par),game.par = names(game.par),sa = list(), s = list())
+    sim = list(strats=strat.names, answers = answer.names, answer.par = names(answer.par), strat.par = names(strat.par), strat.answer.par = names(strat.answer.par), game.par = names(game.par),sa = list(), s = list())
     class(sim) = c("StratsAnswersStudy","list")
   } else {
     sim$strats = union(sim$strats,strat.names)
     sim$answers = union(sim$answers, answer.names)
   }
 
-  sim$s = study.strats(strats, R, strat.par=strat.par, extra.strat.par=NULL, sim=sim$s, game, delta, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
+  sim$s = study.strats(strats, R, strat.par=c(strat.par, strat.answer.par), extra.strat.par=NULL, sim=sim$s, game, delta, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
   
   if (length(answer.names)>0) {
-    sim$sa = study.answers(strats,answers, R, strat.par,answer.par,  extra.strat.par, extra.answer.par, sim$sa, game, delta,verbose, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
+    sim$sa = study.answers(strats,answers, R, strat.par,answer.par, strat.answer.par, extra.strat.par, extra.answer.par, sim$sa, game, delta,verbose, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
   
   }
   if (length(sim$answers)>0)  {
     sim = add.score.to.study(sim, score.fun=score.fun)
     
-    keys = c("strat","delta",sim$game.par,sim$strat.par,sim$strat)
+    keys = c("strat","delta",sim$game.par,sim$strat.par,sim$strat.answer.par,sim$strat)
     sim$sa$agg = merge(x=sim$sa$agg,y=sim$s$agg, by=keys,all=TRUE,suffixes=c("",".strat"))
     
   }
@@ -225,20 +225,20 @@ add.score.to.study = function(sim, score.fun) {
   
 
   agg = sim$s$agg
-  keys = c("strat","delta",sim$strat.par,sim$game.par)
+  keys = c("strat","delta",sim$strat.par,sim$game.par, sim$strat.answer.par)
   uba.df = quick.by(sim$sa$agg,by=keys, "u.best.answer = max(u.mean)") 
   agg = merge(agg,uba.df, by=keys)
   
   # Instablity and score
   agg$efficiency = agg$u.mean
-  agg$instability = agg$u.best.answer-agg$efficiency
+  agg$instability = pmax(0,agg$u.best.answer-agg$efficiency)
   agg$score = eval(base::parse(text=score.fun), agg)
   
   sim$s$agg = agg
   return(sim)
 }
 
-study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL,  extra.strat.par=NULL, extra.answer.par=NULL, sim=NULL, game=NULL, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par=NULL,ci=0.9, disable.restore.point=TRUE) {
+study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, strat.answer.par=NULL,  extra.strat.par=NULL, extra.answer.par=NULL, sim=NULL, game=NULL, delta,verbose=interactive(), seeds = draw.seed(R), game.fun=NULL, game.par=NULL,ci=0.9, disable.restore.point=TRUE) {
   restore.point("study.answers")
 
   strat.names = names(strats)
@@ -248,13 +248,15 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
   if (length(answer.par)>0) {
     names(answer.par) = paste0("answer_", names(answer.par))
   }
+  #restore.point("run.one.game.outer", force=TRUE)
   
   run.one.game = function(strat,answer,delta,...) {
-    args = list(...)    
-    spar = c(args[intersect(names(strat.par),names(args))],extra.strat.par)
+    args = list(...)   
+    #restore.point("run.one.game", force=TRUE)
+    spar = c(args[intersect(c(names(strat.par), names(strat.answer.par)),names(args))],extra.strat.par)
     apar = c(args[intersect(names(answer.par),names(args))])
     names(apar) = substring(names(apar),8) # strip off "answer_"
-    apar = c(apar,extra.answer.par)
+    apar = c(apar, args[intersect(names(strat.answer.par),names(args))],extra.answer.par)
     
     if (!is.null(game.fun)) {
       gpar = c(args[intersect(names(game.par),names(args))])
@@ -262,12 +264,14 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
     }
     
     u = run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=FALSE)
+    
+    run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=TRUE)
     return(u[2])    
   }
   
   library(compiler)
 
-  par = c(game.par,strat.par,answer.par)
+  par = c(game.par,strat.answer.par,strat.par,answer.par)
   par.names = names(par)
   
   if (verbose)
