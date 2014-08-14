@@ -1,3 +1,99 @@
+
+
+examples.rep.game = function() {
+  #assignInNamespace("cedta.override", c(data.table:::cedta.override,"StratTourn","dplyrExtrs","dplyr"), "data.table")
+  
+  # Generate a game object
+  game = make.pd.game(err.D.prob=0.15)
+  
+  
+  strat = forgiving.grim.trigger
+  get.strat.info(game=game, strat=strat)
+  # Pick a pair of strategies
+  strats = nlist(net.nice,tit.for.tat)
+
+  # Let the strategies play against each other
+  set.storing(TRUE)
+  run.rep.game(delta=0.9, game=game, strat = strats, detailed.return=FALSE)
+    
+  # Init and run a tournament of several strategies against each other  
+  set.storing(FALSE)
+  game$delta = 0.9; game$sample.delta = 0.9
+  strat = nlist(tit.for.tat,always.defect, net.nice0, net.nice1, forgiving.grim.trigger)
+  
+  setwd("D:/libraries/StratTourn/")
+  library(compiler)
+  enableJIT(3)
+  tourn = init.tournament(game=game, strat=strat)
+  Rprof(tmp <- tempfile())
+  tourn = run.tournament(tourn=tourn, R = 100)
+  Rprof()
+  summaryRprof(tmp)
+  unlink(tmp)
+  
+  tourn = run.tournament(tourn=tourn, R = 2)
+  tourn
+  save.tournament(tourn)
+  # Second stage of tournament  
+  strat = nlist(tit.for.tat)
+  strat.dev = list(grim.trigger= nlist(always.defect, always.coop),
+                   tit.for.tat = nlist(always.defect, always.coop))
+  tourn = init.tournament(game=game, strat=strat,strat.dev=strat.dev, delta=0.9)
+  tourn = run.tournament(tourn=tourn, R = 10)
+  tourn
+  
+}
+
+net.nice0 = function(obs,i,t, net.nice=0,k=0, ...) {
+  net.nice(obs,i,t, net.nice,k, ...)
+}
+net.nice1 = function(obs,i,t, net.nice=0,k=1, ...) {
+  net.nice(obs,i,t, net.nice,k, ...)
+}
+  
+
+net.nice = function(obs,i,t, net.nice=0,k=1, ...) {  
+  restore.point("net.nice")
+  if (t==1) {
+    return(nlist(a="C",net.nice))
+  }
+  a = obs$a
+  j = 3-i  
+  a.num = ifelse(a=="C",1,0)
+  net.nice = net.nice + a.num[i]-a.num[j] 
+  if (net.nice <= k) {
+    return(nlist(a="C",net.nice))
+  }
+  return(nlist(a="D",net.nice))
+}
+
+forgiving.grim.trigger = function(obs,i,t,game,coop=TRUE,forgive.prob=0.2,...) {
+  coop = coop & all(obs$a == "C")
+  if (runif(1)<forgive.prob)
+    coop = TRUE
+  a = ifelse(coop,"C","D")
+  list(a=a,coop=coop)
+}
+
+
+get.strat.info = function(i=1,strat, game) {
+  ex.obs = game$example.obs(i=i)
+  ex.action = game$example.action(i=i)
+  
+  # Extras arguments of the strategy
+  args = setdiff(names(formals(strat)),c("obs", "i","t","game","..."))
+  
+  # Returned values of the strategy
+  res  = strat(obs=ex.obs,i=i,t=1, game=game) 
+  
+  actions = names(ex.action)
+  strat.states = setdiff(intersect(names(res), args), actions)
+  strat.par = setdiff(args, c(actions,strat.states))
+  
+  nlist(actions, strat.states, strat.par)
+  
+}
+
 get.obs.i = function(i,obs, game) {
   if (is.null(obs))
     return(NULL)
@@ -18,42 +114,50 @@ get.obs.i = function(i,obs, game) {
   
 }
 
+
+sample.T = function(delta, sample.delta = delta) {
+  T = rnbinom(1,size=1,prob=1-sample.delta)+1
+  if (sample.delta != delta) {
+    weight = dnbinom(T-1, size=1, prob=1-delta) / dnbinom(T-1, size=1, prob=1-sample.delta)
+  } else {
+    weight = 1
+  }
+  list(T=T, T.weight=weight)
+}
+
 #' Runs a repeated game
 #' @param delta discount factor
 #' @param game the game object
 #' @param strat a list of strategies
-#' @param T.min the minium number of periods that will be played. Payoffs for periods t=1,...,T.min will be disocunted with delta^(t-1). After any period t>=T the game stops with probability 1-delta and all payoffs are discounted with delta^(T-1).
 #' @param T.max optionally a maximum number of rounds
-#' @param cap.numbers defines to which extend all numerics of the result are returned. As a default case it is off, meaning that the numerics are not to be transformed. Note that this does not influence the behavior within the game. 
-run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = round(runif(1,10000,12000)),detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, cap.numbers = FALSE) {
+run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = 1 - (1-delta)/2, match.id = sample.int(2147483647,1)) {
   restore.point("run.rep.game")
   
   gbos$do.store = do.store
-  
-  # We have a separate function for multistage games
-  if (length(game$stages)>0) {
-    return(run.rep.multistage.game(delta=delta, game=game, strat=strat, T.min=T.min,T.max = T.max,detailed.return = detailed.return, strat.seed=strat.seed, game.seed = game.seed))
-  }
-  
-  
-  
+   
   if (is.null(game.seed))
     game.seed = draw.seed()
   if (is.null(strat.seed))
     strat.seed = draw.seed()
   
   c(game.seed,strat.seed)
+  
   #Store seeds to replicate for debugging purposes
   gbos$game.seed = game.seed
   gbos$strat.seed = strat.seed
   
   init.random.state("game",game.seed)
   init.random.state("strat",strat.seed)
-  
   set.random.state("game")
-  T.rand = rnbinom(1,size=1,prob=1-delta)
-  T = pmin(T.min + T.rand,T.max)
-   
+  
+  # Draw number of periods from a negative binominal distribution
+  ret = sample.T(delta=delta, sample.delta=sample.delta)
+  T = ret$T
+  T.weight = ret$T.weight
+  if (!is.null(T.max))
+    T = pmin(T, T.max)
+
+  
   strat.id = seq_along(strat)
   n.strat = length(strat.id)
   
@@ -62,29 +166,28 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
   }
   
   if (game$private.signals) {
-    obs = vector("list",game$n)
+    obs = lapply(1:game$n, game$example.obs)
   } else {
-    obs = NULL
+    obs = game$example.obs(i=1)
   }
   
   denv = new.env()
   a = vector("list",n.strat)
   game.states = game$init.states
-  # Names of strategy states
-  sts.names = lapply(strat.id, function(i) {
-    setdiff(names(formals(strat[[i]])),c("obs", "i","t","game","..."))
+  
+  # Strategy infos
+  si = lapply(strat.id, function(i) {
+    get.strat.info(i=i, strat=strat[[i]], game=game)
   })
   strat.states = lapply(strat.id, function(i) {
     list()
   })
+  #action.stats = lapply(1:game$n, get.empty.action.stats, game=game)
   
-  
-  u = rep(0,game$n)
-  delta.compound = 1
+  round.stats.li = vector("list",T)
+  U = rep(0,game$n)
   t = 1
   for (t in 1:T) {
-    #if (t==2)
-    #  stop()
     if (detailed.return) {
       start.strat.states = strat.states
       start.game.states = game.states
@@ -95,13 +198,10 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
     
     # 1. Evaluate strategies of each player
     for (i in strat.id) {
-      obs.i = get.obs.i(obs = obs, i = i, game = game)
-    
+      obs.i = get.obs.i(obs = obs, i = i, game = game)    
       # Use only those strat.par that are not returned as a strat.state
       act.strat.par = strat.par[[i]][setdiff(names(strat.par[[i]]),names(strat.states[[i]]))]
       args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]], act.strat.par)
-      
-      
       tryCatch(
         strat.res <- do.call(strat[[i]],args),
         error = function(e) {
@@ -115,33 +215,22 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
           
           stop(as.character(e), call.=FALSE)
         }
-      )
-      strat.res = format.strat.res(t=t,i=i,game=game,strat.res=strat.res,sts.names=sts.names,formals=formals(strat[[i]]))
-      
-      
-      a[[i]] = strat.res$a
-      strat.states[[i]] = strat.res$strat.states
+      )      
+      a[[i]] = strat.res[si[[i]]$actions]  
+      strat.states[[i]] = strat.res[si[[i]]$strat.states]
       game$check.action(ai=a[[i]],i=i,t=t)
-    }
-    names(a) = game$a.names
-    
+      #action.stats[[i]] = add.to.action.stats(a[[i]], action.stats[[i]])
+    }    
     # 2. Evaluate game results
     set.random.state("game")  
-    results = game$results.fun(a=a,game.states=game.states,game=game)
+    results = game$run.stage.game(t=t,a=a,t.obs=obs,game.states=game.states,game=game)
+    round.stats.li[[t]] = results$round.stats
     old.obs = obs
     obs = results$obs
     game.states = results$game.states
     
     # 3. Update total payoffs
-    if (delta==1) {
-      u = u + results$payoff
-    } else {      
-      u = u + (delta.compound) * results$payoff 
-    }
-    
-    if (t<T.min) {
-      delta.compound = delta.compound*delta
-    }
+    U = U + results$payoff
     
     # 4. Update statistics if desired
     if (detailed.return) {
@@ -150,57 +239,23 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.min=1,T.max = rou
   }
   
   set.random.state(".GLOBAL")
+  u = U/T
+
+  # Round stats
+  round.stats = rbindlist(round.stats.li)
+  game$adapt.round.stats.dt(round.stats, match.id=match.id)
+  rs.dt = data.table(match.id=match.id, strat=rep(names(strat), times=T), round.stats)
   
-  # Compute expexted number of rounds
-  if (T.min>1) {
-    tau = T.min-1
-    t = 1:tau
-    sum(delta^(t-1)*(1-delta) ) + delta^tau
-    ET = sum(delta^(t-1)*(1-delta)*t) + delta^tau*T
-    u/ET
-  } else {
-    ET = T
-  }
-  
-  u = u/ET
-  
-  #Optional transformation to shorten result based on cap.numbers
-  denv$df <- run.rep.game.assist.cap.numbers(detailed.return=detailed.return, output=denv$df, cap.numbers=cap.numbers)
-    
+  # action statistics
+  #as.df = do.call("rbind",lapply(action.stats, unlist)) / T
+  # returned data frame
+  res.dt = data.table(match.id = match.id,i=1:game$n, T=T,u.weight=T*T.weight, strat=names(strat), u=u)
+
   if (detailed.return) {
-    return(list(hist=denv$df,u=u))
+    return(list(hist=denv$df,res=res.dt, rs=rs.dt))
   }
-  return(u)
+  return(list(rs=rs.dt,res=res.dt))
 }  
-
-
-format.strat.res = function(t,i,game,strat.res,sts.names,formals) {
-  restore.point("format.strat.res")
-  
-  #Note: This function relies fully on the example action. Here we can ensure a certain order of the arguments.
-  # It is not obvious though, that the player accepts this order, so we have to match via names
-  # This does not allow for unnamed arguments
-  # Arguments which are not provided, but should be provided are seen as their default value
-  ai.names = names(game$example.action(i=i,t=t))
-  pl.names <- sts.names[[i]]
-  
-  missing.names <- setdiff(c(ai.names,pl.names),names(strat.res))
-  
-  # Don't add missing states. The user must return all strat.states 
-  # other arguments are strat.par and shall not be modified
-  
-  #missing.elements <- as.list(rep(NA,length(missing.names)))
-  #names(missing.elements) <- missing.names
-  #missing.elements[intersect(missing.names,names(formals))] <- formals[intersect(missing.names,names(formals))]
-  #strat.res <- append(strat.res,missing.elements)
-  
-  strat.res <- strat.res[setdiff(c(ai.names,pl.names), missing.names)]
-  if (length(ai.names)==1) {
-    return(list(a=strat.res[[ai.names]], strat.states=strat.res[-match(ai.names,names(strat.res))]))
-  } else {
-    return(list(a = strat.res[match(ai.names,names(strat.res))], strat.states = strat.res[-match(ai.names,names(strat.res))]))
-  }  
-}
 
 # Helper function to add indices to vector obs
 obs.names.to.cols = function(obs.names, obs.len) {
@@ -326,4 +381,30 @@ list.to.str = function(li, collapse=",", li.collapse=";") {
 
 examples.list.to.str = function() {
   list.to.str(list(a=1:2,b=list(c=3,d="Hi")))
+}
+
+
+get.empty.action.stats = function(i, game) {
+  sets = game$get.action.set(i)
+  na = names(sets)
+  as = lapply(sets, function(set) {
+    if (is.null(set))
+      return(0)
+    li = vector("numeric",length(set))
+    names(li) = set
+    li
+  })
+  as  
+}
+
+add.to.action.stats = function(a,as) {
+  li = lapply(seq_along(as), function(j) {
+    if (is.numeric(a[[j]]))
+      return(as[[j]]+a[[j]])
+    ret = as[[j]]
+    ret[a[[j]]] = ret[a[[j]]]+1
+    ret
+  })
+  names(li) = names(as)
+  return(li)
 }

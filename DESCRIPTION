@@ -13,4 +13,6 @@ Depends:
   sktools,
   reshape2,
   data.table,
-  ggplot2
+  ggplot2,
+  dplyr,
+  dplyrExtras

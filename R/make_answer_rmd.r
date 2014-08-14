@@ -1,14 +1,14 @@
 # 
 
 make.answers.rmd = function(in.dir, out.dir, num.scen = 1, num.answer = 2, answer.scen = 1:num.scen) {
-  in.dir = "D:/lehre/cooperation seminar/task1strat"
-  out.dir = "D:/lehre/cooperation seminar/task1_stage2_template"
+  in.dir = "D:/lehre/cooperation seminar/task2strat"
+  out.dir = "D:/lehre/cooperation seminar/task2_stage2_template"
   
-  tmp.file = "D:/libraries/StratTourn/StratTourn/coop1_answerstrats_vorlage.template.Rmd"
+  tmp.file = "D:/libraries/StratTourn/StratTourn/coop2_answerstrats_vorlage.template.Rmd"
   
   num.answer = 2
-  num.scen = 4
-  must.scen = 1:2
+  num.scen = 3
+  must.scen = 1:3
   scs = import.stage1.strats(in.dir, num.scen)
   teams = scs[[1]]$team
   ignore.teams = c("The Overseer","Prof")
