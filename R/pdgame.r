@@ -19,7 +19,7 @@ examples.pd = function() {
   # Init and run a tournament of several strategies against each other  
   set.storing(FALSE)
   strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
-  tourn = init.tournament(game=game, strat=strat, delta=0.95, score.fun = "efficiency-2*instability-20*instability^2")
+  tourn = init.tournament(game=game, strat=strat, delta=0.95)
   tourn = run.tournament(tourn=tourn, R = 4)
   tourn
   
@@ -87,7 +87,7 @@ strange.defector <- function(obs, i, t, game, still.defect=0,...){
 }
 
 #' Generate a (noisy) Prisoners' Dilemma game
-make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, private.signals=FALSE) {
+make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, private.signals=FALSE,delta=0.9,...) {
   
   run.stage.game = function(a,t,t.obs,...) {
     restore.point("pd.stage.game.fun")
@@ -167,7 +167,7 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
     list(a=c("C","D"))
   }
   
-  nlist(run.stage.game, adapt.round.stats.dt,check.action,get.action.set,example.action,example.obs, n=2, private.signals, a.names = c("a1","a2"), params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, name="Noisy PD", score.fun = "efficiency-2*instability- 20*instability^2")
+  nlist(run.stage.game, adapt.round.stats.dt,check.action,get.action.set,example.action,example.obs, n=2, private.signals, a.names = c("a1","a2"), params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
 }
 
 adjust.pd.rs.dt = function(rs.dt) {

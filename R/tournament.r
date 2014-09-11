@@ -26,7 +26,7 @@ first.vs.all.matchings = function(strat,game) {
 }
 
 #' Inits a tournament object
-init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL) {
+init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL, id.add=NULL) {
   
   restore.point("init.tournament")
   
@@ -43,6 +43,9 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
   if (is.null(tourn.id)) {
     id = paste0("Tourn_",game$name,"_",time.str)
     tourn.id = gsub(" ","_",id)
+    if (!is.null(id.add)) {
+      tourn.id = paste0(tourn.id,"_",id.add)
+    }
   }
   if (is.null(team))
     team = rep("", length(strat))
@@ -51,7 +54,7 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
     attr(strat[[s]],"team.name")=team[s]
   }
   if (is.null(rs.file)) {
-    rs.file = paste0(dir,"/", tourn.id, "_rs.csv")
+    rs.file = paste0(tourn.id, "_rs.csv")
   }
   
   tourn = list(tourn.id=tourn.id,strat = strat, game = game, team=team, matchings = matchings, dt=NULL, score.fun = score.fun, rs.file=rs.file)
@@ -120,19 +123,21 @@ print.Tournament = function(tourn) {
 save.tournament = function(tourn,path=getwd(),file=NULL, add.stats = FALSE) {
   if (is.null(file)) {
     #tourn$prev.backup.num = (tourn$prev.backup.num) %% 2 +1
-    #file = paste0(tourn$tourn.id,"_V",tourn$prev.backup.num,".Rdata")
-    file = paste0(tourn$tourn.id,".Rdata")
+    #file = paste0(tourn$tourn.id,"_V",tourn$prev.backup.num,".tou")
+    file = paste0(tourn$tourn.id,".tou")
 
   }
   fn = paste0(path,"/",file)
   
   save(tourn, file=fn)
-  message("Tournament saved under ", fn)
+  display("Tournament saved under ", fn)
   invisible(tourn)
 }
 
 #' Loads a tournament from a file
-load.tournament = function(file) {
-  load(file,verbose=TRUE)
+load.tournament = function(file=paste0(tourn$tourn.id,".tou"), tourn=NULL, path=getwd()) {
+  fn = paste0(path,"/",file)
+  
+  load(fn,verbose=TRUE)
   return(tourn)
 }

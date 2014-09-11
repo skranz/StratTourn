@@ -1,0 +1,75 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+```
+
+
+## Load package and tournament
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(xtable)
+library(shiny)
+setwd("D:/libraries/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_Noisy_PD_20140910_143903_2.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+We use the per-round data in the file **`r file`**. We have `r length(strats)` strategies and observations from `r NROW(rd)` rounds in `r length(unique(rd$match.id))` matches.
+
+## Average performance over time
+
+```{r, echo=FALSE}
+td = summarise(group_by(rd,strat,t), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat),
+         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="u", wvar="num.obs", spar=0.2))
+qplot(data=tsd, x=t, y=u, color=strat, group=strat, size=I(1), geom="line")
+```
+
+# Motion plots of u vs other.u
+```{r, echo=FALSE, results='asis'}
+td = summarise(group_by(rd,strat,t), u=mean(u),other.u = mean(other.u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat),
+  get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
+tsd$Strat = tsd$strat
+p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
+  yvar = "u", colorvar = "strat", sizevar = "", 
+  options = list())
+print(p, tag="chart")
+```
+

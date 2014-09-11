@@ -140,6 +140,15 @@ get.rounds.vs.matrix = function(d, var="u", round=4) {
   round(mat,round)
 }
 
+mean.over.matches = function(dt=tourn$dt, tourn,var) {
+  restore.point("mean.over.matches")
+  d = s_select(dt, paste0("strat, u.weight,", var))
+  dg = group_by(d, strat)
+  ds = s_summarise(dg, paste0(var," = sum( ", var," * u.weight)/sum(u.weight)"))
+  ds
+}
+
+
 strat.rank.from.matches = function(dt=tourn$dt, tourn,var=NULL, add.var = !is.null(var)) {
   restore.point("strat.rank.from.matches")
   if (is.null(var))
@@ -148,9 +157,10 @@ strat.rank.from.matches = function(dt=tourn$dt, tourn,var=NULL, add.var = !is.nu
   setnames(d, var, "VARIABLE")
   dg = group_by(d, strat)
   ds = summarise(dg, mean = sum(VARIABLE*u.weight)/sum(u.weight), se = wtd.se(VARIABLE,u.weight), num.obs = length(VARIABLE))
-  ds = arrange(ds, -mean)
   if (add.var)
     ds$var = var
+
+  ds = arrange(ds, -mean)
   ds = mutate(ds, rank=seq_along(mean), low = mean-se, up=mean+se)
   sigma.rank = rep(0, NROW(ds))
   for (i in 1:NROW(ds)) {
@@ -254,4 +264,24 @@ get.matches.vs.matrix = function(dt=tourn$dt, tourn, var="u", br.sign=NULL, roun
   colnames(mat) = rownames(mat) = strats
 
   mat
+}
+
+get.matches.vs.grid = function(dt=tourn$dt, tourn, var="u") {
+  restore.point("get.matches.vs.matrix")
+  num.u = NROW(dt)
+  weight.factor = num.u / sum(dt$u.weight)
+  
+  d = copy(dt)
+  d$VAR = d[[var]] * d$u.weight * weight.factor
+  #d = s_mutate(dt, paste0("VAR=",var,"*u.weight * weight.factor"))
+  d = select(d,match.id,i,strat,VAR)
+  d1 = filter(d, i==1)
+  d2 = filter(d, i==2)
+  dw = data.table(match.id=d1$match.id, strat1=d1$strat, strat2=d2$strat, u1=d1$VAR, u2=d2$VAR)
+  dw$pair = paste0(dw$strat1," - ",dw$strat2)
+  ds = summarise(group_by(dw,pair),strat1=strat1[1], strat2=strat2[1], u1=mean(u1),u2=mean(u2), obs=length(u1))
+  ds = as.data.frame(ds)
+  colnames(ds)[4:5] = paste0(var,1:2)
+  #ds[,4:5] = round(ds[,4:5],round)
+  ds
 }

@@ -1,3 +1,14 @@
+
+#' Displays the given text
+#' @export
+display = function (..., collapse = "\n", sep = "") 
+{
+    str = paste("\n", paste(..., collapse = collapse, sep = sep), 
+        "\n", sep = "")
+    invisible(cat(str))
+}
+
+
 examples.pos.in.seq.of.ones = function() {
   x = sample(c(0,0,1,1),20, replace=TRUE)
   rbind(x, pos.in.seq.of.ones(x))

@@ -1,34 +1,34 @@
 
-evolve.asymmetric = function(initial=NULL,mat,rounds = 100,alpha=0.1, min.share=0.001) {
+evolve.asymmetric = function(initial=NULL,mat,generations = 100,alpha=0.1, min.share=0.001) {
   restore.point("evolve.asymmetric")
   if (is.null(initial))
     initial = lapply(mat,function(mat) rep(1/NROW(mat),NROW(mat)))
   shares = list()
   for (i in 1:2) {
-    shares[[i]] = matrix(NA,rounds,length(initial[[i]]))
+    shares[[i]] = matrix(NA,generations,length(initial[[i]]))
     shares[[i]][1,] = initial[[i]]
     colnames(shares[[i]]) = rownames(mat[[i]])
   }
-  for (r in 2:rounds) {
-    shares[[1]][r,] = evolve.one.round(shares[[1]][r-1,],shares[[2]][r-1,],mat[[1]],alpha=alpha,min.share=min.share)
-    shares[[2]][r,] = evolve.one.round(shares[[2]][r-1,],shares[[1]][r-1,],mat[[2]],alpha=alpha, min.share=min.share) 
+  for (r in 2:generations) {
+    shares[[1]][r,] = evolve.one.generation(shares[[1]][r-1,],shares[[2]][r-1,],mat[[1]],alpha=alpha,min.share=min.share)
+    shares[[2]][r,] = evolve.one.generation(shares[[2]][r-1,],shares[[1]][r-1,],mat[[2]],alpha=alpha, min.share=min.share) 
   }
   return(shares)
 }
 
 plot.evolve.asymmetric = function(shares) {
   shares = shares[[1]]
-  rounds = NROW(shares)
-  df = as.data.frame(cbind(1:rounds,res.prop))
-  colnames(df)[1] = "round"
-  mdf = melt(df,id.vars = "round")
-  colnames(mdf) = c("round","strategy","share")
-  qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
+  generations = NROW(shares)
+  df = as.data.frame(cbind(1:generations,res.prop))
+  colnames(df)[1] = "generation"
+  mdf = melt(df,id.vars = "generation")
+  colnames(mdf) = c("generation","strategy","share")
+  qplot(x=generation,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
   
 }
 
 
-evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,rounds = 100,alpha=0.1, min.shares=0, add.matrix=TRUE) {
+evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,generations = 100,alpha=0.1, min.shares=0, add.matrix=TRUE) {
   # Start with last row of a matrix
   if (is.matrix(initial)) {
     org.mat = initial
@@ -37,11 +37,11 @@ evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,rounds = 100,alpha=0.1,
     org.mat = NULL
   }
   
-  shares = matrix(NA,rounds,length(initial))
+  shares = matrix(NA,generations,length(initial))
   shares[1,] = initial
   colnames(shares) = rownames(mat)
-  for (r in 2:rounds) {
-    shares[r,] = evolve.one.round(shares=shares[r-1,],mat=mat,alpha=alpha, min.shares=min.shares) 
+  for (r in 2:generations) {
+    shares[r,] = evolve.one.generation(shares=shares[r-1,],mat=mat,alpha=alpha, min.shares=min.shares) 
   }
   if (add.matrix & !is.null(org.mat)) {
     shares = rbind(org.mat,shares[-1,])
@@ -49,24 +49,46 @@ evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,rounds = 100,alpha=0.1,
   return(shares)
 }
 
+evolve2 = function(initial=rep(1/NROW(mat),NROW(mat)),vs.mat,generations = 100,alpha=0.1, min.shares=0) {
+  s.mat = evolve(initial,mat=vs.mat, generations=generations, alpha = alpha, min.shares = min.shares)
+  
+  u.mat = t(vs.mat %*% t(s.mat))
+  
+  df = as.data.frame(s.mat)
+  df$generation = 1:NROW(df)
+  smdf = melt(df,id.vars = "generation")
+  colnames(smdf) = c("generation","strategy","share")
+  
+  df = as.data.frame(u.mat)
+  df$generation = 1:NROW(df)
+  umdf = melt(df,id.vars = "generation")
+  colnames(umdf) = c("generation","strategy","u")
+  
+  mdf = merge(smdf,umdf, by=c("generation","strategy"))
+  mdf$strat = mdf$strategy
+  
+  mdf$time = as.Date(paste0(mdf$generation+2000,"-01-01"))
+  list(grid=mdf, shares.mat=s.mat, u.mat=u.mat)
+}
+
 #res.prop = ev
 plot.evolve = function(res.prop, direct.labels=suppressWarnings(require(directlabels,quietly=TRUE))) {
-  rounds = NROW(res.prop)
-  df = as.data.frame(cbind(1:rounds,res.prop))
-  colnames(df)[1] = "round"
-  mdf = melt(df,id.vars = "round")
-  colnames(mdf) = c("round","strategy","share")
+  generations = NROW(res.prop)
+  df = as.data.frame(cbind(1:generations,res.prop))
+  colnames(df)[1] = "generation"
+  mdf = melt(df,id.vars = "generation")
+  colnames(mdf) = c("generation","strategy","share")
   if (!direct.labels) {
-    qplot(x=round,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
+    qplot(x=generation,y=share,group=strategy,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2), shape = strategy)
   } else {
     library(directlabels)
-    p=qplot(x=round,y=share,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2))
+    p=qplot(x=generation,y=share,color=strategy,data=mdf, main = "Evolution of strategies", geom="point", size=I(1.2))
     direct.label(p) 
   }
 }
 
-evolve.one.round = function(shares,shares.j=shares,mat,alpha=0.1, min.shares=0.001) {
-  restore.point("evolve.one.round")
+evolve.one.generation = function(shares,shares.j=shares,mat,alpha=0.1, min.shares=0.001) {
+  restore.point("evolve.one.generation")
   fit = mat %*% shares.j
   shares = pmax(min.shares,shares + alpha*(fit-sum(shares*fit))*shares)
   shares/sum(shares)
@@ -74,7 +96,7 @@ evolve.one.round = function(shares,shares.j=shares,mat,alpha=0.1, min.shares=0.0
 
 examples.evolve = function() {
   mat = tourn$mat
-  ev = evolve(mat=mat, rounds = 500)
+  ev = evolve(mat=mat, generations = 500)
   plot.evolve(ev)
 }
 
@@ -125,10 +147,10 @@ path.to.defect = function() {
   
   # Start evolution
   R = 1
-  ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=0, alpha=0.5)
+  ev = evolve(initial=init.shares,mat=mat, generations = R,min.shares=0, alpha=0.5)
   plot.evolve(ev,!TRUE)
   next.shares = add.type(ev,"always.defect")
-  ev = evolve(initial=next.shares,mat=mat, rounds = 200,min.shares=0, alpha=0.5)
+  ev = evolve(initial=next.shares,mat=mat, generations = 200,min.shares=0, alpha=0.5)
   plot.evolve(ev)
   
   
@@ -153,9 +175,9 @@ path.to.defect = function() {
   
   # Start evolution
   R = 100
-  ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=min.shares, alpha=1)
+  ev = evolve(initial=init.shares,mat=mat, generations = R,min.shares=min.shares, alpha=1)
   next.shares = add.type(ev,"always.defect")
-  ev = evolve(initial=next.shares,mat=mat, rounds = 200,min.shares=min.shares, alpha=1)
+  ev = evolve(initial=next.shares,mat=mat, generations = 200,min.shares=min.shares, alpha=1)
   plot.evolve(ev)
   
   
@@ -165,10 +187,10 @@ path.to.defect = function() {
   init.shares = add.type(init.shares,"always.coop",0.01)
   
   R = 100
-  ev = evolve(initial=init.shares,mat=mat, rounds = R,min.shares=min.shares, alpha=10)
+  ev = evolve(initial=init.shares,mat=mat, generations = R,min.shares=min.shares, alpha=10)
   plot.evolve(ev)
   next.shares = add.type(ev,"always.defect")
-  ev = evolve(initial=next.shares,mat=mat, rounds = R,min.shares=min.shares, alpha=10)
+  ev = evolve(initial=next.shares,mat=mat, generations = R,min.shares=min.shares, alpha=10)
   plot.evolve(ev)
   
   
