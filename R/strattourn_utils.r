@@ -1,3 +1,12 @@
+apply.on.numeric = function(dat, fun, ..., vars=names(dat)) {
+  for (var in vars) {
+    if (is.numeric(dat[[var]])) {
+      dat[[var]] = fun(dat[[var]],...)
+    }  
+  }
+  dat
+}
+
 
 #' Displays the given text
 #' @export
@@ -61,3 +70,18 @@ get.smoothed.vals = function(d,xout=d[[xvar]], xvar="num.err",yvar="u", wvar="nu
   df = do.call(data.frame,res.li)
   df
 }
+
+deparse.strat = function(strat, name = NULL) {
+  str = capture.output(strat)
+  last.line = which(str.trim(str)=="}")
+  if (length(last.line)>0)  {
+    last.line = last.line[length(last.line)]
+    str = str[1:last.line]
+  }
+  str = merge.lines(str)
+  if (!is.null(name)) {
+    str = paste0(name, " = ", str)
+  }
+  str
+}
+

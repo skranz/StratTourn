@@ -1,18 +1,55 @@
 examples.init.scenario.study = function() {
   setwd("D:/libraries/StratTourn/studies")
-  baseline = list(delta = 0.9, err.D.prob = 0.2)
+  baseline = list(delta = 0.95, err.D.prob = 0.15)
   scenarios = list(
-    high.delta=list(delta=.9),
-    low.delta =list(delta=.6)                  
+    baseline=list(),
+    high.err.D =list(err.D.prob=.3),
+    err.C = list(err.C.prob=0.15),
+    low.delta = list(delta=0.5)
   )
+  
+  # new scenarios
+  baseline = list(delta = 0.99, err.D.prob = 0.2)
+  scenarios = list(
+    baseline=list(),
+    low.err.D =list(err.D.prob=.05),
+    low.delta = list(delta=0.7)
+  )
+
+  
+  strat.dir = "D:/libraries/StratTourn/task1strat"
+  num.scen = 3
+  scen.strat.li = import.stage1.strats(strat.dir, num.scen)
+
+  study = init.scenario.study("Noisy PD", game.fun = make.pd.game, baseline, scenarios, scen.strat.li=scen.strat.li)
+  run.scenario(study, 2, R=3)
+
+  save.scenario.study(study)
+
+  #study = load.scenario.study("Study_Noisy PD_20140912 093613.stu")
+  study = load.scenario.study("Study_Noisy PD_20140913 114354.stu")
+
+  set.restore.point.options(display.restore.point=!TRUE)
+  set.storing(FALSE)
+  run.scenarios(study, R=100)
+  set.storing(TRUE)
+  save.scenario.study(study)
+
+  
+  
+  
+  cbind(scen.strat$strat.name,scen.strat$team)
+
+  
   strats =  nlist(always.coop,tit.for.tat,always.defect, net.nice0, net.nice1, forgiving.grim.trigger)
 
   strat.li = list(strats,strats)
   study = init.scenario.study("Noisy PD", game.fun = make.pd.game, baseline, scenarios, strat.li=strat.li)
+  R = 3
+
   run.scenario(study, 1, R=R)
 
   set.storing(FALSE)
-  R = 3
   run.scenarios(study)
   run.cross.scenarios(study,R=3)
   save.scenario.study(study)
@@ -25,9 +62,20 @@ examples.init.scenario.study = function() {
 
 }
 
-init.scenario.study = function(study.name, game.fun, baseline, scenarios, strat.li=NULL, teams.li=NULL, tourn.li = NULL, study.id = NULL) {
+init.scenario.study = function(study.name, game.fun, baseline, scenarios, strat.li=NULL, teams.li=NULL, tourn.li = NULL, study.id = NULL, scen.strat.li=NULL) {
   restore.point("init.scenario.study")
   n.scen = length(scenarios)
+  
+  # scen.strat.li is returned from import.stage1.strat, which parses students' .rmd files
+  if (!is.null(scen.strat.li)) {
+    if (is.null(strat.li))
+      strat.li = lapply(scen.strat.li, function(scen.strat) scen.strat$strat)
+    if (is.null(teams.li))
+      teams.li = lapply(scen.strat.li, function(scen.strat) scen.strat$team)
+    
+    
+  }
+  
   if (is.null(strat.li)) strat.li = vector("list", n.scen)
   if (is.null(teams.li)) teams.li = vector("list", n.scen)
   if (is.null(tourn.li)) tourn.li = vector("list", n.scen)
@@ -120,6 +168,7 @@ run.study.tourn = function(tourn, R=10,use.jit=TRUE,load.tourn.data=TRUE,...) {
     enableJIT(3)
   }
   tourn = run.tournament(tourn=tourn, R = R,...)
+  enableJIT(0)
   tourn
 }
 

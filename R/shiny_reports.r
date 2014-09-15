@@ -17,13 +17,19 @@ run.shiny.reports = function() {
   library(xtable)
   library(shinyBS)
   library(googleVis)
-  set.restore.point.options(display.restore.point=!TRUE)
+  library(shinyAce)
+  set.restore.point.options(display.restore.point=TRUE)
   setwd("D:/libraries/StratTourn/studies")
   set.view.mode("shiny_report")
   sr = get.sr()
   sr$file.path = getwd()
-  sr$tourn.file = "Tourn_Noisy_PD_20140910_143903_1.tou"
+  sr$tourn.file = "Tourn_Noisy_PD_20140912_094618_1.tou"
+  sr$tourn.file = "Tourn_Noisy_PD_20140913_114354_1.tou"
   set.tourn.file(sr$tourn.file)
+  
+  strats = names(sr$tourn$strat)
+  sr$strat.sizes = rep(1,length(strats))
+  names(sr$strat.sizes) = strats
   
   sr$rep.li = make.rep.li()
   sr$report = sr$rep.li[[1]]
@@ -47,18 +53,27 @@ payoff_matrix:
 duels_plot:
   label: duels plot
   file: D:/libraries/StratTourn/StratTourn/reports/matches_duels_plot.rmd
-reciprocity:
-  label: reciprocity
-  file: D:/libraries/StratTourn/StratTourn/reports/reciprocity_regressions.rmd
+duel_stats:
+  label: duel stats
+  file: D:/libraries/StratTourn/StratTourn/reports/payoff_diff_ranking.rmd
+strat_stats:
+  label: strat stats
+  file: D:/libraries/StratTourn/StratTourn/reports/strat_indicators.rmd
 payoffs_over_time:
   label: payoff over time
   file: D:/libraries/StratTourn/StratTourn/reports/payoffs_over_time.rmd
+diag_payoffs_over_time:
+  label: against itself
+  file: D:/libraries/StratTourn/StratTourn/reports/diag_payoffs_over_time.rmd
 duels_over_time:
   label: duels over time
   file: D:/libraries/StratTourn/StratTourn/reports/duels_over_time.rmd
 evolution:
   label: evolution
   file: D:/libraries/StratTourn/StratTourn/reports/evolution.rmd
+strategies:
+  label: strategies
+  file: D:/libraries/StratTourn/StratTourn/reports/show_strat_code.rmd
 
 
 "
@@ -78,15 +93,17 @@ evolution:
 
 make.report.ui = function(sr=get.sr()) {
   strats = sr$strats
+  sizes.str = paste0(names(sr$strat.sizes),"=", sr$strat.sizes, collapse="\n")
   ui = fluidPage("Analyse Tournament",
     progressInit(),             
     sidebarLayout(
       sidebarPanel(
         tabsetPanel(id ="leftPanel",
           tabPanel("Reports",
-            bsActionButton("update_strat_btn","update", size="small"),       
+            bsActionButton("update_strat_btn","update", size="small"),
             selectizeInput("used_strats", label = "Used strategies:",
             choices = strats, selected = strats, multiple=TRUE,width="100%"),
+            aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
             select.report.ui(),
             uiOutput("ui.custom.parameters")
 
@@ -121,8 +138,10 @@ make.report.server = function(sr = get.sr()) {
         
     output$reportPanel = renderUI({
       cat("render reportPanel")
+      #browser()
       update.report$counter
       html=compile.report(sr$report, session=session)
+      cat("after compile.report")
       HTML(html)
     })
 
@@ -174,44 +193,43 @@ select.tournament.ui = function(sr=get.sr()) {
 select.report.ui = function(rep.li=sr$rep.li, sr=get.sr()) {
   restore.point("select.report.ui")
   buttons = lapply(rep.li, function(rep) {
-    bsActionButton(rep$button.id,rep$label)
+    bsActionButton(rep$button.id,rep$label, size="small")
   })
   names(buttons)=NULL
   do.call(fluidRow,buttons)
   #buttons[[1]]
 }
 
-adapt.round.data = function(tourn, used.strats=NULL, strats=tourn$strats, sr=get.sr()) {
-  if (!identical(used.strats,strats)) {
-    rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
-    sr$rd = sr$ard[rows,]
-  } else {
-    sr$rd = sr$ard
-  }
-
-}
-
-set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sr=get.sr()) {
+set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sizes.string="", sr=get.sr(), set.round.data=TRUE) {
   restore.point("set.tourn.data")
+
+  if (is.null(used.strats))
+    used.strats = names(tourn$strat)
   
+  strat.sizes = parse.sizes.string(str = sizes.string,used.strats = used.strats,to.shares = FALSE)
+  shares = strat.sizes / sum(strat.sizes)
+
   # Data for each match
   md = tourn$dt
-  md = add.other.var(md,c("strat","u"))
+  md$share = shares[md$strat] 
+  md = add.other.var(md,c("strat","u","share"))
   md$delta.u = md$u - md$other.u
-  
+    
   # Names of all strategies
   strats = unique(md$strat)
-  
   amd = md
-  if (is.null(used.strats)) {
-    used.strats = strats
-  } else {
+ 
+  if (!setequal(used.strats, strats)) {
     rows = md$strat %in% used.strats & md$other.strat %in% used.strats
     md = amd[rows,]
   }
-    
-  copy.into.env(dest=sr,names = c("tourn","amd", "md","strats","used.strats"))
+ 
+  rank.dt = strat.rank.from.matches(md)
   
+  copy.into.env(dest=sr,names = c("tourn","amd", "md","strats","used.strats","strat.sizes", "shares","rank.dt"))
+  
+  if (set.round.data)
+    adapt.round.data()
 }
 
 
@@ -254,6 +272,11 @@ click_load_tourn = function(session, update.report,update.tourn,...,sr=get.sr())
   #          choices = strats, selected = strats, multiple=TRUE,width="100%")
   updateSelectizeInput(session, "used_strats",label = "Used strategies:",
     choices = strats, selected = strats)
+
+  strats = sr$strats
+  sizes.string = paste0(names(sr$strat.sizes),"=", sr$strat.sizes, collapse="\n")
+  updateAceEditor(session,"sizes_string", value=sizes.string)
+  
   
   update.report$counter = isolate(update.report$counter+1)
   update.tourn$counter = isolate(update.tourn$counter+1)
@@ -261,12 +284,19 @@ click_load_tourn = function(session, update.report,update.tourn,...,sr=get.sr())
 }
 
 click_report_btn = function(session,id,..., update.report,new.report, sr=get.sr()) {
-  restore.point("click_update_strat")
+  
+  
+  restore.point("click_report_btn")
   cat("I am in click_update_strat")
   #browser()
   id = str.left.of(id,"_report_btn")
   sr$report = sr$rep.li[[id]]
-  set.tourn.data()  
+  used.strats = isolate(session$input$used_strats)
+  sizes.string = isolate(session$input$sizes_string)
+
+  #set.tourn.data()
+
+  set.tourn.data(used.strats=used.strats, sizes.string = sizes.string)
 
   new.report$counter = isolate(new.report$counter+1)
   update.report$counter = isolate(update.report$counter+1)
@@ -281,7 +311,9 @@ click_update_strat = function(session,..., update.report) {
   #browser()
   input=session$input
   used.strats = isolate(input$used_strats)
-  set.tourn.data(used.strats=used.strats)
+  sizes.string = isolate(input$sizes_string)
+
+  set.tourn.data(used.strats=used.strats, sizes.string = sizes.string)
   
   update.report$counter = isolate(update.report$counter+1)
   
@@ -334,8 +366,8 @@ set.tourn.file = function(tourn.file, sr = get.sr()) {
   restore.point("set.tourn.file")
   sr$tourn.file = tourn.file
   tourn = load.tournament(sr$tourn.file)
-  set.tourn.data(tourn, used.strats = NULL)
-
+    
+  set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
   load.round.data(tourn$rs.file)
 
 }
@@ -406,6 +438,43 @@ load.round.data = function(file=tourn$rs.file, tourn=sr$tourn, sr=get.sr()) {
   rd = as.tbl(as.data.frame(rd))
   rd = add.other.var(rd,c("strat","u"))
   sr$ard = rd
-  sr$rd = rd
+
+  adapt.round.data()
+}
+
+
+adapt.round.data = function(tourn=sr$tourn, used.strats=sr$used.strats, strats=names(tourn$strat), shares=sr$shares, sr=get.sr()) {
+  restore.point("adapt.round.data")
   
+  if (is.null(used.strats))
+    used.strats = strats
+  if (!identical(used.strats,strats)) {
+    rows = sr$ard$strat %in% used.strats & sr$ard$other.strat %in% used.strats
+    sr$rd = sr$ard[rows,]
+  } else {
+    sr$rd = sr$ard
+  }
+}
+
+
+parse.sizes.string = function(str, used.strats=sr$used.strats, sr = get.sr(), to.shares=TRUE) {
+  restore.point("parse.sizes.string")
+  sizes = rep(1,NROW(used.strats))
+  names(sizes) = used.strats
+
+  str = str.trim(sep.lines(str))
+  str = str[nchar(str)>0]
+  str = merge.lines(str, collapse=",")
+  str = gsub(" ","",str,fixed=TRUE)
+  str = gsub(",,",",",str,fixed=TRUE)
+  
+  vec = NULL
+  try(vec <- eval(parse(text=paste0("c(",str,")"))))
+
+  cols = intersect(names(sizes), names(vec))
+  sizes[cols] = vec[cols]
+  if (to.shares)
+    sizes = sizes / sum(sizes)
+
+  sizes
 }

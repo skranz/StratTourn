@@ -52,36 +52,32 @@ if (!identical(used.strats,strats)) {
 
 
 ```{r "init_parameters", include=FALSE}
-end.t = 50
+end.t = 150
 start.t = 1
 ```
 
-## Average payoffs over time
+## Average performance each strategy against itself over time
 
 ```{r, echo=FALSE, results='asis'}
-library(dplyr)
-fun = function(rd, start.t, end.t) {
-  restore.point("fun...")
-  td = summarise(group_by(rd,strat,t), u=mean(u),other.u = mean(other.u), num.obs = length(t))
+  srd = filter(rd, strat==other.strat)
+  td = summarise(group_by(srd,strat,t), u=mean(u), num.obs = length(t))
   td = as.data.frame(td)
   t.seq = start.t:min(max(td$t),end.t)
   tsd = do(group_by(td, strat),
-    get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
+    get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u"), wvar="num.obs", spar=0.2))
   tsd$Strat = tsd$strat
   tsd$t = tsd$t+1900
-  stat = '{"xZoomedDataMin":-2177452800000,"colorOption":"4","playDuration":15000,"orderedByY":false,"xZoomedIn":false,"sizeOption":"_UNISIZE","yZoomedIn":false,"xLambda":1,"nonSelectedAlpha":0.4,"orderedByX":false,"yZoomedDataMax":1.010901557,"showTrails":false,"iconType":"LINE","duration":{"timeUnit":"Y","multiplier":1},"uniColorForNonSelected":false,"yZoomedDataMin":0,"xAxisOption":"_TIME","xZoomedDataMax":-631152000000,"time":"1950","dimensions":{"iconDimensions":["dim0"]},"yLambda":1,"iconKeySettings":[],"yAxisOption":"3"};'
-  
+  state = '{"xZoomedDataMin":-2177452800000,"colorOption":"3","iconKeySettings":[],"xZoomedIn":false,"sizeOption":"_UNISIZE","yZoomedIn":false,"xLambda":1,"playDuration":15000,"xZoomedDataMax":2524608000000,"xAxisOption":"_TIME","iconType":"LINE","nonSelectedAlpha":0.4,"orderedByY":false,"uniColorForNonSelected":false,"yZoomedDataMin":-0.004,"orderedByX":false,"yZoomedDataMax":1.006974926,"showTrails":false,"yAxisOption":"2","time":"2050","dimensions":{"iconDimensions":["dim0"]},"yLambda":1,"duration":{"timeUnit":"Y","multiplier":1}};'
   p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
     yvar = "u", colorvar = "strat", sizevar = "", 
-    options = list(stat=stat))
+    options = list(state = state))
   #plot(p)
   print(p, tag="chart")
-}
-fun(rd, start.t, end.t)
 ```
+We show the payoffs of each strategy against itself. Note that we have fewer observations for later periods t (see plot below). 
 
 ```{r, echo=FALSE, fig.height=8}
-t.obs = tabulate(rd$t) / 2
+t.obs = tabulate(srd$t) / 2
 plot(t.obs, xlab="t",ylab="matches (log scale)",main="Number of matches with a period t",log="y")
 grid(nx = NA, ny = NULL, col = "lightgray", lty = "dotted",
      lwd = par("lwd"), equilogs = TRUE)

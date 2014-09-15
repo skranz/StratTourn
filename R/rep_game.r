@@ -114,6 +114,20 @@ get.obs.i = function(i,obs, game) {
   
 }
 
+examples.sample.T = function() {
+  delta = 0.985
+  n = 100000
+  T = rnbinom(n,size=1,prob=1-delta)+1
+  hist(T,breaks=50)
+  sum(T>=50)/n
+  T.bar = 80
+  sum((T>=T.bar)*(T-T.bar))/n
+  sum((T<T.bar)*(T))/n
+  mean(T)
+  median(T)
+  tabulate(T[T<=400])
+  plot(ecdf(T[T<=400]))
+}
 
 sample.T = function(delta, sample.delta = delta) {
   T = rnbinom(1,size=1,prob=1-sample.delta)+1
@@ -197,6 +211,7 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
     set.random.state("strat")
     
     # 1. Evaluate strategies of each player
+    i = 2
     for (i in strat.id) {
       obs.i = get.obs.i(obs = obs, i = i, game = game)    
       # Use only those strat.par that are not returned as a strat.state

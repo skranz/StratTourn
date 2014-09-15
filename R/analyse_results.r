@@ -148,15 +148,34 @@ mean.over.matches = function(dt=tourn$dt, tourn,var) {
   ds
 }
 
+add.strat.shares = function(dt, shares=NULL, add.other.share = "other.strat" %in% colnames(dt), overwrite=FALSE) {
+  restore.point("add.strat.shares")
+  if (is.null(shares)) {
+    strats=unique(dt$strat)
+    if (is.null(dt$share) | overwrite)
+      dt$share= 1 / length(strats)
+    if (is.null(dt$other.share) | overwrite)
+      dt$other.share= 1 / length(strats)
+  } else {
+    if (is.null(dt$share) | overwrite)
+      dt$share= shares[dt$strat]
+    if (is.null(dt$other.share) | overwrite)
+      dt$other.share= shares[dt$other.strat]    
+  }
+  dt
+}
 
 strat.rank.from.matches = function(dt=tourn$dt, tourn,var=NULL, add.var = !is.null(var)) {
   restore.point("strat.rank.from.matches")
   if (is.null(var))
     var = "u"
-  d = s_select(dt, paste0("strat, u.weight,", var))
+  
+  dt = add.strat.shares(dt)
+  
+  d = s_select(dt, paste0("strat, u.weight,other.share,share,", var))
   setnames(d, var, "VARIABLE")
   dg = group_by(d, strat)
-  ds = summarise(dg, mean = sum(VARIABLE*u.weight)/sum(u.weight), se = wtd.se(VARIABLE,u.weight), num.obs = length(VARIABLE))
+  ds = summarise(dg, share = round(share[1]*100,1),mean = sum(VARIABLE*u.weight*other.share)/sum(u.weight*other.share), se = wtd.se(VARIABLE,u.weight*other.share), num.obs = length(VARIABLE))
   if (add.var)
     ds$var = var
 
@@ -168,8 +187,8 @@ strat.rank.from.matches = function(dt=tourn$dt, tourn,var=NULL, add.var = !is.nu
   }
   ds$sigma.rank = sigma.rank
   if (add.var) 
-    return(select(ds, strat,var, rank, sigma.rank, mean, se, up, low, num.obs))
-  return(select(ds, strat, rank, sigma.rank, mean, se, up, low, num.obs))
+    return(select(ds, strat,share,var, rank, sigma.rank, mean, se, up, low, num.obs))
+  return(select(ds, strat,share, rank, sigma.rank, mean, se, up, low, num.obs))
 }
 
 eval_text = function(code, subst=NULL, envir=parent.frame()) {
@@ -268,18 +287,23 @@ get.matches.vs.matrix = function(dt=tourn$dt, tourn, var="u", br.sign=NULL, roun
 
 get.matches.vs.grid = function(dt=tourn$dt, tourn, var="u") {
   restore.point("get.matches.vs.matrix")
+  
+  dt = add.strat.shares(dt)
+
   num.u = NROW(dt)
   weight.factor = num.u / sum(dt$u.weight)
   
   d = copy(dt)
   d$VAR = d[[var]] * d$u.weight * weight.factor
   #d = s_mutate(dt, paste0("VAR=",var,"*u.weight * weight.factor"))
-  d = select(d,match.id,i,strat,VAR)
+  d = select(d,match.id,i,strat,share, VAR)
   d1 = filter(d, i==1)
   d2 = filter(d, i==2)
-  dw = data.table(match.id=d1$match.id, strat1=d1$strat, strat2=d2$strat, u1=d1$VAR, u2=d2$VAR)
+  dw = data.table(match.id=d1$match.id, strat1=d1$strat, strat2=d2$strat, u1=d1$VAR, u2=d2$VAR, share1=d1$share, share2=d2$share)
   dw$pair = paste0(dw$strat1," - ",dw$strat2)
-  ds = summarise(group_by(dw,pair),strat1=strat1[1], strat2=strat2[1], u1=mean(u1),u2=mean(u2), obs=length(u1))
+  ds = summarise(group_by(dw,pair),strat1=strat1[1], strat2=strat2[1], u1=mean(u1),u2=mean(u2), obs=length(u1), share1=share1[1], share2=share2[1])
+  ds$share1x2 = ds$share1* ds$share2
+  
   ds = as.data.frame(ds)
   colnames(ds)[4:5] = paste0(var,1:2)
   #ds[,4:5] = round(ds[,4:5],round)

@@ -15,4 +15,5 @@ Depends:
   data.table,
   ggplot2,
   dplyr,
-  dplyrExtras
+  dplyrExtras,
+  stringtools

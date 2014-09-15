@@ -40,16 +40,7 @@ init.size.string = paste0(used.strats,"=1", collapse=",")
 #used.strats = c("tit.for.tat","always.defect","net.nice0","net.nice1")
 #init.size.string = "always.coop=1,tit.for.tat=1,always.defect=1,net.nice0=100,net.nice1=1,forgiving.grim.trigger=1"
 
-# Set size from init.size
-init.size = rep(1,NROW(used.strats))
-names(init.size) = used.strats
-
-vec = NULL
-try(vec <- eval(parse(text=paste0("c(",init.size.string,")"))))
-
-cols = intersect(names(init.size), names(vec))
-init.size[cols] = vec[cols]
-init.size = init.size / sum(init.size)
+init.size = parse.sizes.string(init.size.string, used.strats=used.strats, sr=NULL)
 
 vs.mat =  get.matches.vs.matrix(md)
 vs.mat = vs.mat[used.strats,used.strats]

@@ -14,11 +14,9 @@ examples.import.stage1.strats = function() {
   library(compiler)
 
   dir = "D:/lehre/cooperation seminar/task1strat"
-  num.scen = 1
+  num.scen = 2
   scen.strat = import.stage1.strats(dir, num.scen)[[1]]
   cbind(scen.strat$strat.name,scen.strat$team)
-  
-  
   
   game = make.pd.game(err.D.prob = 0.15)
   strat = scen.strat$strat
