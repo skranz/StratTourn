@@ -3,7 +3,7 @@ Analyzing Cooperation with Game Theory and Simulation
 Tutorial for the R package StratTourn
 ========================================================================
 
-**Date: 2013-10-21**
+**Date: 2014-10-09**
 
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
 
@@ -35,6 +35,8 @@ install.packages("reshape2")
 library(devtools)
 install_github(repo="restorepoint", username="skranz")
 install_github(repo="sktools", username="skranz")
+install_github(repo="stringtools", username="skranz")
+install_github(repo="dplyrExtras", username="skranz")
 install_github(repo="StratTourn", username="skranz")
 ```
 
@@ -71,9 +73,11 @@ It turns out that if the continuation probability $\delta$ is large enough, such
 
 ### 2.3 What will we do in the seminar?
 
-We search for stable, socially efficient cooperative strategy profiles in several strategic interactions and study which factors make cooperation harder and how one best adapts cooperation strategies to such factors. I will typically interpret such strategy profiles as stable *social norms* that allow a high degree of cooperation in a society.
+We search for "succesful" cooperative strategy profiles in several strategic interactions and study which factors make cooperation harder and how one best adapts cooperation strategies to such factors.
 
-We do this search by programming strategies in R and let them play against each other in a tournament (more on that below). During the seminar, we will discuss a bit informally in how far the winning strategies of our tournament are related to game theoretic equilibrium concepts, like the *Nash equilibrium*. For those who already know more about Nash equilibria, let us just state that the socially most efficient Nash equilibria probably would have a very good chance to be winners in our tournaments, but often it is very hard to find these equilibria.
+We do this search by programming strategies in R and let them play against each other in a tournament (more on that below) and then rank strategies against each other.
+
+In different tasks we will use different criteria to rank the strategies into more or less succesful strategies. While we discuss different criteria in detail later, a core idea is that your strategy should achieve high payoffs when playing against itself and against other submitted strategies.
 
 ## 3. Getting Started: Developing strategies for the repeated Prisoner's Dilemma in R
 
@@ -92,7 +96,7 @@ Preparations:
   library(StratTourn)
   
   # Generate a PD game object
-  game = make.pd.game()
+  game = make.pd.game(err.D.prob=0.05)
   # Pick a pair of strategies (strategies are defined below)
   strat = nlist(tit.for.tat,random.action)
   
@@ -100,27 +104,44 @@ Preparations:
   run.rep.game(delta=0.9, game=game, strat = strat)
 
 ```
-This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting table shows for each period the following information:
+This code simulates a repated PD with continuation probability $\delta=0.9$ in which player 1 follows a strategy called "tit.for.tat" and player 2 follows a strategy called "random.action". The resulting output will look similar to the following:
 
-  * Columns obs_a1 and obs_a2: the observations at the beginning of a period. Here just the previous actions
-  * Columns a1 and a2: players' actions 
-  * Columns pi1 and pi2: the resulting payoffs in that period.
-  
-Below the table, the entry $u shows players' average payoffs across all periods.
+```
+  $rs
+        match.id         strat t i  u a obs.i obs.j err.D.i err.D.j strat.state
+   1: 1121912743   tit.for.tat 1 1 -1 C     C     C   FALSE   FALSE            
+   2: 1121912743 random.action 1 2  2 D     C     C   FALSE   FALSE            
+   3: 1121912743   tit.for.tat 2 1  2 D     C     D   FALSE   FALSE            
+   4: 1121912743 random.action 2 2 -1 C     D     C   FALSE   FALSE            
+   5: 1121912743   tit.for.tat 3 1 -1 C     D     C   FALSE   FALSE            
+   6: 1121912743 random.action 3 2  2 D     C     D   FALSE   FALSE 
+   ...
+```
+The table shows the results of one repeated prisoners dilemma game. The column `t` is the period, the column `i` the player and `strat` her strategy. The column `a` is the action player i has chosen in period t and `u` is her resulting payoff.
+
+For example, in period t=1, player 1 (tit.for.tat) has cooperated (C) and player 2 (random.action) has defected (D). Consequently, player 1 got a payoff of u = -1 and player 2 got a payoff of 2.
+
+The columns `obs.i` and `obs.j` show the observations at the beginning of a period, here just the previous actions of player i hersefl (obs.i) and the other player (obs.j). The columns err.D.i and err.D.j help to see whether there was an observation error and a cooperation (C) has been observed as defection (D).
+
+You see that in t=2, player i=1 correctly observes that the other player (j=2) has played (D) in period (D). As explained below, this causes the tit-for-tat strategy also to play (D) in period 2. 
+
+These tables will be very helpful to understand what your programmed strategy does and to check whether it indeed works as you have planned.
+
+Below the big table you see a small table that shows the average payoffs of each player across all periods.
 
 ### 3.1 Tit-for-Tat
 
 Tit-for-Tat was the winning strategy in Axelrod's original tournament. It has a simple structure:
 
-  * Start nice by cooperating in period 1
+  * Start nice by cooperating (C) in period 1
   * In later periods play that action that the other player has played in the previous period. 
 
 ### 3.2 Tit-for-Tat as a R function
 
 Further below in the file pdgame.r you find a definition of tit.for.tat as a R function:
 ```{r eval=FALSE}
-tit.for.tat = function(obs,i,t,game) {
-  debug.store("tit.for.tat",i,t) # Store each call for each player
+tit.for.tat = function(obs,i,t,...) {
+  debug.store("tit.for.tat",i,t)       # Store each call for each player
   debug.restore("tit.for.tat",i=1,t=2) # Restore call for player i in period t
   
   # Cooperate in the first period
@@ -129,23 +150,26 @@ tit.for.tat = function(obs,i,t,game) {
   
   # In later periods, return the other player's previous action
   j = 3-i
-  list(a=obs$a[j])
+  a = obs$a[j]
+  return(list(a=a))
 }
 
 ```
 
 The first line
 ```{r eval=FALSE}
-tit.for.tat = function(obs,i,t,game) {
+tit.for.tat = function(obs,i,t,...) {
 ```
 says that tit.for.tat is a function with the following arguments:
 
+  * obs: this is a [list](http://cran.r-project.org/doc/manuals/R-intro.html#Lists) that contains a player's observations about behavior from the previous period. The exact structure of observations will depend on the specification of the game that is played. In our basic PD game obs contains an element obs$a that is a vector with the two actions that the players have chosen in the previous period.
   * i: this is simply the number of the player, either 1 or 2
   * t: this is the number of the current period
-  * obs: this is a [list](http://cran.r-project.org/doc/manuals/R-intro.html#Lists) that contains a player's observations about behavior from the previous period. The exact structure of observations will depend on the specification of the game that is played. In our basic PD game obs contains an element obs$a that is a vector with the two actions that the players have chosen in the previous period.
-  * game: this is an object that describes the structure of the game that is currently played. In game$param different parameters of the game, like the stage game payoffs, are stored. You only need to use this variable, if you want to write general strategies that can be used for more than one game and that are fine tuned for different games. In the moment you just can ignore this variable.
+  * ...: these are some arguments, we don't use for now. Please, always add the ... when defining your strategies. Otherwise, the code may not run correctly. 
 
-Every strategy must have these 4 arguments. (There may be additional aguments if a strategy uses states to pass additional information between periods. This is explained further below). The function run.rep.game now calls this function tit.for.tat in every period and provides the corresponding values of i,t,obs and game. E.g. if it is called in the third period for player 1 and in the previous round (D,C) was played, we have i==1, t==3, obs$a[1]=="D" and obs$a[2]=="C". Based on the values of obs, t, i the function must return the action that the player chooses.
+Every strategy must have these 4 arguments. There may be additional aguments if a strategy uses states to pass additional information between periods. This is explained further below.
+
+The function run.rep.game now calls this function tit.for.tat in every period and provides the corresponding values of i,t,obs. E.g. if it is called in the third period for player 1 and in the previous round (D,C) was played, we have i==1, t==3, obs$a[1]=="D" and obs$a[2]=="C". Based on the values of obs, t, i the function must return the action that the player chooses.
 
 The lines 
 ```{r eval=FALSE}
@@ -170,9 +194,10 @@ where the element a is "C". In more complex games, a function may return more th
 The lines
 ```{r eval=FALSE}
   j = 3-i
-  list(a=obs$a[j])
+  a = obs$a[j]
+  return(list(a=a))
 ```
-describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). The last line says that the player choses that action that the other player has played in the previous period, i.e. obs$a[j]. (Note that in the last line of a function you can ommit writing "return".)
+describe the behavior in periods t>1. The variable j will be the index of the other player (if i=1 then j=2 and if i=2 then j=1). Lines 2-3 say that the player choses that action that the other player has played in the previous period, i.e. obs$a[j].
 
 
 ### 3.3 Strategies that use states. Example: strange.defector
@@ -184,7 +209,7 @@ Many strategies rely not only on the most recent observations which are saved in
 Here is an R implementation of this strategy:
 
 ```{r}
-strange.defector <- function(obs, i, t, game, still.defect=0){
+strange.defector <- function(obs, i, t, still.defect=0, ...){
   debug.store("strange.defector",i,t) # Store each call for each player
   debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
   
@@ -214,7 +239,7 @@ The value of a state variable that is passed to your function in period t is the
 ```
 #### Name and number of state variables
 ```
-You can freely pick the name of a state variable (except for the reserved names ops,i,t, game and a) and you can have more than one state variable.
+You can freely pick the name of a state variable (except for the reserved names ops,i,t and a) and you can have more than one state variable.
 ```
 #### Which values can state variables take?
 ```
@@ -226,7 +251,7 @@ In our example, the state variable *still.defect* captures the information how m
 
 Let us have a more detailed look at the code of the example. The line
 ```{r eval=FALSE}
-  strange.defector <- function(obs, i, t, game, still.defect=0){
+  strange.defector <- function(obs, i, t, still.defect=0,...){
 ```
 initializes the function with a state still.defect that has in the first period a value of 0. 
 The lines
@@ -242,7 +267,7 @@ The lines
   }
 
 ```
-first check whether we are in the initial state (still.defect=0), in which we randomize between C and D. If this is the case, we draw with the command
+first check whether we are in the initial state (still.defect==0), in which we randomize between C and D. If this is the case, we draw with the command
 ```{r eval=FALSE}
   do.cooperate = (runif(1)<0.7) 
 ```
@@ -257,7 +282,7 @@ state that if the random variable says that we should cooperate, we return the a
       return(list(a="D", still.defect=4))
     }
 ```
-state that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 periods. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
+say that otherwise, we return the action "D" and set the state still.defect = 4. This means that we will defect for the next 4 periods. In the next period the value of still.defect will be 4 and the code at the bottom of the function will be called:
 ```{r eval=FALSE}
   still.defect = still.defect -1
   return(list(a="D",still.defect=still.defect))
@@ -267,8 +292,8 @@ The first line reduces still.defect by 1. (Hence, after 4 periods, we will again
 
 If you run a single repeated game the result table also shows in each row, the values of the strategies' states at the *end* of the period:
 ```{r eval=TRUE, cache=!TRUE}
-  run.rep.game(delta=0.9, game=game, 
-               strat = nlist(strange.defector,tit.for.tat),T.min=20)
+  run.rep.game(game=game, 
+               strat = nlist(strange.defector,tit.for.tat))
 ```
 
 ### 3.4 Exercise:
@@ -289,21 +314,55 @@ The following lines run a tournament between 4 specified strategies
   options(width=100)
 ```
 ```{r eval=TRUE, cache=TRUE}
-  # Init and run a tournament of several strategies against each other
-  game = make.pd.game()
-  strat = nlist(strange.defector,tit.for.tat,always.defect, always.coop)
-  tourn = init.tournament(game=game, strat=strat, delta=0.95,
-                          score.fun = "efficiency-2*instability- 20*instability^2")
-  tourn = run.tournament(tourn=tourn, R = 10)
+  # Init game
+  game = make.pd.game(err.D.prob=0.15)
+
+  getwd()
+  # Set working directory in which data is stored
+  setwd("D:/libraries/StratTourn/studies") # adapt the folder
+
+  # Init and run a tournament of several strategies against each other  
+  strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
+  tourn = init.tournament(game=game, strat=strat)
+  
+  #set.storing(FALSE)  # uncomment to make code run faster
+  tourn = run.tournament(tourn=tourn, R = 15)
+  set.storing(TRUE)  
   tourn
+  # save data
+  save.tournament(tourn)
+
+  # Analyse tournament in web browser
+  show.tournament(tourn)
 ```
 ```{r include=FALSE}
   set.storing(TRUE)
   options(width=80)
 ```
-The tournament consists of R rounds (here R=15). In every round, every strategy plays against each other strategy in a repeated game. Every strategy also plays against itself. For every pairing of two strategies, we then compute the average payoff of the strategies over all R rounds
+The tournament consists of R rounds (here R=15). In every round, every strategy plays against each other strategy in a repeated game. Every strategy also plays against itself. For every pairing of two strategies, we then compute the average payoff of the strategies over all R rounds.
 
-The first matrix has for every strategy a row and column and shows the average payoff of the *row strategy*  when the row strategy plays against the column strategy. (In a symmetric game like the PD game, we will just display the average payoffs of both player 1 and player 2). For example, when strategy always.defect played against always.coop, then always.defect got on average a payoff of  `r round(tourn$mat[3,4],3)` and always.coop got on average a payoff of `r round(tourn$mat[4,3],3)`. Against itself always.coop got an average payoff of `r round(tourn$mat[4,4],3)`.
+The `show.tournament` command in the last line opens a window in your webbrowser that allows to interactively analyse the results of the tournament. I will explain the different statistics and graphs in class.
+
+
+## 5 Criteria for winning
+
+There are different ways how one can evaluate the performance of the submitted strategies and give scores to different strategies. I want to present the basic idea of some approaches. The exact scoring rules will be explained in the task descriptions during the course.
+
+
+### 5.1 Average performance against all strategies
+
+In his original tournament Axelrod let each strategy play against each other several repeated games and the score of each strategy was its average payoff. 
+
+### 5.2 Evolutionary dynamic and performance in weighted population
+
+Imagine we have a society that lasts for several generations and has a big population of individuals. Each individual has a strategy that it plays in the repeated game. So we can think of each strategy having a share in the total population.   
+
+  1. **Average performance** How well does your strategy perform on average against all submitted strategies, including the payoff against itself. (This was Axelrod's original criterion)
+  
+  2. **Evolutionary setting** We consider an evolutionary dynamic in which successful strategies grow and unsuccessful strategies shrink. The success of a strategy still depends on its payoff against itself and other submitted strategies, but it becomes especially important to perform well against successful strategies.
+
+  3. **Efficient and stable social norm** We 
+
 
 The table below shows which strategies have won, as well as their score, efficiency, instability and best answer.
 
@@ -428,7 +487,7 @@ exploiter = function(obs,i,t,game, otherC) {
 
 As a first step select the whole function in the RStudio editor and press the run button. You should see something similar to the following in the R console.
 ```
-> exploiter = function(obs,i,t,game, other.weakness) {
+> exploiter = function(obs,i,t, other.weakness, ...) {
 +  debug.store("exploiter",i,t) # Store each call for each player
 +  debug.restore("exploiter",i=1,t=2) # Restore call for player i in period t
 +  if (t=1) {

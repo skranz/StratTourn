@@ -9,18 +9,18 @@ library(StratTourn)
 library(shiny)
 library(xtable)
 library(knitr)
+library(googleVis)
 setwd("D:/libraries/StratTourn/studies")
 
-tourn = load.tournament("Tourn_Public_goods_game_20140927_164950.tou")
+tourn = load.tournament("Tourn_Public_goods_game_20140929_090958.tou")
 # Data for each match
 md = tourn$dt
-md = add.other.var(md,c("strat","u"))
-md$delta.u = md$u - md$other.u
 # Names of all strategies
 strats = unique(md$strat)
 
 used.strats = strats
 shown.strats = strats
+
 
 
 ```
@@ -41,12 +41,12 @@ init.size.string = paste0(used.strats,"=1", collapse=",")
 #init.size.string = "always.coop=1,tit.for.tat=1,always.defect=1,net.nice0=100,net.nice1=1,forgiving.grim.trigger=1"
 
 init.size = parse.sizes.string(init.size.string, used.strats=used.strats, sr=NULL)
+init.size[2] = 3
+set.storing(storing = TRUE)
+res = n.evolve(initial=init.size, dt=md, generations=generations, alpha=alpha, min.shares = min.shares)
 
-vs.mat =  get.matches.vs.matrix(md)
-vs.mat = vs.mat[used.strats,used.strats]
-res = evolve2(initial = init.size, vs.mat = vs.mat, generations=generations, alpha = alpha, min.shares = min.shares)
-mdf = res$grid
 shares.mat = res$shares.mat
+mdf = res$grid
 
 if (!isTRUE(is.finite(step.size)))
   step.size = 1

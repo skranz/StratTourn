@@ -1,0 +1,65 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+```
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(xtable)
+library(Shiny)
+setwd("D:/libraries/StratTourn")
+
+setwd("D:/libraries/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_Noisy_PD_20140912_094618_1.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+
+
+```{r "init_parameters", include=FALSE}
+end.t = 50
+start.t = 1
+```
+
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+td = summarise(group_by(rd,strat,other.strat,t), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$t),end.t)
+tsd = do(group_by(td, strat, other.strat),
+         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="u", wvar="num.obs", spar=0.2))
+qplot(data=tsd, x=t, y=u, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat)
+```
+The plot shows the average payoffs of the column strategy against the row strategy as a function of the round t.

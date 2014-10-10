@@ -15,18 +15,6 @@ ace.editor.height = function(txt, font.size=12,min.height=30, min.lines=2,max.li
   max((font.size * 1.1) * code.lines,min.height) 
 }
 
-add.observer = function(expr, server.env, subst.env=NULL,...) {
-  expr = substitute(expr)
-    # Create dynamic observer
-  ca = substitute(env=nali,
-    observe({
-      input[[checkBtn]]
-      cat(paste0("\n",checkBtn, " was pressed."))
-    })
-  )
-  eval(ca)
-}
-
 ignore.false.events = function(dummy.id, server.env=parent.frame()) {
   ca = substitute(env=list(dummy.id=dummy.id),
      observe({

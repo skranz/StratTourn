@@ -16,4 +16,12 @@ Depends:
   ggplot2,
   dplyr,
   dplyrExtras,
-  stringtools
+  stringtools,
+  shiny,
+  shinyIncubator,
+  knitr,
+  xtable,
+  shinyBS,
+  googleVis,
+  shinyAce
+

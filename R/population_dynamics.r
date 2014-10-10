@@ -28,6 +28,12 @@ plot.evolve.asymmetric = function(shares) {
 }
 
 
+get.evolutionary.shares = function(tourn, generations=100, alpha=0.1, min.shares = 1/1000) {
+  mat = get.matches.vs.matrix(tourn = tourn)
+  res = evolve(mat=mat, generations=generations, alpha=alpha, min.shares=min.shares)
+  return(res[NROW(res),])
+}
+
 evolve = function(initial=rep(1/NROW(mat),NROW(mat)),mat,generations = 100,alpha=0.1, min.shares=0, add.matrix=TRUE) {
   # Start with last row of a matrix
   if (is.matrix(initial)) {
@@ -53,22 +59,7 @@ evolve2 = function(initial=rep(1/NROW(mat),NROW(mat)),vs.mat,generations = 100,a
   s.mat = evolve(initial,mat=vs.mat, generations=generations, alpha = alpha, min.shares = min.shares)
   
   u.mat = t(vs.mat %*% t(s.mat))
-  
-  df = as.data.frame(s.mat)
-  df$generation = 1:NROW(df)
-  smdf = melt(df,id.vars = "generation")
-  colnames(smdf) = c("generation","strategy","share")
-  
-  df = as.data.frame(u.mat)
-  df$generation = 1:NROW(df)
-  umdf = melt(df,id.vars = "generation")
-  colnames(umdf) = c("generation","strategy","u")
-  
-  mdf = merge(smdf,umdf, by=c("generation","strategy"))
-  mdf$strat = mdf$strategy
-  
-  mdf$time = as.Date(paste0(mdf$generation+2000,"-01-01"))
-  list(grid=mdf, shares.mat=s.mat, u.mat=u.mat)
+  detailed.evolve.return(s.mat, u.mat)
 }
 
 #res.prop = ev
@@ -92,6 +83,83 @@ evolve.one.generation = function(shares,shares.j=shares,mat,alpha=0.1, min.share
   fit = mat %*% shares.j
   shares = pmax(min.shares,shares + alpha*(fit-sum(shares*fit))*shares)
   shares/sum(shares)
+}
+
+# Evolution for n player games 
+n.evolve = function(initial=NULL,dt,generations = 100,alpha=0.1, min.shares=0, scale.alpha = max(dt$u)-min(dt$u)) {
+  restore.point("n.evolve")
+
+  
+  alpha = alpha / scale.alpha
+  
+  if (is.null(initial)) {
+    strats = unique(dt$strat)
+    n.strats = length(strats)
+    initial = rep(1/n.strats, n.strats)
+    names(initial) = strats
+  }
+
+  initial = initial / sum(initial)
+  shares = u.mat = matrix(NA,generations,length(initial))
+  shares[1,] = initial
+  colnames(shares) = colnames(u.mat) = names(initial)
+  r = 2
+  for (r in 2:generations) {
+    ret = n.evolve.one.generation(shares=shares[r-1,],dt=dt,alpha=alpha, min.shares=min.shares) 
+    shares[r,] = ret$shares
+    u.mat[r-1,] = ret$u  
+  }
+  s.mat = shares
+
+  u.mat[generations,] = n.compute.fitness(shares[generations,], dt)
+  
+  detailed.evolve.return(s.mat, u.mat)
+}
+
+detailed.evolve.return = function(s.mat, u.mat) {
+  df = as.data.frame(s.mat)
+  df$generation = 1:NROW(df)
+  smdf = melt(df,id.vars = "generation")
+  colnames(smdf) = c("generation","strategy","share")
+  
+  df = as.data.frame(u.mat)
+  df$generation = 1:NROW(df)
+  umdf = melt(df,id.vars = "generation")
+  colnames(umdf) = c("generation","strategy","u")
+  
+  mdf = merge(smdf,umdf, by=c("generation","strategy"))
+  mdf$strat = mdf$strategy
+  
+  mdf$time = as.Date(paste0(mdf$generation+2000,"-01-01"))
+  list(grid=mdf, shares.mat=s.mat, u.mat=u.mat)
+  
+}
+
+n.evolve.one.generation = function(shares,dt,alpha=0.1, min.shares=0.001) {
+  restore.point("n.evolve.one.generation")
+  
+  fit = n.compute.fitness(shares,dt)
+  shares = pmax(min.shares,shares + alpha*(fit-sum(shares*fit))*shares)
+  
+  list(shares=shares/sum(shares), u=fit)
+}
+
+
+n.compute.fitness = function(shares,dt) {
+  restore.point("n.compute.fitness")
+  # Compute new fitness
+  dt$strat.prob = shares[dt$strat] 
+  dt = mutate(group_by(dt, match.id ), other.prob = prod(strat.prob) / strat.prob)
+  
+  plot(dt$other.prob, dt$other.sample.prob, log="xy")
+  hist(dt$other.prob)
+  
+  
+  u.mean = summarise(group_by(dt,strat), u = sum(u*other.prob*u.weight / other.sample.prob) / sum(other.prob*u.weight/other.sample.prob))
+  fit = u.mean$u
+  names(fit) = u.mean$strat
+  fit = fit[names(shares)]
+  fit
 }
 
 examples.evolve = function() {

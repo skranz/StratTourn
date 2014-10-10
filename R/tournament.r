@@ -1,12 +1,35 @@
 
 example.random.group.matchings = function() {
-  n = 4
-  n.strat = 10
+  
+  
+  n = 3
+  n.strat = 3
+
+  random.group.matchings(n=5, n.strat=3, all.first=TRUE)
 }
 
-random.group.matchings = function(strat, game, n = game$n,n.strat = length(strat)) {
-  order = sample.int(n.strat)
-  mat = suppressWarnings(matrix(order, ncol=n, byrow=TRUE))
+# sample n.strat matches with n players each
+# from a pool in which each strategy appears n times
+# in total each strategy will appear n times, but there 
+# can be games in which certain strategies appear more often
+random.group.matchings = function(strat, game, n = game$n,n.strat = length(strat), weights=NULL, all.first=TRUE) {
+   
+  strat.id = sample(n.strat, size=n*n.strat,replace=TRUE, prob=weights) %% n.strat +1
+  mat = matrix(strat.id, ncol=n)
+  
+  if (is.null(weights)) {
+    sample.prob.mat = matrix(1/n.strat, nrow=nrow(mat), ncol=ncol(mat))
+  } else {
+    sample.prob.mat = matrix(weights, nrow=nrow(mat), ncol=ncol(mat),byrow=TRUE)    
+  }
+  
+  if (all.first) {
+    mat[,1]=1:n.strat
+    sample.prob.mat[,1]= 1 / n.strat
+  }
+  
+  attr(mat,"sample.prob.mat") <- sample.prob.mat
+  mat  
 }
 
 #' Returns default matchings
@@ -65,7 +88,7 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings),...) {
+run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL,...) {
   restore.point("run.tournament")
   
   dt.li = LAPPLY(1:R, function(r) {
@@ -94,9 +117,25 @@ run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, g
       }
       return(res$res)
     })
-    rbindlist(res.li)
+    mdt = rbindlist(res.li)
+    
+    if (game$n>2) {
+      sample.prob.mat = attr(matchings,"sample.prob.mat")
+      if (!is.null(sample.prob.mat)) {
+        mdt$sample.prob = as.vector(t(sample.prob.mat))
+        mdt = mutate(group_by(mdt, match.id ), other.sample.prob = prod(sample.prob) / sample.prob)
+        mdt = ungroup(mdt)
+      } else {
+        stop("Your matchings do not have the attribute 'sample.prob.mat'. This is neccessary for games with n>2 players.")
+      }
+    }
+    mdt
   })
   dt = rbindlist(dt.li)
+  
+  if (is.null(weights)) {
+    weights = rep(1/length(strat), length(strat))
+  }
   if (!is.null(tourn$dt)) {
     tourn$dt = rbind(tourn$dt,dt, use.names=FALSE)
   } else {
@@ -114,9 +153,12 @@ get.tourn.rank = function(dt=tourn$dt, tourn) {
 }
 
 print.Tournament = function(tourn) {
-  print(as.list(tourn))
-  #print(tourn$dt)
-  #print(tournament.stats(dt=tourn$dt))
+  cat("\nTournament: ",tourn$tourn.id)
+  cat("\nround data: ",tourn$rs.file)
+  cat("\nStrategies: ",paste0(names(tourn$strat), collapse=", "))
+  num.match=NROW(tourn$dt) / tourn$game$n
+  cat(paste0("\n",num.match, " matches:\n"))
+  print(tourn$dt)
 }
 
 #' Saves a tournament to a file

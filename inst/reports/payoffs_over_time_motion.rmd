@@ -1,0 +1,86 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+
+```
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+setwd("D:/libraries/StratTourn")
+
+
+tourn = load.tournament("Tourn_Noisy_PD_20140721_202445.Rdata")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+# Data for each round
+file = "D:/libraries/StratTourn/Tourn_Noisy_PD_20140721_202445_rs.csv"
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+rd = mutate(group_by(rd,match.id,i),
+  choose.C = (a == "C")*1,
+  choose.D = (a == "D")*1,
+  other.D.prev = (obs.j == "D")*1,
+  other.D.prev2 = is.true(obs.j == "D" & lag(obs.j) == "D")*1,
+  other.d.dist75 = 0.75^distance.to.previous.event(other.D.prev),
+  own.D.cum = cumsum(obs.i=="D"),
+  other.D.cum = cumsum(obs.j=="D"),
+  other.D.cum1 = (other.D.cum>=1)*1,
+  other.D.cum2 = (other.D.cum>=2)*1,
+  net.nice = other.D.cum - own.D.cum,
+  net.nice1 = (net.nice>=1)*1,
+  net.nice2 = (net.nice>=2)*1,
+  error.D.i = lag(err.D.i, default=FALSE)*1,
+  error.D.j = lag(err.D.j, default=FALSE)*1,
+  error.D.i.cum = cumsum(error.D.i),
+  error.D.j.cum = cumsum(error.D.j),
+  num.err = error.D.i.cum+error.D.j.cum,
+  diff.err = abs(error.D.i.cum-error.D.j.cum),
+  error.D.i.once = (cumsum(error.D.i)>0)*1,
+  error.D.j.once = (cumsum(error.D.j)>0)*1
+)
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+
+```{r, echo=FALSE, results='asis', fig.height=6}
+td = summarise(group_by(rd,strat,t), u=mean(u),other.u = mean(other.u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat),
+  get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
+tsd$Strat = tsd$strat
+
+state = '{"dimensions":{"iconDimensions":["dim0"]},"iconKeySettings":[],"orderedByX":false,"uniColorForNonSelected":false,"showTrails":false,"xZoomedDataMax":-631152000000,"yZoomedDataMax":1.3,"nonSelectedAlpha":0.4,"orderedByY":false,"colorOption":"4","duration":{"timeUnit":"Y","multiplier":1},"xZoomedIn":false,"yAxisOption":"2","sizeOption":"_UNISIZE","yZoomedIn":false,"xLambda":1,"playDuration":15000,"xAxisOption":"_TIME","yLambda":1,"iconType":"LINE","time":"1950","xZoomedDataMin":-2177452800000,"yZoomedDataMin":-0.8}'
+
+p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
+  yvar = "u", colorvar = "strat", sizevar = "", 
+  options = list(state=state))
+print(p, tag="chart")
+#renderGvis(p)()
+```
+You see the average payoffs of each strategy as a function of the round played. We use the per-round data in the file **`r file`**. We have `r length(strats)` strategies and observations from `r NROW(rd)` rounds in `r length(unique(rd$match.id))` matches.
+

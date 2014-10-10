@@ -5,54 +5,53 @@ examples.pd = function() {
   library(StratTourn)
   
   # Generate a game object
-  game = make.pd.game(err.D.prob=0.15)
+  game = make.pd.game(err.D.prob=0.1, delta=0.9)
 
   # Pick a pair of strategies
   strat = nlist(tit.for.tat,random.action)
-  strat = nlist(always.coop,always.coop)
-  
   # Let the strategies play against each other
-  run.rep.game(delta=0.9, game=game, strat = strat)
-  run.rep.game(delta=0.9, game=game, strat = strat, T.min = 10)
+  run.rep.game(game=game, strat = strat)
   
   
+  getwd()
+  # Set working directory in which data is stored
+  setwd("D:/libraries/StratTourn/studies")
+
   # Init and run a tournament of several strategies against each other  
-  set.storing(FALSE)
   strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
-  tourn = init.tournament(game=game, strat=strat, delta=0.95)
+  tourn = init.tournament(game=game, strat=strat)
+  
+  #set.storing(FALSE)  # uncoment to make code run faster
   tourn = run.tournament(tourn=tourn, R = 4)
-  tourn
+  set.storing(TRUE)
   
-  # Second stage of tournament  
-  strat = nlist(tit.for.tat)
-  strat.dev = list(grim.trigger= nlist(always.defect, always.coop),
-                   tit.for.tat = nlist(always.defect, always.coop))
-  tourn = init.tournament(game=game, strat=strat,strat.dev=strat.dev, delta=0.9)
-  tourn = run.tournament(tourn=tourn, R = 10)
   tourn
-  
+  save.tournament(tourn)
+  # Analyse tournament in web browser
+  show.tournament(tourn)
 }
 
 
+
 # A strategy that always cooperates
-always.coop = function(obs,i,t,game,...) {
+always.coop = function(obs,i,t,...) {
   return(list(a="C"))
 }
 
 # A strategy that always defects
-always.defect = function(obs,i,t,game,...) {
+always.defect = function(obs,i,t,...) {
   return(list(a="D"))
 }
 
 # A strategy that randomly chooses an action
-random.action = function(obs,i,t,game,...) {
+random.action = function(obs,i,t,...) {
   a = sample( c("C","D"),  1)
   return(list(a=a))
 }
 
 
 # The famous tit.for.tat strategy: winner of Axelrod's original tournament
-tit.for.tat = function(obs,i,t,game,...) {
+tit.for.tat = function(obs,i,t,...) {
   debug.store("tit.for.tat",i,t) # Store each call for each player
   debug.restore("tit.for.tat",i=1,t=2) # Restore call for player i in period t
   
@@ -66,7 +65,7 @@ tit.for.tat = function(obs,i,t,game,...) {
 }
 
 # Strategy from the tutorial without much meaning
-strange.defector <- function(obs, i, t, game, still.defect=0,...){
+strange.defector <- function(obs, i, t, still.defect=0,...){
   debug.store("strange.defector",i,t) # Store each call for each player
   debug.restore("strange.defector",i=1,t=2) # Restore call for player i in period t
   
@@ -142,9 +141,7 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
     return(list(payoff=payoff,obs=obs, round.stats=round.stats))
   } 
   adapt.round.stats.dt = function(rs.dt, ...) {
-    #cat("data.table aware: ",data.table:::cedta())
-    adjust.pd.rs.dt(rs.dt)
-    #modify(rs.dt,obs.i  = lag(obs.i), obs.j = lag(obs.j), err.D.i=lag(err.D.i), err.D.j=lag(err.D.j))
+    rs.dt
   }
   
   check.action = function(ai,i,t,...) {
@@ -163,18 +160,8 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
   example.obs = function(i=1,t=1,...) {
     list(a=c("C","C"))
   }
-  get.action.set = function(i=1,...) {
-    list(a=c("C","D"))
-  }
   
-  nlist(run.stage.game, adapt.round.stats.dt,check.action,get.action.set,example.action,example.obs, n=2, private.signals, a.names = c("a1","a2"), params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
+  nlist(run.stage.game, adapt.round.stats.dt,check.action,example.action,example.obs, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
 }
 
-adjust.pd.rs.dt = function(rs.dt) {
-  #rs.dt[, obs.i :=lag(obs.i)]
-  #rs.dt[, obs.j :=lag(obs.j)]
-  #rs.dt[, err.D.i :=lag(err.D.i)]
-  #rs.dt[, err.D.j :=lag(err.D.j)]
-}
-  
 

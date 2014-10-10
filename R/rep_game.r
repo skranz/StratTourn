@@ -14,7 +14,7 @@ examples.rep.game = function() {
 
   # Let the strategies play against each other
   set.storing(TRUE)
-  run.rep.game(delta=0.9, game=game, strat = strats, detailed.return=FALSE)
+  run.rep.game(delta=0.9, game=game, strat = strats, detailed.return=!FALSE)
     
   # Init and run a tournament of several strategies against each other  
   set.storing(FALSE)
@@ -77,14 +77,16 @@ forgiving.grim.trigger = function(obs,i,t,game,coop=TRUE,forgive.prob=0.2,...) {
 
 
 get.strat.info = function(i=1,strat, game) {
+  restore.point("get.strat.info")
+  
   ex.obs = game$example.obs(i=i)
   ex.action = game$example.action(i=i)
   
   # Extras arguments of the strategy
-  args = setdiff(names(formals(strat)),c("obs", "i","t","game","..."))
+  args = setdiff(names(formals(strat)),c("obs", "i","t","game","...",names(game$show.par)))
   
   # Returned values of the strategy
-  res  = strat(obs=ex.obs,i=i,t=1, game=game) 
+  res = do.call(strat, c(list(obs=ex.obs,i=i,t=1), game$show.par))
   
   actions = names(ex.action)
   strat.states = setdiff(intersect(names(res), args), actions)
@@ -144,7 +146,7 @@ sample.T = function(delta, sample.delta = delta) {
 #' @param game the game object
 #' @param strat a list of strategies
 #' @param T.max optionally a maximum number of rounds
-run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = 1 - (1-delta)/2, match.id = sample.int(2147483647,1)) {
+run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = 1 - (1-delta)/2, match.id = sample.int(2147483647,1)) {
   restore.point("run.rep.game")
   
   gbos$do.store = do.store
@@ -179,6 +181,10 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
     stop(paste("The game requires ",game$n, " players but you submitted ", n.strat, " strategies."))
   }
   
+  if (detailed.return) {
+    strat.state.str.li = vector("list",T)
+  }
+  
   if (game$private.signals) {
     obs = lapply(1:game$n, game$example.obs)
   } else {
@@ -196,7 +202,6 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
   strat.states = lapply(strat.id, function(i) {
     list()
   })
-  #action.stats = lapply(1:game$n, get.empty.action.stats, game=game)
   
   round.stats.li = vector("list",T)
   U = rep(0,game$n)
@@ -216,7 +221,7 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
       obs.i = get.obs.i(obs = obs, i = i, game = game)    
       # Use only those strat.par that are not returned as a strat.state
       act.strat.par = strat.par[[i]][setdiff(names(strat.par[[i]]),names(strat.states[[i]]))]
-      args = c(list(obs = obs.i,i=i,t=t, game=game),game.states,strat.states[[i]], act.strat.par)
+      args = c(list(obs = obs.i,i=i,t=t),game$show.par,game.states,strat.states[[i]], act.strat.par)
       tryCatch(
         strat.res <- do.call(strat[[i]],args),
         error = function(e) {
@@ -234,12 +239,17 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
       a[[i]] = strat.res[si[[i]]$actions]  
       strat.states[[i]] = strat.res[si[[i]]$strat.states]
       game$check.action(ai=a[[i]],i=i,t=t)
-      #action.stats[[i]] = add.to.action.stats(a[[i]], action.stats[[i]])
-    }    
+    }
+    
     # 2. Evaluate game results
     set.random.state("game")  
     results = game$run.stage.game(t=t,a=a,t.obs=obs,game.states=game.states,game=game)
+    
+    if (detailed.return) {
+      strat.state.str.li[[t]] = sapply(strat.states,list.to.str, use.names=TRUE) 
+    }
     round.stats.li[[t]] = results$round.stats
+
     old.obs = obs
     obs = results$obs
     game.states = results$game.states
@@ -247,10 +257,6 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
     # 3. Update total payoffs
     U = U + results$payoff
     
-    # 4. Update statistics if desired
-    if (detailed.return) {
-      rep.game.store.detailed.return(t,old.obs,obs,a, payoffs=results$payoff, start.strat.states,next.strat.states=strat.states, game.states = start.game.states,next.game.states=game.states, denv,T, game, strat=strat)
-    }
   }
   
   set.random.state(".GLOBAL")
@@ -261,13 +267,19 @@ run.rep.game = function(delta=game$param$delta, game, strat, T.max = NULL,detail
   game$adapt.round.stats.dt(round.stats, match.id=match.id)
   rs.dt = data.table(match.id=match.id, strat=rep(names(strat), times=T), round.stats)
   
+  if (detailed.return) {
+    strat.state.str = unlist(strat.state.str.li)
+    rs.dt$strat.state = strat.state.str
+  }
+  
+  
   # action statistics
   #as.df = do.call("rbind",lapply(action.stats, unlist)) / T
   # returned data frame
   res.dt = data.table(match.id = match.id,i=1:game$n, T=T,u.weight=T*T.weight, strat=names(strat), u=u)
 
   if (detailed.return) {
-    return(list(hist=denv$df,res=res.dt, rs=rs.dt))
+    return(list(rs=rs.dt,res=res.dt))
   }
   return(list(rs=rs.dt,res=res.dt))
 }  
@@ -286,140 +298,18 @@ obs.names.to.cols = function(obs.names, obs.len) {
   obs.cols
 }
 
-rep.game.store.detailed.return = function(t,obs,next.obs,a, payoffs, strat.states,next.strat.states, game.states,next.game.states,denv,T, game, max.state.vector.size = 4, strat) {
-  restore.point("rep.game.store.detailed.return")
-  n = game$n
-  if (t == 1) {
-    restore.point("rep.game.store.detailed.return_t1")
-    
-    # Get a list of all names
-    a.names = lapply(1:n, function(i) {
-      ai = a[[i]]
-      if (is.list(ai))
-        return(paste0(names(ai),i))
-      return(paste0("a",i))
-    })
-    a.names = do.call("c",a.names)
-    payoff.names = paste0("pi",1:n)
-    
-    ex.obs = game$example.obs()
-    
-    # Get names of observations
-    if (!game$private.signals) {
-      obs.names = str.combine("obs_",names(ex.obs))
-    } else {
-      public.obs.names = str.combine("obs_",game$public.obs)
-      private.obs.names = unlist(lapply(1:n, function(i) {
-        str.combine("obs",i,"_",game$private.obs[[i]])
-      }))
-    }
-    
-    # Get a list of all strategy state names
-    strat.states.names = lapply(1:n, function(i) {
-      si = next.strat.states[[i]]
-      str.combine(names(si),"_",i)
-    })
-    strat.states.cols = unlist(strat.states.names)
-    
-    game.states.names = names(game.states)
-    game.states.cols = unlist(game.states.names)
-    next.game.states.cols = str.combine("next_",game.states.cols)
-    if (!game$private.signals) {
-      denv$obs.names = obs.names
-      col.names = c("t",unlist(c(game.states.cols,obs.names,a.names,payoff.names,strat.states.cols)))  
-    } else {
-      denv$public.obs.names = public.obs.names
-      denv$private.obs.names = private.obs.names
-      col.names = c("t",unlist(c(game.states.cols,public.obs.names,private.obs.names,a.names,payoff.names,strat.states.cols)))  
-    }
-    
-    df = as.data.frame(matrix(NA,T,length(col.names)))
-    names(df)=col.names
-    denv$df = df
-    denv$a.names = a.names
-    denv$payoff.names = payoff.names
-    denv$strat.states.names = strat.states.names
-    denv$strat.states.cols = strat.states.cols
-    
-    denv$game.states.cols = game.states.cols
-   }
-  denv$df[t,"t"] = t
-  denv$df[t,denv$a.names] = unlist(lapply(a, function(ai) lapply(ai,list.to.str)))
-  denv$df[t,denv$payoff.names] = payoffs
-  
-  if (game$private.signals) {
-    denv$df[t,denv$public.obs.names] = 
-      unlist(lapply(game$public.obs, function(j) {
-        if (!(j %in% names(obs[[1]])))
-          return(NA)  
-        list.to.str(obs[[1]][[j]])
-      }))
-    
-    denv$df[t,denv$private.obs.names] = unlist(lapply(1:n, function(i) {
-      sapply(game$private.obs[[i]], function(j) {
-        if (!(j %in% names(obs[[1]])))
-          return(NA)
-        list.to.str(obs[[i]][[j]])
-      })
-    }))  
-  } else {
-    denv$df[t,denv$obs.names] = 
-      unlist(lapply(seq_along(denv$obs.names), function(j) {
-        if (j > length(obs))
-          return(NA)  
-        list.to.str(obs[[j]])
-      }))
-  }
-  
-  denv$df[t,denv$strat.states.cols] = unlist(lapply(1:n, function(i) {
-    sapply(seq_along(denv$strat.states.names[[i]]), function(j) {
-      if (j > length(next.strat.states[[i]]))
-        return(NA)
-      list.to.str(next.strat.states[[i]][[j]])
-    })
-  }))  
-  
-  denv$df[t,denv$game.states.cols] = 
-    sapply(seq_along(denv$game.states.cols), function(j) {
-      if (j > length(game.states[[j]]))
-        return(NA)
-      list.to.str(game.states[[j]])
-    })
-  
-}       
-
-list.to.str = function(li, collapse=",", li.collapse=";") {
+list.to.str = function(li, collapse=",", li.collapse=";", use.names=0) {
   if (!is.list(li))
     return(paste0(li, collapse=collapse))
-  return(paste0(lapply(li,list.to.str, collapse=collapse),collapse=li.collapse))
+  str = lapply(li,list.to.str, collapse=collapse, use.names=use.names-1)
+  if (use.names>0 & !is.null(names(li)) & length(li)>0) {
+    str = paste0(names(li),"=",str, collapse=li.collapse)
+  } else {
+    str = paste0(str, collapse=li.collapse)    
+  }
+  str
 }
 
 examples.list.to.str = function() {
-  list.to.str(list(a=1:2,b=list(c=3,d="Hi")))
-}
-
-
-get.empty.action.stats = function(i, game) {
-  sets = game$get.action.set(i)
-  na = names(sets)
-  as = lapply(sets, function(set) {
-    if (is.null(set))
-      return(0)
-    li = vector("numeric",length(set))
-    names(li) = set
-    li
-  })
-  as  
-}
-
-add.to.action.stats = function(a,as) {
-  li = lapply(seq_along(as), function(j) {
-    if (is.numeric(a[[j]]))
-      return(as[[j]]+a[[j]])
-    ret = as[[j]]
-    ret[a[[j]]] = ret[a[[j]]]+1
-    ret
-  })
-  names(li) = names(as)
-  return(li)
+  list.to.str(list(a=1:2,b=list(c=3,d="Hi")), use.name=1)
 }

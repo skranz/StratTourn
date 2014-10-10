@@ -1,11 +1,31 @@
 examples.run.shiny.reports = function() {
   run.shiny.reports()
+  show.tournament(tourn)
 }
 
 sr = new.env(parent=globalenv())
 
 get.sr = function() {
   sr
+}
+
+show.tournament = function(tourn=NULL, tourn.file=NULL, launch.browser=TRUE, file.path=getwd()) {
+  sr = get.sr()
+  set.tourn.file(tourn=tourn, tourn.file=tourn.file)
+  
+  strats = names(sr$tourn$strat)
+  sr$strat.sizes = rep(1,length(strats))
+  names(sr$strat.sizes) = strats
+  
+  sr$rep.li = make.rep.li()
+  sr$report = sr$rep.li[[1]]
+  
+  reset.event.handlers()
+  
+  ui = make.report.ui()
+  server = make.report.server()
+  
+  runApp(list(ui=ui,server=server), launch.browser=launch.browser)  
 }
 
 run.shiny.reports = function() {
@@ -46,34 +66,34 @@ make.rep.li = function() {
   reports.yaml = "
 payoff_ranking:
   label: payoff ranking
-  file: D:/libraries/StratTourn/StratTourn/reports/matches_ranking.rmd
+  file: matches_ranking.rmd
 payoff_matrix:
   label: payoff matrix
-  file: D:/libraries/StratTourn/StratTourn/reports/matches_payoff_matrix.rmd
+  file: matches_payoff_matrix.rmd
 duels_plot:
   label: duels plot
-  file: D:/libraries/StratTourn/StratTourn/reports/matches_duels_plot.rmd
+  file: matches_duels_plot.rmd
 duel_stats:
   label: duel stats
-  file: D:/libraries/StratTourn/StratTourn/reports/payoff_diff_ranking.rmd
+  file: payoff_diff_ranking.rmd
 strat_stats:
   label: strat stats
-  file: D:/libraries/StratTourn/StratTourn/reports/strat_indicators.rmd
+  file: strat_indicators.rmd
 payoffs_over_time:
   label: payoff over time
-  file: D:/libraries/StratTourn/StratTourn/reports/payoffs_over_time.rmd
+  file: payoffs_over_time.rmd
 diag_payoffs_over_time:
   label: against itself
-  file: D:/libraries/StratTourn/StratTourn/reports/diag_payoffs_over_time.rmd
+  file: diag_payoffs_over_time.rmd
 duels_over_time:
   label: duels over time
-  file: D:/libraries/StratTourn/StratTourn/reports/duels_over_time.rmd
+  file: duels_over_time.rmd
 evolution:
   label: evolution
-  file: D:/libraries/StratTourn/StratTourn/reports/evolution.rmd
+  file: evolution.rmd
 strategies:
   label: strategies
-  file: D:/libraries/StratTourn/StratTourn/reports/show_strat_code.rmd
+  file: show_strat_code.rmd
 
 
 "
@@ -182,10 +202,21 @@ select.tournament.ui = function(sr=get.sr()) {
   restore.point("select.tournament.ui")
   files = list.files(sr$file.path, pattern=".*\\.tou")
   fluidRow(
-    selectizeInput('tourn.file.input',"Tournament",choices=files, selected=sr$tourn.file,multiple=FALSE, width="100%"),
-    bsActionButton("load.tourn.btn","load", size="small"),
-    bsActionButton("run.tourn.btn","run", size="small"),
-    numericInput("rep.tourn.input","R",value = 10,min = 1),
+    fluidRow(
+      selectizeInput('tourn.file.input',"tournament",choices=files, selected=sr$tourn.file,multiple=FALSE, width="100%"),
+      bsActionButton("load.tourn.btn","load", size="small")
+    ),
+    fluidRow(
+      column(3,
+        bsActionButton("run.tourn.btn","run", size="small")
+      ),
+      column(3,
+        helpText("Rounds:")
+      ),
+      column(3,
+        numericInput("rep.tourn.input",NULL,value = 10,min = 1)
+      )
+    ),
     htmlOutput("tourn.info.output")
   )
 }
@@ -256,8 +287,13 @@ click_run_tourn = function(session,update.report,update.tourn,...,sr=get.sr()) {
 
   })
   
-  update.report$counter = isolate(update.report$counter+1)
-  update.tourn$counter = isolate(update.tourn$counter+1)
+  #set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
+  #load.round.data(tourn$rs.file)
+  
+  click_load_tourn(session, update.report, update.tourn,...,sr=sr)
+  
+  #update.report$counter = isolate(update.report$counter+1)
+  #update.tourn$counter = isolate(update.tourn$counter+1)
   
 }
 
@@ -323,7 +359,7 @@ click_update_strat = function(session,..., update.report) {
 make.ui.custom.parameters = function(session, sr=get.sr()) {  
   restore.point("make.ui.custom.parameters")
   rep = sr$report
-  file = rep$file[1]
+  file = system.file(package="StratTourn", "reports",rep$file[1]) 
   txt = readLines(file)
   
   env = new.env(parent=sr)
@@ -362,11 +398,18 @@ eval.custom.parameters = function(rmd.code, env) {
   eval(ca,env)
 }  
  
-set.tourn.file = function(tourn.file, sr = get.sr()) {
+set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=getwd()) {
   restore.point("set.tourn.file")
-  sr$tourn.file = tourn.file
-  tourn = load.tournament(sr$tourn.file)
-    
+
+  if (is.null(tourn.file))
+    tourn.file = paste0(tourn$tourn.id,".tou")
+  
+  if (is.null(tourn))
+    tourn = load.tournament(sr$tourn.file)
+
+  sr$file.path = file.path
+  setwd(file.path)
+  sr$tourn.file = tourn.file  
   set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
   load.round.data(tourn$rs.file)
 
@@ -375,7 +418,7 @@ set.tourn.file = function(tourn.file, sr = get.sr()) {
 compile.report = function(rep=sr$report,session, sr=get.sr()) {
   
   restore.point("compile.report")
-  file = rep$file[1]
+  file = system.file(package="StratTourn", "reports",rep$file[1]) 
   txt = readLines(file)
   
   env = new.env(parent=sr)
