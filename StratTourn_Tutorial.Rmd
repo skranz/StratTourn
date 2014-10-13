@@ -42,6 +42,15 @@ install.packages("devtools")
 install.packages("data.table")
 install.packages("ggplot2")
 install.packages("reshape2")
+install.packages("dplyr")
+install.packages("shiny")
+install.packages("shinyIncubator")
+install.packages("knitr")
+install.packages("xtable")
+install.packages("shinyBS")
+install.packages("googleVis")
+install.packages("shinyAce")
+
 
 library(devtools)
 install_github(repo="restorepoint", username="skranz")
@@ -356,7 +365,9 @@ The following lines run a tournament between 4 specified strategies
 
   getwd()
   # Set working directory in which data is stored
-  setwd("D:/libraries/StratTourn/studies") # adapt the folder
+  
+  # Adapt directory. Note: use / instead of \ to seperate folders
+  setwd("D:/libraries/StratTourn/studies") 
 
   # Init and run a tournament of several strategies against each other  
   strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  

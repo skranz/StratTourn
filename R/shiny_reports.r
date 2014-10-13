@@ -9,13 +9,27 @@ get.sr = function() {
   sr
 }
 
-show.tournament = function(tourn=NULL, tourn.file=NULL, launch.browser=TRUE, file.path=getwd()) {
-  sr = get.sr()
-  set.tourn.file(tourn=tourn, tourn.file=tourn.file)
+show.tournament = function(tourn=NULL, tourn.file=NULL, launch.browser=TRUE, file.path=getwd(), strat.shares=NULL) {
   
-  strats = names(sr$tourn$strat)
-  sr$strat.sizes = rep(1,length(strats))
-  names(sr$strat.sizes) = strats
+  restore.point("show.tournament")
+  sr = get.sr()
+  
+  if (is.null(strat.shares)) {
+    set.tourn.file(tourn=tourn, tourn.file=tourn.file)
+    strats = names(sr$tourn$strat)
+
+    sr$strat.sizes = rep(1,length(strats))
+    names(sr$strat.sizes) = strats
+  } else {
+    strats = names(strat.shares)
+    strat.shares = strat.shares[strats]
+    sr$strat.sizes = round(strat.shares*100,1)
+    sizes.str = paste0(names(sr$strat.sizes),"=", sr$strat.sizes, collapse="\n")
+    
+    set.tourn.file(tourn=tourn, tourn.file=tourn.file, sizes.str=sizes.str)
+    strats = names(sr$tourn$strat)
+  }
+  
   
   sr$rep.li = make.rep.li()
   sr$report = sr$rep.li[[1]]
@@ -67,35 +81,33 @@ make.rep.li = function() {
 payoff_ranking:
   label: payoff ranking
   file: matches_ranking.rmd
-payoff_matrix:
-  label: payoff matrix
-  file: matches_payoff_matrix.rmd
-duels_plot:
-  label: duels plot
-  file: matches_duels_plot.rmd
-duel_stats:
-  label: duel stats
-  file: payoff_diff_ranking.rmd
-strat_stats:
-  label: strat stats
-  file: strat_indicators.rmd
-payoffs_over_time:
-  label: payoff over time
-  file: payoffs_over_time.rmd
-diag_payoffs_over_time:
-  label: against itself
-  file: diag_payoffs_over_time.rmd
-duels_over_time:
-  label: duels over time
-  file: duels_over_time.rmd
 evolution:
   label: evolution
   file: evolution.rmd
+diag_payoffs_over_time:
+  label: against itself
+  file: diag_payoffs_over_time.rmd
+payoffs_over_time:
+  label: payoff over time
+  file: payoffs_over_time.rmd
+payoff_matrix:
+  label: payoff matrix
+  file: matches_payoff_matrix.rmd
+duel_stats:
+  label: duel stats
+  file: payoff_diff_ranking.rmd
+duels_plot:
+  label: duels plot
+  file: matches_duels_plot.rmd
+duels_over_time:
+  label: duels over time
+  file: duels_over_time.rmd
+strat_stats:
+  label: strat stats
+  file: strat_indicators.rmd
 strategies:
   label: strategies
   file: show_strat_code.rmd
-
-
 "
   library(yaml)
   rep.li = yaml.load(reports.yaml)
@@ -112,6 +124,7 @@ strategies:
 }
 
 make.report.ui = function(sr=get.sr()) {
+
   strats = sr$strats
   sizes.str = paste0(names(sr$strat.sizes),"=", sr$strat.sizes, collapse="\n")
   ui = fluidPage("Analyse Tournament",
@@ -287,13 +300,13 @@ click_run_tourn = function(session,update.report,update.tourn,...,sr=get.sr()) {
 
   })
   
-  #set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
-  #load.round.data(tourn$rs.file)
+  set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
+  load.round.data(tourn$rs.file)
   
-  click_load_tourn(session, update.report, update.tourn,...,sr=sr)
+  #click_load_tourn(session, update.report, update.tourn,...,sr=sr)
   
-  #update.report$counter = isolate(update.report$counter+1)
-  #update.tourn$counter = isolate(update.tourn$counter+1)
+  update.report$counter = isolate(update.report$counter+1)
+  update.tourn$counter = isolate(update.tourn$counter+1)
   
 }
 
@@ -398,7 +411,7 @@ eval.custom.parameters = function(rmd.code, env) {
   eval(ca,env)
 }  
  
-set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=getwd()) {
+set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=getwd(), sizes.string="", set.data = TRUE) {
   restore.point("set.tourn.file")
 
   if (is.null(tourn.file))
@@ -409,10 +422,10 @@ set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=
 
   sr$file.path = file.path
   setwd(file.path)
-  sr$tourn.file = tourn.file  
-  set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
+  sr$tourn.file = tourn.file
+  
+  set.tourn.data(tourn, used.strats = NULL,sizes.string = sizes.string, set.round.data=FALSE)
   load.round.data(tourn$rs.file)
-
 }
 
 compile.report = function(rep=sr$report,session, sr=get.sr()) {
