@@ -1,6 +1,13 @@
-examples.run.shiny.reports = function() {
+
+
+examples.show.tournament = function() {
   run.shiny.reports()
   show.tournament(tourn)
+
+  setwd("D:/libraries/StratTourn/studies")
+  tourn.file = "Tourn_Noisy_PD_20141013_093419.tou"
+  show.tournament(tourn.file=tourn.file)
+  
 }
 
 sr = new.env(parent=globalenv())
@@ -9,6 +16,7 @@ get.sr = function() {
   sr
 }
 
+#' Analyse a tournament interactively in web browser
 show.tournament = function(tourn=NULL, tourn.file=NULL, launch.browser=TRUE, file.path=getwd(), strat.shares=NULL) {
   
   restore.point("show.tournament")
@@ -128,7 +136,6 @@ make.report.ui = function(sr=get.sr()) {
   strats = sr$strats
   sizes.str = paste0(names(sr$strat.sizes),"=", sr$strat.sizes, collapse="\n")
   ui = fluidPage("Analyse Tournament",
-    progressInit(),             
     sidebarLayout(
       sidebarPanel(
         tabsetPanel(id ="leftPanel",
@@ -284,17 +291,17 @@ click_run_tourn = function(session,update.report,update.tourn,...,sr=get.sr()) {
   
   do.store = is.storing()
   set.storing(FALSE)
-  withProgress(session, {
-    shinyIncubator::setProgress(message = "Running tournaments...",
+  withProgress(session=session,min=0,max=R+1, expr={
+    shiny::setProgress(message = "Running tournaments...",
     detail = paste0("Finished 0 / ", R))
     for (r in 1:R) {
       tourn = run.tournament(tourn,R = 1)
-      shinyIncubator::setProgress(detail = paste0("Finished ",r," / ", R))
+      shiny::setProgress(value=r,detail = paste0("Finished ",r," / ", R))
     }
     set.storing(do.store)
   
     sr$tourn = tourn
-    shinyIncubator::setProgress(detail = paste0("Save tournament..."))
+    shiny::setProgress(value=R+0.5,detail = paste0("Save tournament..."))
  
     save.tournament(tourn=tourn, path=sr$file.path)
 
@@ -418,7 +425,7 @@ set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=
     tourn.file = paste0(tourn$tourn.id,".tou")
   
   if (is.null(tourn))
-    tourn = load.tournament(sr$tourn.file)
+    tourn = load.tournament(tourn.file)
 
   sr$file.path = file.path
   setwd(file.path)
