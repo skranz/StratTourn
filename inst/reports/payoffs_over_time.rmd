@@ -22,8 +22,8 @@ library(shiny)
 library(dplyr)
 setwd("D:/libraries/StratTourn/studies")
 
-
-tourn = load.tournament("Tourn_Noisy_PD_20140912_094618_1.tou")
+name = "Tourn_Noisy_PD_20141020_170203"
+tourn = load.tournament(paste0(name,".tou"))
 # Data for each match
 md = tourn$dt
 md = add.other.var(md,c("strat","u"))
@@ -32,7 +32,7 @@ md$delta.u = md$u - md$other.u
 strats = unique(md$strat)
 
 # Data for each round
-file = tourn$rs.file
+file = paste0(name,"_rs.csv")
 rd = fread(file)
 rd = as.tbl(as.data.frame(rd))
 rd = add.other.var(rd,c("strat","u"))
@@ -48,6 +48,7 @@ if (!identical(used.strats,strats)) {
   rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
   rd = ard[rows,]
 }
+
 ```
 
 
@@ -69,11 +70,13 @@ fun = function(rd, start.t, end.t) {
     get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
   tsd$Strat = tsd$strat
   tsd$t = tsd$t+1900
-  stat = '{"xZoomedDataMin":-2177452800000,"colorOption":"4","playDuration":15000,"orderedByY":false,"xZoomedIn":false,"sizeOption":"_UNISIZE","yZoomedIn":false,"xLambda":1,"nonSelectedAlpha":0.4,"orderedByX":false,"yZoomedDataMax":1.010901557,"showTrails":false,"iconType":"LINE","duration":{"timeUnit":"Y","multiplier":1},"uniColorForNonSelected":false,"yZoomedDataMin":0,"xAxisOption":"_TIME","xZoomedDataMax":-631152000000,"time":"1950","dimensions":{"iconDimensions":["dim0"]},"yLambda":1,"iconKeySettings":[],"yAxisOption":"3"};'
+  state = '{"yZoomedIn":false,"xLambda":1,"colorOption":"2","nonSelectedAlpha":0.4,"xZoomedDataMax":-631152000000,"iconType":"LINE","yAxisOption":"3","uniColorForNonSelected":false,"yZoomedDataMin":0,"dimensions":{"iconDimensions":["dim0"]},"yZoomedDataMax":1.2,"orderedByY":false,"orderedByX":false,"iconKeySettings":[],"xAxisOption":"_TIME","yLambda":1,"xZoomedIn":false,"xZoomedDataMin":-2177452800000,"time":"1950","playDuration":15000,"duration":{"timeUnit":"Y","multiplier":1},"showTrails":false,"sizeOption":"_UNISIZE"};'
   
+  tsd = as.data.frame(tsd)
+  tsd$const=1
   p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
-    yvar = "u", colorvar = "strat", sizevar = "", 
-    options = list(stat=stat))
+    yvar = "u", colorvar = "strat", sizevar = "const", 
+    options = list(state=state))
   #plot(p)
   print(p, tag="chart")
 }

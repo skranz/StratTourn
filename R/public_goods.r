@@ -96,11 +96,7 @@ make.pg.game = function(n=5,MPCR=2/n, pun.cost = 1/3, max.x=100, max.pun=200,del
     
     return(list(payoff=payoff,obs=obs, round.stats=round.stats))
   }
-    
-  adapt.round.stats.dt = function(rs.dt, ...) {
-    rs.dt
-  }
-  
+      
   check.action = function(ai,i,t,...) {
     return()
     #restore.point("check.action.pd")
@@ -112,7 +108,7 @@ make.pg.game = function(n=5,MPCR=2/n, pun.cost = 1/3, max.x=100, max.pun=200,del
   example.obs = function(i=1,t=1,...) {
     list(x=rep(0,n), pun=matrix(0,n,n))
   }
-  li = nlist(run.stage.game, adapt.round.stats.dt,check.action,example.action,example.obs, n, private.signals, params = nlist(MPCR, pun.cost, max.x, max.pun), sym=TRUE, delta=delta, name="Public goods game", show.par = nlist(max.x,max.pun,n))
+  li = nlist(run.stage.game, check.action,example.action,example.obs, n, private.signals, params = nlist(MPCR, pun.cost, max.x, max.pun), sym=TRUE, delta=delta, name="Public goods game", show.par = nlist(max.x,max.pun,n))
   li
   
 }

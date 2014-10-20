@@ -140,9 +140,6 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
     
     return(list(payoff=payoff,obs=obs, round.stats=round.stats))
   } 
-  adapt.round.stats.dt = function(rs.dt, ...) {
-    rs.dt
-  }
   
   check.action = function(ai,i,t,...) {
     ai = ai$a
@@ -161,7 +158,7 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
     list(a=c("C","C"))
   }
   
-  nlist(run.stage.game, adapt.round.stats.dt,check.action,example.action,example.obs, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
+  nlist(run.stage.game, check.action,example.action,example.obs, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
 }
 
 

@@ -22,8 +22,8 @@ library(shiny)
 library(dplyr)
 setwd("D:/libraries/StratTourn/studies")
 
-
-tourn = load.tournament("Tourn_Noisy_PD_20140912_094618_1.tou")
+name = "Tourn_Noisy_PD_20141020_170203"
+tourn = load.tournament(paste0(name,".tou"))
 # Data for each match
 md = tourn$dt
 md = add.other.var(md,c("strat","u"))
@@ -32,7 +32,7 @@ md$delta.u = md$u - md$other.u
 strats = unique(md$strat)
 
 # Data for each round
-file = tourn$rs.file
+file = paste0(name,"_rs.csv")
 rd = fread(file)
 rd = as.tbl(as.data.frame(rd))
 rd = add.other.var(rd,c("strat","u"))
@@ -43,7 +43,6 @@ strats = unique(rd$strat)
 # Perhaps select a subset of strategies
 used.strats = strats
 ard = rd
-
 if (!identical(used.strats,strats)) {
   rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
   rd = ard[rows,]
@@ -67,10 +66,14 @@ start.t = 1
     get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u"), wvar="num.obs", spar=0.2))
   tsd$Strat = tsd$strat
   tsd$t = tsd$t+1900
-  state = '{"xZoomedDataMin":-2177452800000,"colorOption":"3","iconKeySettings":[],"xZoomedIn":false,"sizeOption":"_UNISIZE","yZoomedIn":false,"xLambda":1,"playDuration":15000,"xZoomedDataMax":2524608000000,"xAxisOption":"_TIME","iconType":"LINE","nonSelectedAlpha":0.4,"orderedByY":false,"uniColorForNonSelected":false,"yZoomedDataMin":-0.004,"orderedByX":false,"yZoomedDataMax":1.006974926,"showTrails":false,"yAxisOption":"2","time":"2050","dimensions":{"iconDimensions":["dim0"]},"yLambda":1,"duration":{"timeUnit":"Y","multiplier":1}};'
-  p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
-    yvar = "u", colorvar = "strat", sizevar = "", 
-    options = list(state = state))
+  state = '{"yZoomedIn":false,"orderedByY":false,"iconKeySettings":[],"yAxisOption":"3","xLambda":1,"xZoomedIn":false,"xZoomedDataMax":2524608000000,"iconType":"LINE","dimensions":{"iconDimensions":["dim0"]},"uniColorForNonSelected":false,"yZoomedDataMin":-0.001,"nonSelectedAlpha":0.4,"yZoomedDataMax":1,"time":"2050","sizeOption":"_UNISIZE","showTrails":false,"orderedByX":false,"xZoomedDataMin":-2177452800000,"yLambda":1,"xAxisOption":"_TIME","playDuration":15000,"duration":{"timeUnit":"Y","multiplier":1},"colorOption":"2"};'
+
+  tsd = as.data.frame(tsd)
+  tsd$const = 1
+  tsd$const2 = 1
+  p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "u",
+    yvar = "u", colorvar = "strat", sizevar = "const", 
+    options = list(state=state))
   #plot(p)
   print(p, tag="chart")
 ```

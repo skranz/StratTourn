@@ -185,15 +185,21 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
     strat.state.str.li = vector("list",T)
   }
   
-  if (game$private.signals) {
-    obs = lapply(1:game$n, game$example.obs)
+  if (!is.null(game$initial.game.states)) {
+    game.states = game$initial.game.states()
   } else {
-    obs = game$example.obs(i=1)
+    game.states = NULL
+  }
+
+  if (game$private.signals) {
+    obs = lapply(1:game$n, game$example.obs, game.states=game.states)
+  } else {
+    obs = game$example.obs(i=1,game.states=game.states)
   }
   
   denv = new.env()
   a = vector("list",n.strat)
-  game.states = game$init.states
+  
   
   # Strategy infos
   si = lapply(strat.id, function(i) {
@@ -264,7 +270,6 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
 
   # Round stats
   round.stats = rbindlist(round.stats.li)
-  game$adapt.round.stats.dt(round.stats, match.id=match.id)
   rs.dt = data.table(match.id=match.id, strat=rep(names(strat), times=T), round.stats)
   
   if (detailed.return) {
