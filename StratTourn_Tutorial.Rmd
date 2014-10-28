@@ -13,8 +13,8 @@ Tutorial for the R package StratTourn
 ```{r setup, include=FALSE, cache = F}
 knitr::opts_chunk$set(error = TRUE)
 ```
-
-**Date: 2014-10-09**
+  
+**Date: 2014-10-28**
 
 **Author: Sebastian Kranz (sebastian.kranz@uni-ulm.de)**
 
@@ -48,15 +48,16 @@ install.packages("knitr")
 install.packages("xtable")
 install.packages("shinyBS")
 install.packages("googleVis")
-install.packages("shinyAce")
 
 
 library(devtools)
-install_github(repo="restorepoint", username="skranz")
-install_github(repo="sktools", username="skranz")
-install_github(repo="stringtools", username="skranz")
-install_github(repo="dplyrExtras", username="skranz")
-install_github(repo="StratTourn", username="skranz")
+install_github(repo="skranz/restorepoint")
+install_github(repo="skranz/sktools")
+install_github(repo="skranz/stringtools")
+install_github(repo="skranz/dplyrExtras")
+install_github(repo="skranz/StratTourn")
+install_github(repo="skranz/shinyAce")
+
 ```
 
 ## 2. Brief Background: The Prisoners' Dilemma Game

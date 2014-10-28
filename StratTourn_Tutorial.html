@@ -98,7 +98,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 <div id="tutorial-for-the-r-package-strattourn" class="section level1">
 <h1>Tutorial for the R package StratTourn</h1>
-<p><strong>Date: 2014-10-09</strong></p>
+<p><strong>Date: 2014-10-28</strong></p>
 <p><strong>Author: Sebastian Kranz (<a href="mailto:sebastian.kranz@uni-ulm.de">sebastian.kranz@uni-ulm.de</a>)</strong></p>
 <p><strong>with help by Martin Kies (<a href="mailto:martin.kies@uni-ulm.de">martin.kies@uni-ulm.de</a>)</strong></p>
 <div id="installing-neccessary-software" class="section level2">
@@ -124,15 +124,15 @@ install.packages(&quot;knitr&quot;)
 install.packages(&quot;xtable&quot;)
 install.packages(&quot;shinyBS&quot;)
 install.packages(&quot;googleVis&quot;)
-install.packages(&quot;shinyAce&quot;)
 
 
 library(devtools)
-install_github(repo=&quot;restorepoint&quot;, username=&quot;skranz&quot;)
-install_github(repo=&quot;sktools&quot;, username=&quot;skranz&quot;)
-install_github(repo=&quot;stringtools&quot;, username=&quot;skranz&quot;)
-install_github(repo=&quot;dplyrExtras&quot;, username=&quot;skranz&quot;)
-install_github(repo=&quot;StratTourn&quot;, username=&quot;skranz&quot;)</code></pre>
+install_github(repo=&quot;skranz/restorepoint&quot;)
+install_github(repo=&quot;skranz/sktools&quot;)
+install_github(repo=&quot;skranz/stringtools&quot;)
+install_github(repo=&quot;skranz/dplyrExtras&quot;)
+install_github(repo=&quot;skranz/StratTourn&quot;)
+install_github(repo=&quot;skranz/shinyAce&quot;)</code></pre>
 </div>
 </div>
 <div id="brief-background-the-prisoners-dilemma-game" class="section level2">
@@ -794,94 +794,94 @@ Error: unexpected '}' in &quot;}&quot;</code></pre>
 run.rep.game(delta=0.95, game=game, strat = nlist(exploiter,random.action), game.seed=12345, strat.seed=12345)</code></pre>
 <pre><code>## $rs
 ##       match.id         strat  t i  u a obs.i obs.j err.D.i err.D.j
-##  1: 1773829415     exploiter  1 1 -1 C     C     C   FALSE   FALSE
-##  2: 1773829415 random.action  1 2  2 D     C     C   FALSE   FALSE
-##  3: 1773829415     exploiter  2 1  0 D     C     D   FALSE   FALSE
-##  4: 1773829415 random.action  2 2  0 D     D     C   FALSE   FALSE
-##  5: 1773829415     exploiter  3 1  2 D     D     D   FALSE    TRUE
-##  6: 1773829415 random.action  3 2 -1 C     D     D    TRUE   FALSE
-##  7: 1773829415     exploiter  4 1  2 D     D     D   FALSE   FALSE
-##  8: 1773829415 random.action  4 2 -1 C     D     D   FALSE   FALSE
-##  9: 1773829415     exploiter  5 1 -1 C     D     C    TRUE   FALSE
-## 10: 1773829415 random.action  5 2  2 D     C     D   FALSE    TRUE
-## 11: 1773829415     exploiter  6 1  2 D     D     D   FALSE   FALSE
-## 12: 1773829415 random.action  6 2 -1 C     D     D   FALSE   FALSE
-## 13: 1773829415     exploiter  7 1 -1 C     D     C   FALSE   FALSE
-## 14: 1773829415 random.action  7 2  2 D     C     D   FALSE   FALSE
-## 15: 1773829415     exploiter  8 1  2 D     C     D   FALSE   FALSE
-## 16: 1773829415 random.action  8 2 -1 C     D     C   FALSE   FALSE
-## 17: 1773829415     exploiter  9 1  2 D     D     C   FALSE   FALSE
-## 18: 1773829415 random.action  9 2 -1 C     C     D   FALSE   FALSE
-## 19: 1773829415     exploiter 10 1  2 D     D     C   FALSE   FALSE
-## 20: 1773829415 random.action 10 2 -1 C     C     D   FALSE   FALSE
-## 21: 1773829415     exploiter 11 1  2 D     D     C   FALSE   FALSE
-## 22: 1773829415 random.action 11 2 -1 C     C     D   FALSE   FALSE
-## 23: 1773829415     exploiter 12 1  2 D     D     C   FALSE   FALSE
-## 24: 1773829415 random.action 12 2 -1 C     C     D   FALSE   FALSE
-## 25: 1773829415     exploiter 13 1  0 D     D     C   FALSE   FALSE
-## 26: 1773829415 random.action 13 2  0 D     C     D   FALSE   FALSE
-## 27: 1773829415     exploiter 14 1  2 D     D     D    TRUE   FALSE
-## 28: 1773829415 random.action 14 2 -1 C     D     D   FALSE    TRUE
-## 29: 1773829415     exploiter 15 1  2 D     D     C   FALSE   FALSE
-## 30: 1773829415 random.action 15 2 -1 C     C     D   FALSE   FALSE
-## 31: 1773829415     exploiter 16 1  0 D     D     C   FALSE   FALSE
-## 32: 1773829415 random.action 16 2  0 D     C     D   FALSE   FALSE
-## 33: 1773829415     exploiter 17 1  0 D     D     D   FALSE   FALSE
-## 34: 1773829415 random.action 17 2  0 D     D     D   FALSE   FALSE
-## 35: 1773829415     exploiter 18 1  0 D     D     D    TRUE   FALSE
-## 36: 1773829415 random.action 18 2  0 D     D     D   FALSE    TRUE
-## 37: 1773829415     exploiter 19 1  2 D     D     D   FALSE   FALSE
-## 38: 1773829415 random.action 19 2 -1 C     D     D   FALSE   FALSE
-## 39: 1773829415     exploiter 20 1  0 D     D     C   FALSE   FALSE
-## 40: 1773829415 random.action 20 2  0 D     C     D   FALSE   FALSE
-## 41: 1773829415     exploiter 21 1  0 D     D     D   FALSE    TRUE
-## 42: 1773829415 random.action 21 2  0 D     D     D    TRUE   FALSE
-## 43: 1773829415     exploiter 22 1  2 D     D     D    TRUE    TRUE
-## 44: 1773829415 random.action 22 2 -1 C     D     D    TRUE    TRUE
-## 45: 1773829415     exploiter 23 1  2 D     D     D   FALSE   FALSE
-## 46: 1773829415 random.action 23 2 -1 C     D     D   FALSE   FALSE
-## 47: 1773829415     exploiter 24 1  0 D     D     C   FALSE   FALSE
-## 48: 1773829415 random.action 24 2  0 D     C     D   FALSE   FALSE
-## 49: 1773829415     exploiter 25 1  2 D     D     D   FALSE   FALSE
-## 50: 1773829415 random.action 25 2 -1 C     D     D   FALSE   FALSE
-## 51: 1773829415     exploiter 26 1  2 D     D     C   FALSE   FALSE
-## 52: 1773829415 random.action 26 2 -1 C     C     D   FALSE   FALSE
-## 53: 1773829415     exploiter 27 1  0 D     D     C    TRUE   FALSE
-## 54: 1773829415 random.action 27 2  0 D     C     D   FALSE    TRUE
-## 55: 1773829415     exploiter 28 1  2 D     D     D   FALSE   FALSE
-## 56: 1773829415 random.action 28 2 -1 C     D     D   FALSE   FALSE
-## 57: 1773829415     exploiter 29 1  2 D     D     C   FALSE   FALSE
-## 58: 1773829415 random.action 29 2 -1 C     C     D   FALSE   FALSE
-## 59: 1773829415     exploiter 30 1  0 D     D     C   FALSE   FALSE
-## 60: 1773829415 random.action 30 2  0 D     C     D   FALSE   FALSE
-## 61: 1773829415     exploiter 31 1  0 D     D     D   FALSE   FALSE
-## 62: 1773829415 random.action 31 2  0 D     D     D   FALSE   FALSE
-## 63: 1773829415     exploiter 32 1  0 D     D     D    TRUE   FALSE
-## 64: 1773829415 random.action 32 2  0 D     D     D   FALSE    TRUE
-## 65: 1773829415     exploiter 33 1  2 D     D     D   FALSE   FALSE
-## 66: 1773829415 random.action 33 2 -1 C     D     D   FALSE   FALSE
-## 67: 1773829415     exploiter 34 1  0 D     D     C   FALSE   FALSE
-## 68: 1773829415 random.action 34 2  0 D     C     D   FALSE   FALSE
-## 69: 1773829415     exploiter 35 1  2 D     D     D   FALSE    TRUE
-## 70: 1773829415 random.action 35 2 -1 C     D     D    TRUE   FALSE
-## 71: 1773829415     exploiter 36 1  0 D     D     D   FALSE   FALSE
-## 72: 1773829415 random.action 36 2  0 D     D     D   FALSE   FALSE
-## 73: 1773829415     exploiter 37 1  0 D     D     D   FALSE   FALSE
-## 74: 1773829415 random.action 37 2  0 D     D     D   FALSE   FALSE
-## 75: 1773829415     exploiter 38 1  2 D     D     D   FALSE   FALSE
-## 76: 1773829415 random.action 38 2 -1 C     D     D   FALSE   FALSE
-## 77: 1773829415     exploiter 39 1  2 D     D     C   FALSE    TRUE
-## 78: 1773829415 random.action 39 2 -1 C     C     D    TRUE   FALSE
-## 79: 1773829415     exploiter 40 1  2 D     D     D    TRUE    TRUE
-## 80: 1773829415 random.action 40 2 -1 C     D     D    TRUE    TRUE
-## 81: 1773829415     exploiter 41 1  2 D     D     D   FALSE   FALSE
-## 82: 1773829415 random.action 41 2 -1 C     D     D   FALSE   FALSE
-## 83: 1773829415     exploiter 42 1  2 D     D     C   FALSE   FALSE
-## 84: 1773829415 random.action 42 2 -1 C     C     D   FALSE   FALSE
-## 85: 1773829415     exploiter 43 1  0 D     D     C    TRUE   FALSE
-## 86: 1773829415 random.action 43 2  0 D     C     D   FALSE    TRUE
-## 87: 1773829415     exploiter 44 1  0 D     D     D   FALSE    TRUE
-## 88: 1773829415 random.action 44 2  0 D     D     D    TRUE   FALSE
+##  1: 1380462523     exploiter  1 1 -1 C     C     C   FALSE   FALSE
+##  2: 1380462523 random.action  1 2  2 D     C     C   FALSE   FALSE
+##  3: 1380462523     exploiter  2 1  0 D     C     D   FALSE   FALSE
+##  4: 1380462523 random.action  2 2  0 D     D     C   FALSE   FALSE
+##  5: 1380462523     exploiter  3 1  2 D     D     D   FALSE    TRUE
+##  6: 1380462523 random.action  3 2 -1 C     D     D    TRUE   FALSE
+##  7: 1380462523     exploiter  4 1  2 D     D     D   FALSE   FALSE
+##  8: 1380462523 random.action  4 2 -1 C     D     D   FALSE   FALSE
+##  9: 1380462523     exploiter  5 1 -1 C     D     C    TRUE   FALSE
+## 10: 1380462523 random.action  5 2  2 D     C     D   FALSE    TRUE
+## 11: 1380462523     exploiter  6 1  2 D     D     D   FALSE   FALSE
+## 12: 1380462523 random.action  6 2 -1 C     D     D   FALSE   FALSE
+## 13: 1380462523     exploiter  7 1 -1 C     D     C   FALSE   FALSE
+## 14: 1380462523 random.action  7 2  2 D     C     D   FALSE   FALSE
+## 15: 1380462523     exploiter  8 1  2 D     C     D   FALSE   FALSE
+## 16: 1380462523 random.action  8 2 -1 C     D     C   FALSE   FALSE
+## 17: 1380462523     exploiter  9 1  2 D     D     C   FALSE   FALSE
+## 18: 1380462523 random.action  9 2 -1 C     C     D   FALSE   FALSE
+## 19: 1380462523     exploiter 10 1  2 D     D     C   FALSE   FALSE
+## 20: 1380462523 random.action 10 2 -1 C     C     D   FALSE   FALSE
+## 21: 1380462523     exploiter 11 1  2 D     D     C   FALSE   FALSE
+## 22: 1380462523 random.action 11 2 -1 C     C     D   FALSE   FALSE
+## 23: 1380462523     exploiter 12 1  2 D     D     C   FALSE   FALSE
+## 24: 1380462523 random.action 12 2 -1 C     C     D   FALSE   FALSE
+## 25: 1380462523     exploiter 13 1  0 D     D     C   FALSE   FALSE
+## 26: 1380462523 random.action 13 2  0 D     C     D   FALSE   FALSE
+## 27: 1380462523     exploiter 14 1  2 D     D     D    TRUE   FALSE
+## 28: 1380462523 random.action 14 2 -1 C     D     D   FALSE    TRUE
+## 29: 1380462523     exploiter 15 1  2 D     D     C   FALSE   FALSE
+## 30: 1380462523 random.action 15 2 -1 C     C     D   FALSE   FALSE
+## 31: 1380462523     exploiter 16 1  0 D     D     C   FALSE   FALSE
+## 32: 1380462523 random.action 16 2  0 D     C     D   FALSE   FALSE
+## 33: 1380462523     exploiter 17 1  0 D     D     D   FALSE   FALSE
+## 34: 1380462523 random.action 17 2  0 D     D     D   FALSE   FALSE
+## 35: 1380462523     exploiter 18 1  0 D     D     D    TRUE   FALSE
+## 36: 1380462523 random.action 18 2  0 D     D     D   FALSE    TRUE
+## 37: 1380462523     exploiter 19 1  2 D     D     D   FALSE   FALSE
+## 38: 1380462523 random.action 19 2 -1 C     D     D   FALSE   FALSE
+## 39: 1380462523     exploiter 20 1  0 D     D     C   FALSE   FALSE
+## 40: 1380462523 random.action 20 2  0 D     C     D   FALSE   FALSE
+## 41: 1380462523     exploiter 21 1  0 D     D     D   FALSE    TRUE
+## 42: 1380462523 random.action 21 2  0 D     D     D    TRUE   FALSE
+## 43: 1380462523     exploiter 22 1  2 D     D     D    TRUE    TRUE
+## 44: 1380462523 random.action 22 2 -1 C     D     D    TRUE    TRUE
+## 45: 1380462523     exploiter 23 1  2 D     D     D   FALSE   FALSE
+## 46: 1380462523 random.action 23 2 -1 C     D     D   FALSE   FALSE
+## 47: 1380462523     exploiter 24 1  0 D     D     C   FALSE   FALSE
+## 48: 1380462523 random.action 24 2  0 D     C     D   FALSE   FALSE
+## 49: 1380462523     exploiter 25 1  2 D     D     D   FALSE   FALSE
+## 50: 1380462523 random.action 25 2 -1 C     D     D   FALSE   FALSE
+## 51: 1380462523     exploiter 26 1  2 D     D     C   FALSE   FALSE
+## 52: 1380462523 random.action 26 2 -1 C     C     D   FALSE   FALSE
+## 53: 1380462523     exploiter 27 1  0 D     D     C    TRUE   FALSE
+## 54: 1380462523 random.action 27 2  0 D     C     D   FALSE    TRUE
+## 55: 1380462523     exploiter 28 1  2 D     D     D   FALSE   FALSE
+## 56: 1380462523 random.action 28 2 -1 C     D     D   FALSE   FALSE
+## 57: 1380462523     exploiter 29 1  2 D     D     C   FALSE   FALSE
+## 58: 1380462523 random.action 29 2 -1 C     C     D   FALSE   FALSE
+## 59: 1380462523     exploiter 30 1  0 D     D     C   FALSE   FALSE
+## 60: 1380462523 random.action 30 2  0 D     C     D   FALSE   FALSE
+## 61: 1380462523     exploiter 31 1  0 D     D     D   FALSE   FALSE
+## 62: 1380462523 random.action 31 2  0 D     D     D   FALSE   FALSE
+## 63: 1380462523     exploiter 32 1  0 D     D     D    TRUE   FALSE
+## 64: 1380462523 random.action 32 2  0 D     D     D   FALSE    TRUE
+## 65: 1380462523     exploiter 33 1  2 D     D     D   FALSE   FALSE
+## 66: 1380462523 random.action 33 2 -1 C     D     D   FALSE   FALSE
+## 67: 1380462523     exploiter 34 1  0 D     D     C   FALSE   FALSE
+## 68: 1380462523 random.action 34 2  0 D     C     D   FALSE   FALSE
+## 69: 1380462523     exploiter 35 1  2 D     D     D   FALSE    TRUE
+## 70: 1380462523 random.action 35 2 -1 C     D     D    TRUE   FALSE
+## 71: 1380462523     exploiter 36 1  0 D     D     D   FALSE   FALSE
+## 72: 1380462523 random.action 36 2  0 D     D     D   FALSE   FALSE
+## 73: 1380462523     exploiter 37 1  0 D     D     D   FALSE   FALSE
+## 74: 1380462523 random.action 37 2  0 D     D     D   FALSE   FALSE
+## 75: 1380462523     exploiter 38 1  2 D     D     D   FALSE   FALSE
+## 76: 1380462523 random.action 38 2 -1 C     D     D   FALSE   FALSE
+## 77: 1380462523     exploiter 39 1  2 D     D     C   FALSE    TRUE
+## 78: 1380462523 random.action 39 2 -1 C     C     D    TRUE   FALSE
+## 79: 1380462523     exploiter 40 1  2 D     D     D    TRUE    TRUE
+## 80: 1380462523 random.action 40 2 -1 C     D     D    TRUE    TRUE
+## 81: 1380462523     exploiter 41 1  2 D     D     D   FALSE   FALSE
+## 82: 1380462523 random.action 41 2 -1 C     D     D   FALSE   FALSE
+## 83: 1380462523     exploiter 42 1  2 D     D     C   FALSE   FALSE
+## 84: 1380462523 random.action 42 2 -1 C     C     D   FALSE   FALSE
+## 85: 1380462523     exploiter 43 1  0 D     D     C    TRUE   FALSE
+## 86: 1380462523 random.action 43 2  0 D     C     D   FALSE    TRUE
+## 87: 1380462523     exploiter 44 1  0 D     D     D   FALSE    TRUE
+## 88: 1380462523 random.action 44 2  0 D     D     D    TRUE   FALSE
 ##       match.id         strat  t i  u a obs.i obs.j err.D.i err.D.j
 ##                           strat.state
 ##  1: otherC=0;played.tit.for.tat=FALSE
@@ -976,8 +976,8 @@ run.rep.game(delta=0.95, game=game, strat = nlist(exploiter,random.action), game
 ## 
 ## $res
 ##      match.id i  T u.weight         strat       u
-## 1: 1773829415 1 44     28.8     exploiter  1.0227
-## 2: 1773829415 2 44     28.8 random.action -0.4091</code></pre>
+## 1: 1380462523 1 44     28.8     exploiter  1.0227
+## 2: 1380462523 2 44     28.8 random.action -0.4091</code></pre>
 </div>
 <div id="exercise-correct-the-remaining-bugs-in-exploiter" class="section level3">
 <h3>Exercise: Correct the remaining bugs in exploiter</h3>
