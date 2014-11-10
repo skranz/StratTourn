@@ -37,7 +37,7 @@ show.tournament = function(tourn=NULL, tourn.file=NULL, launch.browser=TRUE, fil
     set.tourn.file(tourn=tourn, tourn.file=tourn.file, sizes.str=sizes.str)
     strats = names(sr$tourn$strat)
   }
-  
+  sr$used.strats = strats
   
   sr$rep.li = make.rep.li()
   sr$report = sr$rep.li[[1]]
@@ -98,18 +98,21 @@ diag_payoffs_over_time:
 payoffs_over_time:
   label: payoff over time
   file: payoffs_over_time.rmd
-payoff_matrix:
-  label: payoff matrix
-  file: matches_payoff_matrix.rmd
-duel_stats:
-  label: duel stats
-  file: payoff_diff_ranking.rmd
-duels_plot:
-  label: duels plot
-  file: matches_duels_plot.rmd
 duels_over_time:
   label: duels over time
   file: duels_over_time.rmd
+duels_diff_over_time:
+  label: duels diff over time
+  file: duels_diff_over_time.rmd
+duel_stats:
+  label: duel stats
+  file: payoff_diff_ranking.rmd
+payoff_matrix:
+  label: payoff matrix
+  file: matches_payoff_matrix.rmd
+duels_plot:
+  label: duels plot
+  file: matches_duels_plot.rmd
 strat_stats:
   label: strat stats
   file: strat_indicators.rmd
@@ -435,7 +438,7 @@ set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=
   load.round.data(tourn$rs.file)
 }
 
-compile.report = function(rep=sr$report,session, sr=get.sr()) {
+compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.input=TRUE, fragment.only=TRUE) {
   
   restore.point("compile.report")
   file = system.file(package="StratTourn", "reports",rep$file[1]) 
@@ -452,10 +455,13 @@ compile.report = function(rep=sr$report,session, sr=get.sr()) {
     row = rows[1]
     remove.rows = cdf$start.row[row]:cdf$end.row[row] 
   }
-  rows = which(cdf$chunk.name=="init_parameters")
-  if (length(rows)>0) {
-    row = rows[1]
-    remove.rows = c(remove.rows,cdf$start.row[row]:cdf$end.row[row])   
+  
+  if (parameters.from.input) {
+    rows = which(cdf$chunk.name=="init_parameters")
+    if (length(rows)>0) {
+      row = rows[1]
+      remove.rows = c(remove.rows,cdf$start.row[row]:cdf$end.row[row])   
+    }
   }
   if (length(remove.rows)>0)
     txt = txt[-(remove.rows)]
@@ -463,7 +469,7 @@ compile.report = function(rep=sr$report,session, sr=get.sr()) {
    restore.point("compile.report.2")
 
   # Assign parameters from inputs
-  if (!is.null(sr$ui.par.df)) {
+  if (!is.null(sr$ui.par.df) & parameters.from.input) {
     #browser()
     d = sr$ui.par.df
     i = 1
@@ -488,7 +494,7 @@ compile.report = function(rep=sr$report,session, sr=get.sr()) {
   }
   
   txt = c("```{r include=FALSE}\n library(StratTourn);set.view.mode('shiny_report')\n```",txt)
-  html = knit2html(text=txt,fragment.only=TRUE, envir=env)
+  html = knit2html(text=txt,fragment.only=fragment.only, envir=env)
   html
 }
 
@@ -540,4 +546,22 @@ parse.sizes.string = function(str, used.strats=sr$used.strats, sr = get.sr(), to
     sizes = sizes / sum(sizes)
 
   sizes
+}
+
+
+write.reports.html = function(report.file = "reports.html",reports = names(rep.li), rep.li = sr$rep.li, sr=get.sr()) {
+
+  #reports = c("payoff_ranking","duel_stats")
+  rep.name = reports[[1]]
+  html = sapply(reports, function(rep.name) {
+    restore.point("inner.write.reports.html")
+    report = rep.li[[rep.name]]
+    txt = compile.report(report,parameters.from.input=FALSE,sr=sr)
+    paste0(txt, collapse="\n")
+  })
+
+  html = paste0(html, collapse = "\n\n")
+  if (!is.null(report.file))
+    writeLines(html, report.file)
+  invisible(html)
 }

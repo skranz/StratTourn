@@ -11,15 +11,16 @@ examples.trade.game = function() {
   mean(x1+x2>1)
   
   mean(x2>0.5)
-  mat = matrix(x, ncol=2)
   
   
   
   # Generate a game object
-  game = make.trade.game(cost.min, cost.max)
+  game = make.trade.game(cost.low=0, cost.high=80, uniform=TRUE, delta=0.8)
+  
+  game = make.trade.game(cost.low=20, cost.high=60, uniform=FALSE, delta=0.8)
 
   # Pick a pair of strategies
-  strat = nlist(tit.for.tat,random.action)
+  strat = nlist(markup10,markup05)
   # Let the strategies play against each other
   run.rep.game(game=game, strat = strat)
   
@@ -29,11 +30,11 @@ examples.trade.game = function() {
   setwd("D:/libraries/StratTourn/studies")
 
   # Init and run a tournament of several strategies against each other  
-  strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
+  strat = nlist(markup10, markup05,demand50)  
   tourn = init.tournament(game=game, strat=strat)
   
-  #set.storing(FALSE)  # uncoment to make code run faster
-  tourn = run.tournament(tourn=tourn, R = 4)
+  set.storing(FALSE)  # uncoment to make code run faster
+  tourn = run.tournament(tourn=tourn, R = 100)
   set.storing(TRUE)
   
   tourn
@@ -48,19 +49,20 @@ trade.fixed.markup = function(obs,i,t,markup=0.1,...) {
   return(list(demand=cost+markup))
 }
 
-markup10 = function(obs,i,t,markup=0.1,...) {
+markup10 = function(obs,i,t,markup=10,...) {
   cost = obs$cost
   return(list(demand=cost+markup))
 }
 
-markup05 = function(obs,i,t,markup=0.05,...) {
+markup5 = function(obs,i,t,markup=5,...) {
   cost = obs$cost
   return(list(demand=cost+markup))
 }
 
 
 demand50 = function(obs,i,t,...) {
-  return(list(demand=0.5))
+  cost = obs$cost
+  return(list(demand=pmax(50,cost)))
 }
 
 trade.reduce = function(obs,i,t,start.markup=0.5,max.demand=0.7, ...) {
@@ -69,7 +71,7 @@ trade.reduce = function(obs,i,t,start.markup=0.5,max.demand=0.7, ...) {
 
 
 #' Generate a (noisy) Prisoners' Dilemma game
-make.trade.game = function(cost.min=0,cost.max=0.8, delta=0.95,...) {
+make.trade.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high=0.5, uniform=FALSE, digits=0, price=100, delta=0.8,...) {
   
   run.stage.game = function(a,t,t.obs,game.states,...) {
     restore.point("trade.run.stage.game")
@@ -78,16 +80,16 @@ make.trade.game = function(cost.min=0,cost.max=0.8, delta=0.95,...) {
     
     D = sum(demands)
     # Feasible demand 
-    if (D<=1) {
-      demands = demands + D/2
-      payoff = demand-costs  
+    if (D<=price) {
+      demands = demands + (price-D)/2
+      payoff = demands-costs  
     } else {
       payoff = c(0,0)
     }
     
     # private signals: each player sees her cost type
-    obs = list(list(cost=cost[1], demands=demands),
-               list(cost=cost[2], demands=demands))
+    obs = list(list(cost=costs[1], demands=demands),
+               list(cost=costs[2], demands=demands))
     round.stats = quick.df(t=c(t,t),i=1:2,cost=costs,demand=demands,u=payoff) 
     return(list(payoff=payoff,obs=obs, round.stats=round.stats, game.states=list(costs=costs)))
   } 
@@ -107,11 +109,15 @@ make.trade.game = function(cost.min=0,cost.max=0.8, delta=0.95,...) {
   }
   
   initial.game.states = function() {
-    costs = round(runif(2,cost.min, cost.max),2)
+    if (uniform) {
+      costs = round(runif(2,cost.low, cost.high),digits)
+    } else {
+      costs = sample(c(cost.low,cost.high),2, replace=TRUE, prob=c(prob.low, prob.high))
+    }
     nlist(costs)
   }
   
-  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.low,cost.high, prob.low, prob.high), sym=TRUE, delta=delta, name="trade")
+  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.min,cost.max), sym=TRUE, delta=delta, name="trade")
 }
 
 

@@ -1,4 +1,5 @@
 find.row = function(txt,pattern,li, stop.if.not.found = TRUE) {
+  restore.point("find.row")
   rows = which(str.starts.with(txt,pattern))
   if (length(rows)==0)
     stop(paste0("Did not find row starting with '", pattern, "' in file ", li$file))
@@ -13,28 +14,42 @@ examples.import.stage1.strats = function() {
   library(StratTourn)
   library(compiler)
 
-  dir = "D:/lehre/cooperation seminar/task1strat"
-  num.scen = 2
-  scen.strat = import.stage1.strats(dir, num.scen)[[1]]
+  dir = "D:/lehre/cooperation seminar/coop1_prelim"
+  num.scen = 1
+  scen.strat = import.strats.from.dir(dir, num.scen)[[1]]
   cbind(scen.strat$strat.name,scen.strat$team)
   
-  game = make.pd.game(err.D.prob = 0.15)
+  setwd("D:/libraries/StratTourn/studies")
+  game = make.pd.game(err.D.prob = 0.2, delta=0.985)
   strat = scen.strat$strat
   team = scen.strat$team
-  
+
+  setwd("D:/libraries/StratTourn/studies")
   set.storing(FALSE)
-  tourn = init.tournament(game=game,strat=strat, delta=0.95, team=team)  
+  tourn = init.tournament(game=game,strat=strat)  
   enableJIT(3)
   tourn = run.tournament(tourn=tourn, R=2)
-  
-  
-  setwd("D:/lehre/cooperation seminar/")
-  save.tournament(tourn,file="task1_tourn.Rdata")
-  tourn
+  set.storing(TRUE)
+  enableJIT(0)
 
-  setwd("D:/lehre/cooperation seminar/")
-  tourn = load.tournament(file="task1_tourn.Rdata")
-  tourn
+  save.tournament(tourn)
+  show.tournament(tourn)
+  
+  setwd("D:/libraries/StratTourn/studies")
+  tourn.name = "Tourn_Noisy_PD_20141110_054429"
+  tourn = load.tournament(paste0(tourn.name,".tou"))
+  show.tournament(tourn)
+
+}
+
+#' Parse strategies from a rmd solution file
+#' @param file the name of your rmd solution file
+#' @param num.scen the number of scenarios
+#' @return A list with codes and information about your strategy. If the strategies cannot be correctly parsed, the function throws an error.
+#' @export
+parse.strats.from.rmd = function(file, num.scen) {
+  ret = parse.stage1.Rmd(file, num.scen=num.scen)
+  ret 
 }
 
 #' Import all strategies from a directory with all team's solutions (as Rmd files) from stage 1 of a tournament
@@ -42,7 +57,7 @@ examples.import.stage1.strats = function() {
 #' @param num.scen the number of scenarios
 #' @return a list that contains a list for each scenario. The list for each scenario has a list strat that contains the strategies of all teams.
 #' @export
-import.stage1.strats = function(dir, num.scen) {
+import.strats.from.dir = function(dir, num.scen) {
   files = list.files(dir)
   
   files = paste0(dir,"/",files)
@@ -95,12 +110,13 @@ parse.stage1.Rmd = function(file, num.scen) {
   txt = readLines(file)
   
   
-  li$team.name = find.row(txt,"**Team-Name:**", li)$str
+  li$team.name = find.row(txt,"**Team Name**:", li)$str
   
   # Extract code for each scenario
+  scen=1
   li$code = lapply(1:num.scen, function(scen) {
-    start.row = find.row(txt,paste0("```{r strat_scen",scen))$row
-    end.row = find.row(txt[-(1:start.row)],"```")$row + start.row
+    start.row = find.row(txt,paste0("```{r strat_scen",scen),li=li)$row
+    end.row = find.row(txt[-(1:start.row)],"```",li=li)$row + start.row
     return(txt[(start.row+1):(end.row-1)])
   })
   

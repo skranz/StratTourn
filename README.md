@@ -5,6 +5,7 @@ output:
     theme: readable
     toc: yes
 ---
+ 
 
 Analyzing Cooperation with Game Theory and Simulation
 ========================================================================
@@ -374,7 +375,7 @@ The following lines run a tournament between 4 specified strategies
   tourn = init.tournament(game=game, strat=strat)
   
   #set.storing(FALSE)  # uncomment to make code run faster
-  tourn = run.tournament(tourn=tourn, R = 15)
+  tourn = run.tournament(tourn=tourn, R = 5)
   set.storing(TRUE)  
   tourn
 

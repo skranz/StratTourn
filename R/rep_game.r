@@ -44,29 +44,6 @@ examples.rep.game = function() {
   
 }
 
-net.nice0 = function(obs,i,t, net.nice=0,k=0, ...) {
-  net.nice(obs,i,t, net.nice,k, ...)
-}
-net.nice1 = function(obs,i,t, net.nice=0,k=1, ...) {
-  net.nice(obs,i,t, net.nice,k, ...)
-}
-  
-
-net.nice = function(obs,i,t, net.nice=0,k=1, ...) {  
-  restore.point("net.nice")
-  if (t==1) {
-    return(nlist(a="C",net.nice))
-  }
-  a = obs$a
-  j = 3-i  
-  a.num = ifelse(a=="C",1,0)
-  net.nice = net.nice + a.num[i]-a.num[j] 
-  if (net.nice <= k) {
-    return(nlist(a="C",net.nice))
-  }
-  return(nlist(a="D",net.nice))
-}
-
 forgiving.grim.trigger = function(obs,i,t,game,coop=TRUE,forgive.prob=0.2,...) {
   coop = coop & all(obs$a == "C")
   if (runif(1)<forgive.prob)
@@ -76,10 +53,10 @@ forgiving.grim.trigger = function(obs,i,t,game,coop=TRUE,forgive.prob=0.2,...) {
 }
 
 
-get.strat.info = function(i=1,strat, game) {
+get.strat.info = function(i=1,strat, game, game.states=NULL) {
   restore.point("get.strat.info")
   
-  ex.obs = game$example.obs(i=i)
+  ex.obs = game$example.obs(i=i, game.states=game.states)
   ex.action = game$example.action(i=i)
   
   # Extras arguments of the strategy
@@ -203,7 +180,7 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
   
   # Strategy infos
   si = lapply(strat.id, function(i) {
-    get.strat.info(i=i, strat=strat[[i]], game=game)
+    get.strat.info(i=i, strat=strat[[i]], game=game, game.states=game.states)
   })
   strat.states = lapply(strat.id, function(i) {
     list()

@@ -73,4 +73,4 @@ mean.u = mean(rd$u)
 
 qplot(data=tsd, x=t, y=u, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat) + geom_hline(yintercept=I(mean.u), size=0.5, col="black",alpha=0.5)
 ```
-The plot shows the average payoffs of the column strategy against the row strategy as a function of the period t.
+The plot shows the average payoffs of the column strategy against the row strategy as a function of the round t.
