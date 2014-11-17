@@ -28,9 +28,15 @@ plot.evolve.asymmetric = function(shares) {
 }
 
 
-get.evolutionary.shares = function(tourn, generations=100, alpha=0.1, min.shares = 1/1000) {
+get.evolutionary.shares = function(tourn, generations=100, alpha=0.1, min.shares = 1/1000, initial=NULL) {
   mat = get.matches.vs.matrix(tourn = tourn)
-  res = evolve(mat=mat, generations=generations, alpha=alpha, min.shares=min.shares)
+  if (!is.null(initial)) {
+    if (!is.null(names(initial)))
+      initial = initial[rownames(mat)]
+   res = evolve(initial=initial,mat=mat, generations=generations, alpha=alpha, min.shares=min.shares) 
+  } else {
+   res = evolve(mat=mat, generations=generations, alpha=alpha, min.shares=min.shares) 
+  }
   return(res[NROW(res),])
 }
 
