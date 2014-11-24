@@ -27,7 +27,12 @@ get.view.style = function(mode) {
   NULL
 }
 
+view.data.table = function(x,...) {
+  view.data.frame(as.data.frame(x),...)
+}
+
 view.data.frame = function(x,...,mode=get.view.mode(),style=get.view.style(mode), digits=NULL, scientific=FALSE) {
+  restore.point("view.data.frame")
   if (mode=="html") {
     library(xtable)
     txt = capture.output(print(xtable(x,...), type = "html",

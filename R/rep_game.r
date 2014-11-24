@@ -123,7 +123,7 @@ sample.T = function(delta, sample.delta = delta) {
 #' @param game the game object
 #' @param strat a list of strategies
 #' @param T.max optionally a maximum number of rounds
-run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = 1 - (1-delta)/2, match.id = sample.int(2147483647,1)) {
+run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = delta, match.id = sample.int(2147483647,1)) {
   restore.point("run.rep.game")
   
   gbos$do.store = do.store
