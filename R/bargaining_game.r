@@ -42,18 +42,19 @@ make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high
   
   run.stage.game = function(a,t,t.obs,game.states,...) {
     restore.point("bargaining.run.stage.game")
-    x = unlist(a)
+    x = unlist(a, use.names=FALSE)
     costs = game.states$costs
     
     D = sum(x)
     # Feasible x 
     if (D<=price) {
-      x = x + (price-D)/2
-      payoff = x-costs  
+      payoff = x + (price-D)/2 -costs  
+      #x = x + (price-D)/2
+      #payoff = x  -costs  
     } else {
       payoff = c(0,0)
     }
-    
+
     # private signals: each player sees her cost type
     obs = list(list(cost=costs[1], x=x),
                list(cost=costs[2], x=x))
