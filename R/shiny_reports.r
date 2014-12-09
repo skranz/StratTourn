@@ -121,7 +121,10 @@ strategies:
   file: show_strat_code.rmd
 bargaining_game:
   label: bargaining game
-  file: bargaining_game_over_time.rmd  
+  file: bargaining_game_over_time.rmd
+bargaining_agreements:
+  label: bargaining agreement
+  file: bargaining_game_perc_agree.rmd
 "
   library(yaml)
   rep.li = yaml.load(reports.yaml)

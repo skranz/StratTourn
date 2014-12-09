@@ -1,0 +1,84 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+library(dplyr)
+library(tidyr)
+```
+
+```{r "init_data", include=FALSE}
+setwd("D:/libraries/StratTourn")
+
+setwd("D:/libraries/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_trade_20141123_082001.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+
+rank.dt = strat.rank.from.matches(md)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+```{r, echo=FALSE}
+rd = add.other.var(rd,c("x","cost"))
+rd$cost.pair = paste0(rd$cost,"_",rd$other.cost)
+rd <- mutate(rd, agreed = x+other.x<=100)
+sd <- summarise(group_by(rd,strat,other.strat, cost.pair), perc.agree=round(mean(agreed)*100,2))
+rank.strats = rank.dt$strat
+sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
+sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
+```
+
+## Percentage of Agreements: Table
+```{r, echo=FALSE, results='asis'}
+tbld <- summarise(group_by(sd,strat,other.strat), agree=mean(perc.agree))
+tbld <- dcast(strat~other.strat, data=tbld, value.var="agree")
+tbld <- mutate(tbld,avrg=rowMeans(tbld[,2:ncol(tbld)])
+           ,rank=match(strat,rank.strats))
+max.row =max.col(t(tbld[,-c(1,ncol(tbld))]))
+tbld[,-c(1,ncol(tbld))] <- sapply(2:(ncol(tbld)-1),FUN=function(x){
+  tbld[,x] <- round(tbld[,x],2)
+  tbld[max.row[x-1],x] <- paste0(tbld[max.row[x-1],x],"*")
+  return(tbld[,x])
+})
+view(as.data.frame(tbld))
+```
+
+## Percentage of Agreements: Plots
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+ggplot(data=sd, aes(cost.pair, fill=strat, y=perc.agree)) + geom_bar(stat="identity") +facet_grid(other.strat~strat)
+cat("\n")
+```
+
+The plot shows the Percentage of rounds where an agreement was reached for the cost distributions 25/25, 25/55, 55/25 and 55/55 respectively for each strategy pair.
