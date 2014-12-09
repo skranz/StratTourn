@@ -1,0 +1,284 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+```
+
+
+## Load package and tournament
+
+```{r, echo=FALSE}
+library(StratTourn)
+library(xtable)
+setwd("D:/libraries/StratTourn")
+
+
+tourn = load.tournament("Tourn_Noisy_PD_20140721_202445.Rdata")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+# Data for each round
+file = "Tourn_Noisy_PD_20140721_202445_rs.csv"
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+rd = mutate(group_by(rd,match.id,i),
+  choose.C = (a == "C")*1,
+  choose.D = (a == "D")*1,
+  other.D.prev = (obs.j == "D")*1,
+  other.D.prev2 = is.true(obs.j == "D" & lag(obs.j) == "D")*1,
+  other.d.dist75 = 0.75^distance.to.previous.event(other.D.prev),
+  own.D.cum = cumsum(obs.i=="D"),
+  other.D.cum = cumsum(obs.j=="D"),
+  other.D.cum1 = (other.D.cum>=1)*1,
+  other.D.cum2 = (other.D.cum>=2)*1,
+  net.nice = other.D.cum - own.D.cum,
+  net.nice1 = (net.nice>=1)*1,
+  net.nice2 = (net.nice>=2)*1,
+  error.D.i = lag(err.D.i, default=FALSE)*1,
+  error.D.j = lag(err.D.j, default=FALSE)*1,
+  error.D.i.cum = cumsum(error.D.i),
+  error.D.j.cum = cumsum(error.D.j),
+  num.err = error.D.i.cum+error.D.j.cum,
+  diff.err = abs(error.D.i.cum-error.D.j.cum),
+  error.D.i.once = (cumsum(error.D.i)>0)*1,
+  error.D.j.once = (cumsum(error.D.j)>0)*1
+)
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+sst = strats
+srd = rd
+if (!identical(sst,strats)) {
+  rows = rd$strat %in% sst & rd$other.strat %in% sst
+  srd = rd[rows,]
+}
+```
+We use the per-round data in the file **`r file`**. We have `r length(strats)` strategies and observations from `r NROW(srd)` rounds in `r length(unique(srd$match.id))` matches.
+
+## Total payoffs
+
+```{r}
+tot = summarize(group_by(srd, strat), u=mean(u))
+tot = mutate(tot, is.best = u == max(u))
+
+qplot(data=tot,x=strat, y=u, fill=strat,color=is.best, group=strat, geom="bar", stat="identity", size=I(1))  + scale_colour_manual(values=c("black","red"))
+
+```
+
+## Payoffs against different strategies
+```{r, echo=FALSE, fig.width=9, fig.height=12}
+d = summarize(group_by(srd, strat, other.strat), u=mean(u))
+d = mutate(group_by(d,other.strat), is.best = u == max(u))
+
+qplot(data=d,x=strat, y=u, color=is.best,fill=strat, group=strat, geom="bar", stat="identity", size=I(1)) + facet_grid(other.strat~.) + scale_colour_manual(values=c("black","red"))
+
+```
+
+## Structure of the game over time
+
+```{r, fig.height=5}
+
+td = summarise(group_by(srd,t), num.err=mean(num.err), diff.err = mean(diff.err), num.obs = length(t))
+qplot(data=td, x=t, y=num.obs, size=I(1), geom="line",main="Number of observations as function of t") + scale_y_log10("Number of observations",breaks = log_breaks_fun())
+
+qplot(data=td, x=t, y=num.err, size=I(1), geom="line", main="Average number of errors")
+qplot(data=td, x=t, y=diff.err, size=I(1), geom="line", main="Average absolute difference of errors across players.")
+
+```
+
+## Average performance over time
+
+```{r, echo=FALSE}
+td = summarise(group_by(srd,strat,t), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat),
+         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="u", wvar="num.obs", spar=0.2))
+qplot(data=tsd, x=t, y=u, color=strat, group=strat, size=I(1), geom="line")
+```
+
+## Average performance over time: duells
+
+
+```{r, echo=FALSE, fig.width=10, fig.height=10}
+td = summarise(group_by(srd,strat,other.strat,t), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat, other.strat),
+         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="u", wvar="num.obs", spar=0.2))
+qplot(data=tsd, x=t, y=u, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat)
+```
+
+
+
+
+# Motion plots of u vs other.u
+```{r}
+td = summarise(group_by(srd,strat,t), u=mean(u),other.u = mean(other.u), num.obs = length(t))
+t.seq = 1:min(max(td$t),50)
+tsd = do(group_by(td, strat),
+  get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
+tsd$Strat = tsd$strat
+p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
+  yvar = "u", colorvar = "strat", sizevar = "", 
+  options = list())
+plot(p)
+
+M1 <- gvisMotionChart(Fruits, idvar="Fruit", timevar="Year")
+plot(M1)
+```
+
+
+
+# Average performance against the number of past observation errors
+
+```{r, echo=FALSE}
+td = summarise(group_by(srd,strat,num.err), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$num.err),20)
+fun = function(d, xvar="num.err",yvar="u", wvar="num.obs",xout=t.seq,...) {
+  sp = smooth.spline(x=d[[xvar]], y=d[[yvar]], w= d[[wvar]],...)
+  smooth = predict(sp,x = xout)
+  df = data.frame(x=smooth$x, y=smooth$y)
+  colnames(df) = c(xvar,yvar)
+  df
+}
+tsd = do(group_by(td, strat),fun(., spar=0))
+
+
+qplot(data=tsd, x=num.err, y=u, color=strat, group=strat, size=I(1), geom="line")
+```
+
+# Average performance against the number of past observation errors: Duells
+
+```{r, echo=FALSE, include=FALSE}
+td = summarise(group_by(srd,strat,other.strat,num.err), u=mean(u), num.obs = length(t))
+t.seq = 1:min(max(td$num.err),20)
+fun = function(d, xvar="num.err",yvar="u", wvar="num.obs",xout=t.seq,...) {
+  sp = smooth.spline(x=d[[xvar]], y=d[[yvar]], w= d[[wvar]],...)
+  smooth = predict(sp,x = xout)
+  df = data.frame(x=smooth$x, y=smooth$y)
+  colnames(df) = c(xvar,yvar)
+  df
+}
+tsd = do(group_by(td, strat, other.strat),fun(., spar=0))
+qplot(data=tsd, x=num.err, y=u, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat)
+```
+
+
+Here is a distribution of the error numbers
+```{r}
+tab = table(srd$num.err)
+shares = round(100*tab / sum(tab),1)
+shares
+```
+
+
+## In which situations do strategies fare well and bad
+
+The average payoff of the strategies in different situations:
+```{r, results='asis', echo=FALSE, include=FALSE}
+conditions =c(
+  "error.D.i.cum > 0",
+  "error.D.j.cum > 0",
+  "error.D.i.cum > 2",
+  "error.D.j.cum > 2",
+  "t==1",
+  "abs(error.D.i.cum-error.D.j.cum) > 0",
+  "abs(error.D.i.cum-error.D.j.cum) > 1"
+)
+
+conditions =c(
+  "error.D.i.cum > 0",
+  "error.D.j.cum > 0",
+  "t==1"
+)
+
+srd$ind = make.condition.indicator(srd, conditions, other.label = "t>1 & no error")
+tab = summarise(group_by(srd, ind,strat),mean.u=mean(u), num.obs = length(u))
+
+ind.obs = summarise(group_by(srd, ind), num.obs = length(u))
+ind.obs$perc.obs = paste0(round((ind.obs$num.obs/ sum(ind.obs$num.obs))*100,1),"%")
+ind.obs$label = paste0( ind.obs$perc.obs," ",ind.obs$ind)
+tab = left_join(tab,x=tab,y=select(ind.obs,ind,label),by="ind")
+
+
+total = summarise(group_by(srd,strat),mean.u=mean(u), num.obs = length(u) )
+total$ind = "total"
+total$label = paste("total (Obs: ", round(sum(ind.obs$num.obs / length(strats))),")") 
+
+tab = rbind(tab,total)
+
+tab = arrange(tab, ind,-mean.u)
+tab = mutate(group_by(tab,ind), rank=seq_along(strat))
+tab = select(tab, ind, strat, rank,num.obs,mean.u, label)
+
+tab$mean.u = round(tab$mean.u,2)
+#dl = select(tab, label, strat,mean.u)
+dw = dcast(tab,label ~strat, value.var = "mean.u")
+colnames(dw)[1] = "subset"
+
+view(dw)
+```
+
+Let us analyse it graphically:
+```{r, fig.height=7, fig.width=9, include=FALSE}
+qplot(x=strat,y=mean.u, data=tab, geom="bar", fill=strat, stat="identity",main="Average payoffs in different situations") + facet_wrap( ~label, ncol=2)
+```
+
+
+
+## Explaining defection with regressions
+
+Below we search for each strategy a short regression specification that well explains a decision to defect in a round. We use the variable selection procedure of the package `leaps` to search for subset of 1-3 explanatory variables from the big regression:
+
+      choose.D ~ other.D.prev+other.D.prev2+other.D.cum+other.D.cum1+other.D.cum2+net.nice+net.nice1+net.nice2 + t
+
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+library(leaps)
+select.reg = function(dat,formula, round=4,nvmax=2, criterion="adjr2",...) {
+  restore.point("select.reg")
+  b<-suppressWarnings(regsubsets(formula,data=dat,nbest=1,nvmax=nvmax,...))
+  bs = summary(b)
+  crit = bs[[criterion]]
+  i = which.max(crit)
+  if (length(i)==0)
+    i = 1
+  #i = 2
+  r.sqr = bs$rsq[[i]]
+  beta = coef(b,i)  
+  do.call("quick.df",c(list(num.obs=NROW(dat), r.sqr=r.sqr),as.list(round(beta,round))))
+}
+li = split(srd,srd$strat)
+res = lapply(li, select.reg, formula = choose.D ~ other.D.prev+other.D.prev2+other.D.cum+other.D.cum1+other.D.cum2+net.nice+net.nice1+net.nice2 + t, method="exhaustive",nvmax=3, criterion="bic")
+res
+```
+Here are the regressions with the selected variables for each strategy:
+```{r, echo=FALSE}
+view(res)
+```
+
+
+## Let us do the analysis again now separately for different opposing strategies
+
+- skipped -
+```{r, eval=FALSE, include=FALSE}
+
+li = split(srd,paste0(srd$strat," vs ",srd$other.strat))
+res = lapply(li, select.reg, formula = choose.D ~ other.D.prev+other.D.prev2+other.D.cum+other.D.cum1+other.D.cum2+net.nice+net.nice1+net.nice2 + t, method="exhaustive",nvmax=3, criterion="bic")
+res
+
+```

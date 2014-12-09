@@ -1,0 +1,92 @@
+---
+title: "Ranking of strategies"
+tab_label: "matches" 
+output: html_document
+---
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(shiny)
+library(xtable)
+library(knitr)
+setwd("D:/libraries/StratTourn/studies")
+
+tourn = load.tournament("Tourn_Public_goods_game_20140927_164950.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+used.strats = strats
+shown.strats = strats
+
+
+```
+
+
+```{r "init_parameters", include=FALSE}
+generations = 100
+alpha = 1
+min.shares = 0.001
+step.size = 10
+start.generation = 1
+init.size.string = paste0(used.strats,"=1", collapse=",")
+```
+
+
+```{r, echo=FALSE,results='asis', fig.width=7, fig.height=7}
+#used.strats = c("tit.for.tat","always.defect","net.nice0","net.nice1")
+#init.size.string = "always.coop=1,tit.for.tat=1,always.defect=1,net.nice0=100,net.nice1=1,forgiving.grim.trigger=1"
+
+init.size = parse.sizes.string(init.size.string, used.strats=used.strats, sr=NULL)
+
+vs.mat =  get.matches.vs.matrix(md)
+vs.mat = vs.mat[used.strats,used.strats]
+res = evolve2(initial = init.size, vs.mat = vs.mat, generations=generations, alpha = alpha, min.shares = min.shares)
+mdf = res$grid
+shares.mat = res$shares.mat
+
+if (!isTRUE(is.finite(step.size)))
+  step.size = 1
+
+if (start.generation >1) {
+  rows = which(mdf$generation >= start.generation)
+  mdf = mdf[rows,]
+}
+
+if (step.size >1) {
+  used.gens = seq(start.generation,generations, by=step.size)
+  rows = which(mdf$generation %in% used.gens)
+  mdf = mdf[rows,]
+}
+
+p = gvisMotionChart(mdf, idvar = "strat", timevar = "time", xvar = "u",
+yvar = "share", colorvar = "strategy", sizevar = "share", 
+options = list())
+
+#plot(p)
+print(p, tag="chart")
+  
+
+```
+Resulting sizes
+```{r echo=FALSE,comment=""}
+res.size = shares.mat[NROW(shares.mat),]
+res.size.string =  paste0(colnames(shares.mat)," = ", round(res.size*100,1), collapse=", ")
+cat(res.size.string)
+```
+
+
+We simulate an evolutionary dynamic in which the proportion of strategies in the population changes over generations. Successful strategies grow and unsuccessful strategies shrink. A strategy `s` grows from one generation to the next generation essentially by the following simple linear population dynamics formula:
+  
+```
+  size.next[s] = size[s] + alpha * (U[s]-U.mean) * size[s]
+``` 
+where `U[s]` is the weighted payoff of strategy `s` against all other strategies with weights being the current shares of each strategy in the population. `U.mean` is the weighted average of `U[s]` over all strategies. Hence a strategy's size in the population grows if and only if it has a higher average payoff than the weighted average payoff in the population. Otherwise, the strategy shrinks.
+
+The parameter `alpha` determines the speed of the evolutionary process between two generations. The smaller `alpha`, the smoother are the evolutionary dynamics. (If you want quicker evolution, you may set alpha higher or, for smoother dynamics increase the number of generations but also increase the generation step. Increasing the generation step just reduces the size of the data frame that is transferred to the motion plot, which is the main performance bottleneck in the code).
+
+After each evolution step we normalize the total population size to 1, soo that strategy sizes correspond to strategy shares. We also have the option to specify a minimal share of each strategy in the population.
+

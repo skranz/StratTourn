@@ -21,7 +21,7 @@ examples.study.strats.and.answers.par = function() {
     strats = nlist(mix), answers=nlist(mix),
     strat.par = list(probC = c(0,0.1,0.5,1)),
     answer.par=list(probC = seq(0,1,length=5)),
-    R=2, delta=0.95, sim=sim,game=game
+    R=2, delta=0.95, sim=sim,game=game, score.fun=NULL
   )
   plot(sim)
   
@@ -95,14 +95,16 @@ plot.StratsAnswersStudy = function(sim,...) {
   max.y = max(c(max(sim$sa$agg$ci.upper),max(sim$s$agg$ci.upper)))
   
   diff = (max.y-min.y)
-  min.y = max(min(c(sim$s$agg$score, min.y - 0.01*diff)), min.y - 0.2*diff)
+  min.y = min.y - 0.05*diff
   max.y = max.y + 0.05*diff
 
-  if ((par[1] == "answer" & need.facet[1]) |
+  if ( is.null(sim$score) |
+      (par[1] == "answer" & need.facet[1]) |
       (par[2] == "answer" & need.facet[2]) |
       (par[3] == "answer" & need.facet[3])) {
     score.geom = NULL    
   } else {
+    min.y = max(min(c(sim$s$agg$score, min.y - 0.01*diff)), min.y - 0.2*diff)
     score.geom = geom_line(aes(y=score), colour="green")
   }
   
@@ -192,7 +194,9 @@ study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.
     sim$strats = union(sim$strats,strat.names)
     sim$answers = union(sim$answers, answer.names)
   }
-
+  sim$score.fun = score.fun
+  
+  
   sim$s = study.strats(strats, R, strat.par=c(strat.par, strat.answer.par), extra.strat.par=NULL, sim=sim$s, game, delta, seeds=seeds, game.fun=game.fun, game.par=game.par,ci=ci, disable.restore.point=disable.restore.point)
   
   if (length(answer.names)>0) {
@@ -209,21 +213,15 @@ study.strats.and.answers = function(strats,answers=NULL, strat.par=NULL, answer.
   return(sim)  
 }
 
-add.score.to.study = function(sim, score.fun) {
+add.score.to.study = function(sim, score.fun=sim$score.fun) {
   restore.point("add.score.to.study")
 
-#   keys = c("strat","delta",sim$strat.par,sim$game.par)
-#   dat = merge(sim$sa$dat, sim$s$dat[,c(keys,"u")],by=keys, suffixes = c("",".strat"))
-#   head(dat)
-#   head(sim$sa$dat)
-#   sa.dat = sim$sa$dat
-#   s.dat = sim$s$dat
-#   
-#   dat$efficiency = dat$u.strat
-#   dat$instability = dat$u - dat$efficiency
-#   dat$score = eval(base::parse(text=score.fun), dat)
+  sim$score.fun = score.fun
+  if (is.null(score.fun))
+    return(sim)
   
-
+  
+  
   agg = sim$s$agg
   keys = c("strat","delta",sim$strat.par,sim$game.par, sim$strat.answer.par)
   uba.df = quick.by(sim$sa$agg,by=keys, "u.best.answer = max(u.mean)") 
@@ -232,8 +230,8 @@ add.score.to.study = function(sim, score.fun) {
   # Instablity and score
   agg$efficiency = agg$u.mean
   agg$instability = pmax(0,agg$u.best.answer-agg$efficiency)
-  agg$score = eval(base::parse(text=score.fun), agg)
   
+  agg$score = eval(base::parse(text=score.fun), agg)
   sim$s$agg = agg
   return(sim)
 }
@@ -263,10 +261,10 @@ study.answers = function(strats,answers, R=1, strat.par=NULL,answer.par = NULL, 
       game = do.call(game.fun, gpar)
     }
     
-    u = run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=FALSE)
+    ret = run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=FALSE)
     
-    run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=TRUE)
-    return(u[2])    
+    #run.rep.game(strat=c(strats[strat],answers[answer]), game=game,delta=delta, strat.par = list(first=spar,second=apar), detailed.return=TRUE)
+    return(ret$res)    
   }
   
   library(compiler)
@@ -314,7 +312,9 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
   # Compute payoff of strategy against itself
   strats.par = list(strat.par, strat.par)
   run.against.itself = function(strat,delta,...) {
-    args = list(...)    
+    args = list(...)
+    #set.storing(TRUE)
+    #restore.point("run.against.itself")
     strat = as.character(strat)
     spar = c(args[intersect(names(strat.par),names(args))],extra.strat.par)
     if (!is.null(game.fun)) {
@@ -322,8 +322,10 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
       game = do.call(game.fun, gpar)
     }
     
-    u = run.rep.game(list(strats[[strat]],strats[[strat]]), game=game,delta=delta, strat.par = list(spar,spar), detailed.return=FALSE)
-    return(u[2])    
+    pair = list(strats[[strat]],strats[[strat]])
+    names(pair) = c(strat,strat)
+    ret = run.rep.game(pair, game=game,delta=delta, strat.par = list(spar,spar), detailed.return=FALSE)
+    return(ret$res)    
   }
   
   if (!is.null(sim)) {
@@ -345,7 +347,7 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
   dat = simulation.study(run.against.itself,par=c(list(strat=strat.names, delta=delta),strat.par, game.par), repl=R, seeds = seeds)
   enableJIT(0); set.storing(was.storing)
         
-  colnames(dat)[NCOL(dat)] = "u"
+  #colnames(dat)[NCOL(dat)] = "u"
   dat = rbind(sim$dat,dat)
   sim$dat = dat
 
@@ -358,113 +360,4 @@ study.strats = function(strats, R=1, strat.par=NULL, extra.strat.par=NULL, sim=N
   
   sim$agg = agg
   return(sim)
-}
-
-#' Study distribution of actions and states in each period in a match of the given strategies
-#' @param strats a list of the n strategies required for a repeated game
-#' @param game the game object
-#' @param delta the discount factor
-#' @param T the number of periods that shall be studied
-#' @param R the number the game is repeated to get the distribution
-#' @param sim NULL or the results of a previous call, results of the current call with be simply added to sim. This allows to add repetitions for getting better estimates.
-#' @export
-study.actions.and.states = function(strats, game, delta, T=100, R=1, sim=NULL, strat.par=NULL, verbose=interactive()) {
-  restore.point("study.actions.and.states")
-  
-  was.storing = is.storing(); set.storing(FALSE);library(compiler); enableJIT(3)
-  cat("\n")
-  li = replicate(n=R,simplify=FALSE, {
-    cat(".")
-    run.rep.game(strat=strats,game=game, delta=delta, T.min=T, T.max = T, strat.par = strat.par)$hist                   
-  }
-  )
-  enableJIT(0); set.storing(was.storing)
-  cat("\n")
-  
-  res = rbindlist(li)
-  if (!is.null(sim))
-    res = rbind(sim,res)
-  return(res)
-}
-
-examples.study.actions.and.states = function() {
-  
-
-  probably.nice <- function(obs,i,t,game,P_i=0.5,P_a=0.5, threshold=0.25, Fratio=0.4){
-    #Fratio: Familiarity Ratio -> 1 means "nice guy" 0 means "Anti nice guy"
-    
-    debug.store("probably.nice",i,t)
-    debug.restore("probably.nice",i=2,t=2)
-    
-    j=3-i
-    P_D <- game$params$err.D.prob
-    P_C <- 0
-    
-    
-    #Update beliefs
-    if(t==1){
-      #do nothing
-    } else {
-      #Update of P_a
-      P_a_old <- P_a
-      #The other guy would assume, that I am me, given what he knows about me, given that he is me
-      if(P_i>=threshold){
-        if(obs$a[j] == "C"){
-          P_a <- P_a*(1-P_D)/(P_a*(1-P_D)+(1-P_a)*(P_C+Fratio*(1-P_D-P_C)))
-        } else { # Case Defect
-          P_a <- P_a*P_D/(P_a*(P_D)+(1-P_a)*(P_D + (1-Fratio)*(1-P_D-P_C)))
-        }
-      } else { # other guy thinks I am evil
-        if(obs$a[j] == "C"){
-          P_a <- P_a*P_C/(P_a*P_C + (1-P_a)*(P_C + (1-Fratio)*(1-P_D-P_C)))
-        } else {
-          P_a <- P_a*(1-P_C)/(P_a*(1-P_C)+(1-P_a)*(P_D + Fratio*(1-P_D-P_C)))
-        }
-      }
-      #Update my view of myself based on his knowledge
-      if(P_a_old>=threshold){
-        if(obs$a[i] == "C"){
-          P_i <- P_i*(1-P_D)/(P_i*(1-P_D)+(1-P_i)*(P_C+Fratio*(1-P_D-P_C)))
-        } else { # Case Defect
-          P_i <- P_i*P_D/(P_i*(P_D)+(1-P_i)*(P_D + (1-Fratio)*(1-P_D-P_C)))
-        }
-      } else { # other guy thinks I am evil so he should play D
-        if(obs$a[i] == "C"){
-          P_i <- P_i*P_C/(P_i*P_C + (1-P_i)*(P_C + (1-Fratio)*(1-P_D-P_C)))
-        } else {
-          P_i <- P_i*(1-P_C)/(P_i*(1-P_C)+(1-P_i)*(P_D + Fratio*(1-P_D-P_C)))
-        }
-      }    
-    }  
-    #If I think he is me, than cooperate
-    if(P_a>=threshold){
-      return(list(a="C",P_i=P_i,P_a=P_a, threshold=threshold))
-    } else {
-      return(list(a="D",P_i=P_i,P_a=P_a, threshold=threshold))
-    }
-  }
-  
-
-  game = make.pd.game(err.D.prob=0.15)
-  delta = 0.95
-  sim = NULL
-  
-  set.storing(TRUE)
-  sim = study.actions.and.states(strats=nlist(net.nice,net.nice ),game=game, delta=delta, T=20, R = 50, sim=sim)
-sim
-  # Show histogram
-  ts = c(2,3,4,5,10,20)
-  dat = sim[sim$t %in% ts,]
-  qplot(P_a_1,data=dat, geom="histogram", color=as.factor(t), fill=as.factor(t), facets = ~t, main="Distribution of P_a_1 by period")
-  
-  # Show quantile
-  agg = quick.by(sim,by="t", "q5 = quantile(P_a_1,0.05)")
-  qplot(agg$t,agg$q5, geom="line")
-  
-  
-  # Show histogram
-  ts = c(2,3,4,5,10,20)
-  dat = sim[sim$t %in% ts,]
-  qplot(a1,data=dat, geom="histogram", color=as.factor(t), fill=as.factor(t), facets = ~t, main="Distribution of actions by period")
-  
 }

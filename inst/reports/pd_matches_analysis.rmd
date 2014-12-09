@@ -1,0 +1,55 @@
+---
+title: "Prisoner's Dilemma Matches"
+tab_label: "matches" 
+runtime: shiny
+output: html_document
+---
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(shiny)
+setwd("D:/libraries/StratTourn")
+
+tourn = load.tournament("Tourn_Noisy_PD_20140721_202445.Rdata")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+used.strats = strats
+shown.strats = strats
+
+```
+
+
+## Reciprocity: an indicator from simple regressions
+
+Reciprocity is the general concept to respond to positive actions with positive actions and to respond to negative actions with negative actions. Here we run the following regressions for each strategy using average payoffs of all matches:
+
+    u.other = beta0 + beta1*u + epsilon 
+
+The interpretation of beta1 is that if player i has one unit higher average payoff then the other player j has on average beta1 units higher payoff. Large, positive values of beta1 are one indicator that the strategy behaves reciprocal. However, the estimates of beta1 depend strongly on the other strategies. A low or negative value of beta1 does not neccessarily mean that the strategy is not reciprocal.
+
+```{r, echo=FALSE}
+reg = function(formula,dat) {
+  if (length(dat)==0)
+    return(NULL)
+  res = lm(formula,data=dat, weights=u.weight)
+  vec = round(coef(res),4)
+  as.data.frame(t(vec))
+}
+
+
+
+smd = r.smd()
+smd = as.data.frame(smd)
+if (length(smd)==0)
+  return(NULL)
+df = do(group_by(smd,strat), reg(other.u~u,dat=.))
+colnames(df) = c("strat","beta0","beta1 (u)")
+view(df)
+
+```
+

@@ -1,0 +1,86 @@
+---
+title: "Ranking of strategies"
+tab_label: "matches" 
+output: html_document
+---
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(shiny)
+library(xtable)
+library(knitr)
+library(ggvis)
+library(dplyr)
+setwd("D:/libraries/StratTourn")
+
+tourn = load.tournament("Tourn_Noisy_PD_20140721_202445.Rdata")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+used.strats = strats
+shown.strats = strats
+
+```
+
+```{r "ggvis_duels", echo=FALSE, results='asis', fig.width=10, output.type="ggvis"}
+d= get.matches.vs.grid(md)
+if (TRUE) {
+  d$date=2001
+  state = '{"orderedByY":false,"showTrails":true,"xZoomedDataMin":-1,"colorOption":"4","xAxisOption":"2","yAxisOption":"3","sizeOption":"_UNISIZE","xZoomedIn":false,"xLambda":1,"iconKeySettings":[],"yZoomedIn":false,"playDuration":15000,"xZoomedDataMax":2,"orderedByX":false,"iconType":"BUBBLE","time":"2001","uniColorForNonSelected":false,"yZoomedDataMin":-1,"yZoomedDataMax":2,"dimensions":{"iconDimensions":["dim0"]},"nonSelectedAlpha":0.4,"duration":{"timeUnit":"Y","multiplier":1},"yLambda":1}'
+  
+  p = gvisMotionChart(d, idvar = "pair", timevar = "date", xvar = "u1",
+  yvar = "u2", colorvar = "strat1", sizevar = "share1x2", 
+  options = list(state=state))
+
+  #plot(p)
+  print(p, tag="chart")
+  
+}
+if (!TRUE) {
+library(ggplot2)
+qplot(data=d, x=u1,y=u2, color=strat1,shape=strat2, geom="point",size=I(4), main="Payoffs of strategy duels")
+}
+
+
+if (!TRUE) {
+library(ggvis)
+
+tooltip_fun <- function(x) {
+  if(is.null(x)) return(NULL)
+  paste0(x$strat1, " vs ", x$strat2,"\n<br>\n",round(x$u1,2), " vs ",round(x$u2,2))
+}
+
+gg = ggvis(data=d, x=~u1, y=~u2,stroke=~strat1,fill=~strat1, shape=~strat2) %>%
+  layer_points() %>% 
+  add_legend(c("fill","stroke", "shape"), title="strat1: color vs strat2: shape") %>%
+  add_tooltip(tooltip_fun, "hover")
+
+#print(gg)
+gg
+}
+
+```
+
+The figure illustrates the payoffs of all strategy duels. The color represent strategy 1, by hovering over a bubble you also see the strategy 2.
+
+Hints for interpreting the graph:
+
+  - We can compare different corner areas in which a bubble lies:
+    - top-right corner: effective cooperation, both strategies have high payoffs
+    - bottom-left corner: mutual destruction, both strategies get low payoffs
+    - top-left corner: strategy 1 is exploited by strategy 2  
+    - top-right corner: strategy 1 exploits strategy 2
+    
+  - A line of bubbles of the same color allows to compare a strategy's outcomes against all other strategies. The shape of the line can be interpreted:
+    - A positive slope of strategy's bubbles suggest that the strategies behaves reciprocal: a higher own payoff corresponds to a higher payoff of other strategies.
+    - Negative slope suggests that the strategy is either exploited or exploits some strategies
+  
+  - In a symmetric game, the outcomes when a strategy plays against itself should lie roughly on a 45° degree line. Small variations are possible due to random factors that influence in the outcomes for player 1 and 2.
+  
+  - All bubbles lie in the convex hull of the stage game payoffs 
+
+

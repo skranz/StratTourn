@@ -1,0 +1,93 @@
+---
+title: "Reciprocity Regressions"
+output: html_document
+---
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(shiny)
+setwd("D:/libraries/StratTourn")
+
+tourn = load.tournament("Tourn_Noisy_PD_20140721_202445.Rdata")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+used.strats = strats
+shown.strats = strats
+
+```
+
+
+## Strategy indicators
+
+```{r, echo=FALSE,results='asis'}
+md = as.data.frame(md)
+ds = summarise(group_by(md, strat),
+  share = paste0(round(share[1]*100,1),"%"),             
+  u.self = sum(u*u.weight*(strat==other.strat)) / sum(u.weight*(strat==other.strat)),                
+  u.eq = sum(u*u.weight) / sum(u.weight),
+  u.w = sum(u*u.weight*other.share) / sum(u.weight*other.share),  
+  other.u.w = sum(other.u*u.weight*other.share) / sum(u.weight*other.share),
+  higher.u = sum(u>other.u & strat!=other.strat) / sum(strat!=other.strat)               
+)
+ds$u.minus.other.u.w = ds$u.w-ds$other.u.w
+ds$higher.u = paste0(round(ds$higher.u*100,1),"%")
+
+ds = apply.on.numeric(ds, round, digits=3)
+rdf = strat.rank.from.matches(dt = md,tourn = tourn)
+
+d = merge(rdf[,c("strat","rank")], ds, by="strat")
+
+d = arrange(d, rank)
+view(d)
+```
+
+We now run regressions on average payoffs for each strategy pair:
+
+    u.other = beta0 + beta1*u + epsilon 
+    
+A positive beta1 suggests that a strategy s acts reciprocal: other strategies that give s them a higher average payoff also get a higher average payoff against s.
+
+```{r, echo=FALSE, results='asis'}
+
+
+reg = function(formula,dat) {
+  if (length(dat)==0)
+    return(NULL)
+  res = lm(formula,data=dat)
+  vec = round(coef(res),3)
+  as.data.frame(t(vec))
+}
+
+
+dso = summarise(group_by(md, strat,other.strat),
+  u = sum(u*u.weight) / sum(u.weight),
+  other.u = sum(other.u*u.weight) / sum(u.weight)
+)
+
+dso = as.data.frame(dso)
+rec.df = do(group_by(dso,strat), reg(other.u~u,dat=.))
+
+colnames(rec.df) = c("strat","beta0","beta1")
+
+rdf = as.data.frame(strat.rank.from.matches(dt = md,tourn = tourn))
+
+d = merge(rdf[,c("strat","rank","mean")], rec.df, by="strat")
+d = arrange(d, rank)
+colnames(d)[3]="u"
+view(d)
+```
+
+
+## Background Computation of reciprocity
+Reciprocity is the general concept to respond to positive actions with positive actions and to respond to negative actions with negative actions. Here we run the following regressions for each strategy using average payoffs of all matches:
+
+    u.other = beta0 + beta1*u + epsilon 
+    
+    (we call beta1 = reciprocity)
+
+The interpretation of `beta1=reciprocity`, is that if player i has one unit higher average payoff then the other player j has on average beta1 units higher payoff. Large, positive values of beta1 are one indicator that the strategy behaves reciprocal. However, the estimates of beta1 depend strongly on the other strategies. A low or negative value of beta1 does not neccessarily mean that the strategy is not reciprocal.

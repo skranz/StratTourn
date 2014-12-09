@@ -1,0 +1,88 @@
+---
+title: "Analyse Prisoners' Dilemma Tournament"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+```
+
+
+## Load package and tournament
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(xtable)
+library(shiny)
+library(dplyr)
+setwd("D:/libraries/StratTourn/studies")
+
+name = "Tourn_Noisy_PD_20141020_170203"
+tourn = load.tournament(paste0(name,".tou"))
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+# Data for each round
+file = paste0(name,"_rs.csv")
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+
+
+```{r "init_parameters", include=FALSE}
+end.t = 150
+start.t = 1
+```
+
+## Average performance each strategy against itself over time
+
+```{r, echo=FALSE, results='asis'}
+  srd = filter(rd, strat==other.strat)
+  td = summarise(group_by(srd,strat,t), u=mean(u), num.obs = length(t))
+  td = as.data.frame(td)
+  t.seq = start.t:min(max(td$t),end.t)
+  tsd = do(group_by(td, strat),
+    get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u"), wvar="num.obs", spar=0.2))
+  tsd$Strat = tsd$strat
+  tsd$t = tsd$t+1900
+  state = '{"yZoomedIn":false,"orderedByY":false,"iconKeySettings":[],"yAxisOption":"3","xLambda":1,"xZoomedIn":false,"xZoomedDataMax":2524608000000,"iconType":"LINE","dimensions":{"iconDimensions":["dim0"]},"uniColorForNonSelected":false,"yZoomedDataMin":-0.001,"nonSelectedAlpha":0.4,"yZoomedDataMax":1,"time":"2050","sizeOption":"_UNISIZE","showTrails":false,"orderedByX":false,"xZoomedDataMin":-2177452800000,"yLambda":1,"xAxisOption":"_TIME","playDuration":15000,"duration":{"timeUnit":"Y","multiplier":1},"colorOption":"2"};'
+
+  tsd = as.data.frame(tsd)
+  tsd$const = 1
+  tsd$const2 = 1
+  p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "u",
+    yvar = "u", colorvar = "strat", sizevar = "const", 
+    options = list(state=state))
+  #plot(p)
+  print(p, tag="chart")
+```
+We show the payoffs of each strategy against itself. Note that we have fewer observations for later periods t (see plot below). 
+
+```{r, echo=FALSE, fig.height=8}
+t.obs = tabulate(srd$t) / 2
+plot(t.obs, xlab="t",ylab="matches (log scale)",main="Number of matches with a period t",log="y")
+grid(nx = NA, ny = NULL, col = "lightgray", lty = "dotted",
+     lwd = par("lwd"), equilogs = TRUE)
+```
+
