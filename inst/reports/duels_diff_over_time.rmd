@@ -75,4 +75,8 @@ tsd$other.strat = factor(tsd$other.strat, rank.strats, ordered=TRUE)
 
 qplot(data=tsd, x=t, y=u.diff, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat) + geom_hline(yintercept=0, size=0.5, col="black",alpha=0.5)
 ```
+
+```{r, echo=FALSE}
+cat("\n")
+```
 The plot shows the expected aggregated payoff difference from period 1 to period t of the column strategy against the row strategy. 

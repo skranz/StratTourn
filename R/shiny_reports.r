@@ -125,6 +125,12 @@ bargaining_game:
 bargaining_agreements:
   label: bargaining agreement
   file: bargaining_game_perc_agree.rmd
+bargaining_offer_sums:
+  label: bargaining offer sums
+  file: bargaining_offer_sums.rmd
+bargaining_game_by_cost:
+  label: bargaining by cost
+  file: bargaining_game_by_cost.rmd
 "
   library(yaml)
   rep.li = yaml.load(reports.yaml)

@@ -53,30 +53,40 @@ if (!identical(used.strats,strats)) {
 
 
 ```{r "init_parameters", include=FALSE}
-end.t = 50
+end.t = 5
 start.t = 1
 ```
 
 
-```{r, echo=FALSE, fig.width=12, fig.height=10}
-cumd = mutate(group_by(rd,strat,other.strat,match.id), cum.u=cumsum(u), cum.other.u=cumsum(other.u))
-
-td = summarise(group_by(cumd,strat,other.strat,t), u.diff=mean(cum.u-cum.other.u), num.obs = length(t))
+```{r, echo=FALSE}
+rd = add.other.var(rd,c("x","cost"))
+rd$cost.pair = paste0(rd$cost,"_",rd$other.cost)
+cumd = mutate(group_by(rd,strat,other.strat, cost.pair), sum.single.x=x+other.x)
+td = summarise(group_by(cumd,strat,other.strat,t,cost.pair), sum.x=mean(sum.single.x), num.obs = length(t))
 
 t.seq = 1:min(max(td$t),end.t)
-tsd = do(group_by(td, strat, other.strat),
-         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="u.diff", wvar="num.obs", spar=0.2))
+tsd = do(group_by(td, strat, other.strat, cost.pair),
+         get.smoothed.vals(.,xout=t.seq, xvar="t",yvar="sum.x", wvar="num.obs", spar=0.2))
 
 # Order strategies according to their rank
 rank.strats = rank.dt$strat
 tsd$strat = factor(tsd$strat, rank.strats, ordered=TRUE)
 tsd$other.strat = factor(tsd$other.strat, rank.strats, ordered=TRUE)
+```
+
+## Sum of bargaining offers (average)
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+tsd.big <- summarise(group_by(tsd,strat,other.strat,t), sum.x=mean(sum.x))
+ggplot(data=tsd.big, aes(x=t, y =sum.x, colour = strat)) + geom_line(size=I(1)) + facet_grid(other.strat~strat)+ geom_hline(yintercept=100, size=0.5, col="black",alpha=0.5)
+```
 
 
-qplot(data=tsd, x=t, y=u.diff, color=strat, group=strat, size=I(1), geom="line") + facet_grid(other.strat~strat) + geom_hline(yintercept=0, size=0.5, col="black",alpha=0.5)
+## Sum of bargaining offers (by cost.pair)
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+ggplot(data=tsd, aes(x=t, y =sum.x, colour = cost.pair, group = cost.pair)) + geom_line() + facet_grid(other.strat~strat)
 ```
 
 ```{r, echo=FALSE}
 cat("\n")
 ```
-The plot shows the expected aggregated payoff difference from period 1 to period t of the column strategy against the row strategy. 
+The plots show the sum of the offers of both strategies given the cost.pair. 
