@@ -102,59 +102,9 @@ get.reports.yaml = function(name=sr$tourn$game$name, sr=get.sr()) {
 }
 
 make.rep.li = function() {
-<<<<<<< HEAD
-  reports.yaml = "
-payoff_ranking:
-  label: payoff ranking
-  file: matches_ranking.rmd
-evolution:
-  label: evolution
-  file: evolution.rmd
-diag_payoffs_over_time:
-  label: against itself
-  file: diag_payoffs_over_time.rmd
-payoffs_over_time:
-  label: payoff over time
-  file: payoffs_over_time.rmd
-duels_over_time:
-  label: duels over time
-  file: duels_over_time.rmd
-duels_diff_over_time:
-  label: duels diff over time
-  file: duels_diff_over_time.rmd
-duel_stats:
-  label: duel stats
-  file: payoff_diff_ranking.rmd
-payoff_matrix:
-  label: payoff matrix
-  file: matches_payoff_matrix.rmd
-duels_plot:
-  label: duels plot
-  file: matches_duels_plot.rmd
-strat_stats:
-  label: strat stats
-  file: strat_indicators.rmd
-strategies:
-  label: strategies
-  file: show_strat_code.rmd
-bargaining_game:
-  label: bargaining game
-  file: bargaining_game_over_time.rmd
-bargaining_agreements:
-  label: bargaining agreement
-  file: bargaining_game_perc_agree.rmd
-bargaining_offer_sums:
-  label: bargaining offer sums
-  file: bargaining_offer_sums.rmd
-bargaining_game_by_cost:
-  label: bargaining by cost
-  file: bargaining_game_by_cost.rmd
-"
-=======
   restore.point("make.rep.li")
 
   reports.yaml = get.reports.yaml()
->>>>>>> upstream/master
   library(yaml)
   rep.li = yaml.load(reports.yaml)
 
