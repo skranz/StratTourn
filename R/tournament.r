@@ -88,7 +88,7 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL,...) {
+run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, T=game$T, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL,...) {
   restore.point("run.tournament")
   
   dt.li = LAPPLY(1:R, function(r) {
@@ -104,7 +104,7 @@ run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, g
        
       ind = as.numeric(matchings[i,])
       strat.pair = strat[ind]
-      res = run.rep.game(delta=delta,strat=strat.pair,game=game,detailed.return = FALSE, game.seed = game.seed, do.store=do.store,...)
+      res = run.rep.game(delta=delta,T=T,strat=strat.pair,game=game,detailed.return = FALSE, game.seed = game.seed, do.store=do.store,...)
       names = names(strat)[ind]
       if (verbose>=1) {
         cat(".")

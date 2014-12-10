@@ -84,7 +84,25 @@ run.shiny.reports = function() {
   runApp(list(ui=ui,server=server), launch.browser=TRUE)
 }
 
+get.reports.yaml = function(name=sr$tourn$game$name, sr=get.sr()) {
+  restore.point("get.reports.yaml")
+  dir = system.file(package="StratTourn", "reports") 
+  files = list.files(path = dir, pattern=".*\\.yaml")
+  
+  target = paste0(name, ".yaml")
+  if (target %in% files) {
+    file = target
+  } else {
+    file = "default.yaml"
+  }
+  
+  yaml = readLines(paste0(dir,"/", file),warn=FALSE)
+  yaml = paste0(yaml, collapse="\n")
+  yaml
+}
+
 make.rep.li = function() {
+<<<<<<< HEAD
   reports.yaml = "
 payoff_ranking:
   label: payoff ranking
@@ -132,6 +150,11 @@ bargaining_game_by_cost:
   label: bargaining by cost
   file: bargaining_game_by_cost.rmd
 "
+=======
+  restore.point("make.rep.li")
+
+  reports.yaml = get.reports.yaml()
+>>>>>>> upstream/master
   library(yaml)
   rep.li = yaml.load(reports.yaml)
 
