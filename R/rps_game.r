@@ -5,10 +5,10 @@ examples.rps = function() {
   library(StratTourn)
   
   # Generate a game object
-  game = make.pd.game(err.D.prob=0.1, delta=0.9)
+  game = make.rps.game(T=50)
 
   # Pick a pair of strategies
-  strat = nlist(tit.for.tat,random.action)
+  strat = nlist(one.third,always.s)
   # Let the strategies play against each other
   run.rep.game(game=game, strat = strat)
   
@@ -18,10 +18,10 @@ examples.rps = function() {
   setwd("D:/libraries/StratTourn/studies")
 
   # Init and run a tournament of several strategies against each other  
-  strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
+  strat = nlist(one.third,always.s)
   tourn = init.tournament(game=game, strat=strat)
   
-  #set.storing(FALSE)  # uncoment to make code run faster
+  set.storing(FALSE)  # uncoment to make code run faster
   tourn = run.tournament(tourn=tourn, R = 4)
   set.storing(TRUE)
   
@@ -31,23 +31,38 @@ examples.rps = function() {
   show.tournament(tourn)
 }
 
+one.third = function(i,t,...) {
+  rand = runif(1)
+  if (rand < 1/3) {
+    return(list(a="r"))
+  } else if (rand < 2/3) {
+    return(list(a="p"))
+  } else {
+    return(list(a="s"))    
+  }
+}
 
+always.s = function(i,t,...) {
+  return(list(a="s"))
+}
 
 #' Generate a rock papers scissors game
-make.rps.game = function(delta=0.9,...) {
+make.rps.game = function(delta=NULL,T=NULL,cost.r=1, cost.p=0.5, cost.s=0,...) {
   
   run.stage.game = function(a,t,t.obs,...) {
-    restore.point("pd.stage.game.fun")
+    restore.point("rps.stage.game.fun")
     a = unlist(a, recursive=TRUE, use.name=FALSE)
-    if (a[1]==a[2])
-      
+    
+    costs = c(cost.r, cost.p, cost.s)
     mat = matrix(c(
-        0, -1,  1,
-        1,  0, -1,
-       -1,  1,  0
+        1, 0,  2,
+        2,  1, 0,
+        0,  2,  1
       ), nrow=3,byrow=TRUE)
     
     colnames(mat) = rownames(mat) =  c("r","p","s")
+    mat = mat-costs
+    
     u1 = mat[a[1],a[2]]
     u2 = mat[a[2],a[1]]
     payoff = c(u1,u2)
@@ -74,7 +89,7 @@ make.rps.game = function(delta=0.9,...) {
     list(a=c("r","p"))
   }
   
-  nlist(run.stage.game, check.action,example.action,example.obs, n=2, private.signals, params =list(), sym=TRUE, delta=delta, name="Rock-Paper-Scissors")
+  nlist(run.stage.game, check.action,example.action,example.obs, n=2, private.signals=FALSE, params =list(), sym=TRUE, delta=delta, T=T, name="RockPaperScissors")
 }
 
 

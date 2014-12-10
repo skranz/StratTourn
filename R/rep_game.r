@@ -10,7 +10,7 @@ examples.rep.game = function() {
   strat = forgiving.grim.trigger
   get.strat.info(game=game, strat=strat)
   # Pick a pair of strategies
-  strats = nlist(net.nice,tit.for.tat)
+  strats = nlist(tit.for.tat,tit.for.tat)
 
   # Let the strategies play against each other
   set.storing(TRUE)
@@ -123,7 +123,7 @@ sample.T = function(delta, sample.delta = delta) {
 #' @param game the game object
 #' @param strat a list of strategies
 #' @param T.max optionally a maximum number of rounds
-run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = delta, match.id = sample.int(2147483647,1)) {
+run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = delta, match.id = sample.int(2147483647,1), T=game$T) {
   restore.point("run.rep.game")
   
   gbos$do.store = do.store
@@ -144,12 +144,15 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
   set.random.state("game")
   
   # Draw number of periods from a negative binominal distribution
-  ret = sample.T(delta=delta, sample.delta=sample.delta)
-  T = ret$T
-  T.weight = ret$T.weight
-  if (!is.null(T.max))
-    T = pmin(T, T.max)
-
+  if (is.null(T)) {
+    ret = sample.T(delta=delta, sample.delta=sample.delta)
+    T = ret$T
+    T.weight = ret$T.weight
+    if (!is.null(T.max))
+      T = pmin(T, T.max)
+  } else {
+    T.weight = T
+  }
   
   strat.id = seq_along(strat)
   n.strat = length(strat.id)
