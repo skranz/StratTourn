@@ -28,6 +28,9 @@ duels_plot:
 strat_stats:
   label: strat stats
   file: strat_indicators.rmd
+RPS_distribution:
+  label: RPS distribution
+  file: rps_distribution.rmd
 strategies:
   label: strategies
   file: show_strat_code.rmd

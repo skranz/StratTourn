@@ -1,0 +1,72 @@
+---
+title: "Analyse RPS Distribution"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+```
+
+```{r "init_data", include=FALSE}
+library(StratTourn)
+library(xtable)
+library(Shiny)
+setwd("D:/libraries/StratTourn")
+
+setwd("D:/libraries/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_Noisy_PD_20141110_054429.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+
+rank.dt = strat.rank.from.matches(md)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+library(tidyr)
+td = summarise(group_by(rd,strat,other.strat,t), r=mean(a=="r"), s=mean(a=="s"), p=mean(a=="p"))
+tsd = group_by(td, strat, other.strat)
+tsd <- mutate(tsd, cum.r = cumsum(r)/t, cum.s = cumsum(s)/t, cum.p = cumsum(p)/t)
+tsd <- tsd %>% gather(type, perc, cum.r:cum.p)
+
+# Order strategies according to their rank
+rank.strats = rank.dt$strat
+tsd$strat = factor(tsd$strat, rank.strats, ordered=TRUE)
+tsd$other.strat = factor(tsd$other.strat, rank.strats, ordered=TRUE)
+
+qplot(data=tsd, x=t, y=perc, color=type, group=type, geom="line") + facet_grid(other.strat~strat)
+#qplot(data=tsd, x=t, y=cum.r, color=strat, group=strat, geom="line") + facet_grid(other.strat~strat)
+```
+```{r, echo=FALSE}
+cat("\n")
+```
+The plot shows the cumulative distribution of rock, scissors and paper for each strategy pair.
