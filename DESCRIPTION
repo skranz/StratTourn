@@ -22,5 +22,8 @@ Depends:
   xtable,
   shinyBS,
   googleVis,
-  shinyAce
+  shinyAce,
+  shinyEvents,
+  loginPart,
+  WhitelistEval
 

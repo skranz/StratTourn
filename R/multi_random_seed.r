@@ -49,6 +49,8 @@ examples.set.random.state = function() {
 #' Sets the random number state to a state specified by name
 set.random.state = function(name=".GLOBAL", seed = NULL) {
   restore.point("set.random.state")
+  
+  #return()
   env = ._RST
 
   # Don't do anything if the random state has not changed
