@@ -49,7 +49,7 @@ first.vs.all.matchings = function(strat,game) {
 }
 
 #' Inits a tournament object
-init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL, id.add=NULL) {
+init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL, id.add=NULL, separate.round.data=TRUE) {
   
   restore.point("init.tournament")
   
@@ -79,8 +79,10 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
   if (is.null(rs.file)) {
     rs.file = paste0(tourn.id, "_rs.csv")
   }
+  if (!separate.round.data)
+    rs.file = NULL
   
-  tourn = list(tourn.id=tourn.id,strat = strat, game = game, team=team, matchings = matchings, dt=NULL, score.fun = score.fun, rs.file=rs.file)
+  tourn = list(tourn.id=tourn.id,strat = strat, game = game, team=team, matchings = matchings, dt=NULL, score.fun = score.fun, rs.file=rs.file, separate.round.data=separate.round.data, rd=NULL)
   class(tourn) = c("Tournament","list")
   return(tourn)
 }
@@ -90,7 +92,11 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
 run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, T=game$T, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL,...) {
   restore.point("run.tournament")
+  if (is.null(tourn$separate.round.data))
+    tourn$separate.round.data = TRUE
   
+  temp.env = as.environment(list(rd=tourn$rd))
+  r = 1
   dt.li = LAPPLY(1:R, function(r) {
     set.random.state(".GLOBAL")
     game.seed = draw.seed()
@@ -99,21 +105,32 @@ run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, g
     if (!fixed.matchings) {
       matchings = matchings.fun(game=game,strat=strat)
     }
+    i = 1
     res.li = lapply(1:NROW(matchings), function(i) {
       restore.point("one.match")
        
       ind = as.numeric(matchings[i,])
       strat.pair = strat[ind]
       res = run.rep.game(delta=delta,T=T,strat=strat.pair,game=game,detailed.return = FALSE, game.seed = game.seed, do.store=do.store,...)
+      #res = run.rep.game(delta=delta,T=T,strat=strat.pair,game=game,detailed.return = FALSE, game.seed = game.seed, do.store=do.store)
       names = names(strat)[ind]
       if (verbose>=1) {
         cat(".")
       }
       # Save round data
-      if (r==1 & i==1 & !isTRUE(file.exists(tourn$rs.file))) {
+      
+      if (tourn$separate.round.data) {
+        if (r==1 & i==1 & !isTRUE(file.exists(tourn$rs.file))) {
           write.table(res$rs, file=tourn$rs.file, row.names=FALSE, sep=",") 
+        } else {
+          write.table(res$rs, file=tourn$rs.file, append=TRUE, col.names=FALSE,row.names=FALSE, sep=",")         
+        }
       } else {
-        write.table(res$rs, file=tourn$rs.file, append=TRUE, col.names=FALSE,row.names=FALSE, sep=",")         
+        if (is.null(tourn$rd)) {
+          temp.env$rd = as.data.table(res$rs)
+        } else {
+          temp.env$rd = rbind(temp.env$rd,as.data.table(res$rs))
+        }
       }
       return(res$res)
     })
@@ -140,6 +157,9 @@ run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, g
     tourn$dt = rbind(tourn$dt,dt, use.names=FALSE)
   } else {
     tourn$dt = dt
+  }
+  if (!tourn$separate.round.data) {
+    tourn$rd = temp.env$rd
   }
   return(tourn)
 }
