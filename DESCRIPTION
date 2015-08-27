@@ -23,7 +23,4 @@ Depends:
   shinyBS,
   googleVis,
   shinyAce,
-  shinyEvents,
-  loginPart,
-  WhitelistEval
-
+  shinyEvents

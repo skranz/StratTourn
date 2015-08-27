@@ -32,10 +32,9 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
 
   check.email.fun = function(email="",...) {
     restore.point("check.email.fun")
-    if (!isTRUE(email=="sebastian.kranz@uni-ulm.de" |
-                email=="sebkranz@gmail.com")) {
-      return(list(ok=FALSE, msg="Please only send to your own email adresses!"))
-    }
+#    if (!isTRUE(email=="sebastian.kranz@uni-ulm.de")) {
+#      return(list(ok=FALSE, msg="Please only send to your own email adresses!"))
+#    }
   list(ok=TRUE,msg="")
   }
 
