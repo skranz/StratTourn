@@ -16,15 +16,24 @@ examples.parse.user.strats = function() {
   "
   parse.user.strats(code)
   
+}
 
-  
+#' Checks whether a given strategy passes a whitelist
+whitelist.check.strat = function(strat) {
+  # Make cobined call of function header and body
+  header = formals(strat)
+  names(header) = NULL
+  call = call("{", body(strat))
+  call[(length(call)+1):(length(call)+length(header))] = header
+  wl.funs = strat.whitelist.funs()
+  check.whitelist(call, wl.funs = wl.funs, bl.vars=c(".GlobalEnv",".BaseNamespaceEnv"))    
 }
 
 parse.user.strats = function(code,  expr = try(parse(text=code))) {
   restore.point("parse.user.strats")
   
-  if (inherits(res, "try-error")) {
-    msg = paste0("Error when parsing your code:\n",as.character(res))
+  if (inherits(expr, "try-error")) {
+    msg = paste0("Error when parsing your code:\n",as.character(expr))
     return(list(ok=FALSE, msg=msg))
   } 
 

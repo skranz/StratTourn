@@ -1,7 +1,7 @@
 examples.againstGivenApp = function() {
   setwd("D:/libraries/StratTourn")
   tourns.dir="D:/libraries/StratTourn/GivenTourn"
-  set.restore.point.options(display.restore.point = TRUE)
+  set.restore.point.options(display.restore.point = !TRUE)
   set.storing(TRUE)
   app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
   runEventsApp(app)  
@@ -15,8 +15,19 @@ examples.againstGivenApp = function() {
   runEventsApp(app, launch.browser=TRUE)  
 }
 
-againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db"), init.userid="", init.password="",app.url="http://127.0.0.1:4915", app.title="Battle of Strategies") {
+check.email.domain = function(email, domain) {
+  ok = str.ends.with(email, domain)
+  if (!ok) {
+    return(list(ok=ok, msg=paste0("You can only create an account with an email that ends with ", domain)))
+  }
+  return(list(ok=ok, msg=""))
+}
+
+againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db"), init.userid="", init.password="",app.url="http://127.0.0.1:4915", app.title="Battle of Strategies", email.domain = NULL, check.email.fun = NULL, email.text.fun=default.email.text.fun) {
   restore.point("againstGivenApp")
+  
+  library(loginPart)
+  library(RSQLite)
   
   app = eventsApp()
 
@@ -30,17 +41,21 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
     setUI("mainUI", sr$main.ui)
   }
 
-  check.email.fun = function(email="",...) {
-    restore.point("check.email.fun")
-#    if (!isTRUE(email=="sebastian.kranz@uni-ulm.de")) {
-#      return(list(ok=FALSE, msg="Please only send to your own email adresses!"))
-#    }
-  list(ok=TRUE,msg="")
+  if (is.null(check.email.fun)) {
+    if (!is.null(email.domain)) {
+      check.email.fun = function(email,...) {
+        check.email.domain(email, email.domain)
+      }
+    } else {
+      check.email.fun = function(email,...) {
+        list(ok=TRUE,msg="")
+      }
+    }
   }
-
+ 
   db.arg = list(dbname=paste0(db.dir,"/stratDB.sqlite"),drv=SQLite())
 
-  lop = loginPart(db.arg = db.arg, login.fun=login.fun, check.email.fun=check.email.fun,app.url=app.url, app.title="Battle of Strategies",init.userid=init.userid, init.password=init.password,container.id = "mainUI")
+  lop = loginPart(db.arg = db.arg, login.fun=login.fun, check.email.fun=check.email.fun, email.text.fun = email.text.fun, app.url=app.url, app.title="Battle of Strategies",init.userid=init.userid, init.password=init.password,container.id = "mainUI")
   set.lop(lop)
   lop.connect.db(lop=lop)
   lop$login$ui = lop.login.ui(lop)

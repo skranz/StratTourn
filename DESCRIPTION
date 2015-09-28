@@ -9,18 +9,16 @@ Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
 Description: Tournament of game theoretic strategies
 License: GPL >= 2.0
 Depends:
-  restorepoint,
-  sktools,
-  reshape2,
-  data.table,
-  ggplot2,
-  dplyr,
-  dplyrExtras,
-  stringtools,
-  shiny,
-  knitr,
-  xtable,
-  shinyBS,
-  googleVis,
-  shinyAce,
-  shinyEvents
+  restorepoint,  sktools,  reshape2,
+  data.table,  ggplot2,  dplyr,
+  dplyrExtras,  stringtools,  shiny,
+  knitr,  xtable,  shinyBS,
+  googleVis,  shinyAce,  shinyEvents,
+  WhitelistEval
+Suggests:
+  RSQLite, loginPart
+Remotes: 
+  skranz/WhitelistEval, skranz/sktools,
+  skranz/dplyrExtras, skranz/stringtools,
+  skranz/shinyEvents, skranz/loginPart
+         
