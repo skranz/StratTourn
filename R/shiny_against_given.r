@@ -3,7 +3,10 @@ examples.againstGivenApp = function() {
   tourns.dir="D:/libraries/StratTourn/GivenTourn"
   set.restore.point.options(display.restore.point = !TRUE)
   set.storing(TRUE)
-  app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
+  #app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
+  
+  app = againstGivenApp(tourns.dir = tourns.dir,password = "test")
+  
   runEventsApp(app)  
   
   runEventsApp(app, launch.browser=rstudio::viewer)
@@ -23,6 +26,8 @@ check.email.domain = function(email, domain) {
   return(list(ok=ok, msg=""))
 }
 
+
+
 againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db"), init.userid="", init.password="",app.url="http://127.0.0.1:4915", app.title="Battle of Strategies", email.domain = NULL, check.email.fun = NULL, email.text.fun=default.email.text.fun) {
   restore.point("againstGivenApp")
   
@@ -31,13 +36,9 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
   
   app = eventsApp()
 
-  login.fun = function(app=getApp(),userid,lop,...) {
-    sr = app$sr
-    sr$userid = userid
-    cat("Successfully logged in as ", userid)
-    
-    sr = init.sr.instance(app = app, userid=userid)
-
+  
+  login.fun = function(app=getApp(),userid,...) {
+    sr = init.sr.instance(app = app, tourns.dir=tourns.dir, userid=userid)
     setUI("mainUI", sr$main.ui)
   }
 
@@ -70,7 +71,7 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
   app
 }
 
-init.sr.instance = function(app = getApp(), userid="jondoe") {
+init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser") {
   restore.point("init.sr.instance")
   app$glob$ptourns = list()
   
@@ -89,42 +90,26 @@ init.sr.instance = function(app = getApp(), userid="jondoe") {
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,...) {
   restore.point("againstGivenApp")
-  
-  library(shinyEvents)  
-  library(shinyAce)
-  library(shinyBS)
-  
   app = eventsApp()
-  
-  app$glob$ptourns = list()
-  
-  sr = new.env(parent=globalenv())
-  app$sr = sr
-  STRATTOURN.GLOB$get.sr.from.app=TRUE
-  
-  sr$tourns.dir = app$glob$tourns.dir = tourns.dir
-  sr$tourn.names = app$glob$tourn.names = list.files(tourns.dir)
-  sr$tourn.name = sr$tourn.names[1]
-  
-  if (is.null(loginPart)) {
-    ui = ag.make.ui()
-    ag.load.tourn(sr$tourn.name)
-    ag.set.user.strat.ui()
-    
-    
-    
+  app$ui = fluidPage(uiOutput("mainUI"))
+
+  login.fun = function(app=getApp(),...) {
+    sr = init.sr.instance(app = app, tourns.dir=tourns.dir)
+    setUI("mainUI", sr$main.ui)
+  }
+
+  if (is.null(password)) {
     appInitHandler(initHandler = function(app,...) {
       restore.point("app.initHandler")
-      #penv = parent.env(app$sr)
-      #app$sr = as.environment(as.list(app$sr))
-      #parent.env(app$sr) <- penv
+      login.fun(app=app)
     }, app=app)
-    
-    app$ui = ui
-    app
+  } else {
+    ui = passwordLogin(id="strattourn",title = "Battle of Strategies",text = "Please enter the password given in the seminar. (It was send to you by email via Moodle)",password = password,login.fun = login.fun)
+    setUI("mainUI", wellPanel(ui))
   }
+  app
 }
 
 #' Analyse a tournament interactively in web browser
