@@ -15,8 +15,6 @@ Depends:
   knitr,  xtable,  shinyBS,
   googleVis,  shinyAce,  shinyEvents,
   WhitelistEval
-Suggests:
-  RSQLite, loginPart
 Remotes: 
   skranz/WhitelistEval, skranz/sktools,
   skranz/dplyrExtras, skranz/stringtools,
