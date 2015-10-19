@@ -432,7 +432,7 @@ set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=
   import.round.data(tourn=tourn)
 }
 
-compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.input=TRUE, fragment.only=TRUE, working.dir = sr$temp.dir) {
+compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.input=TRUE, fragment.only=TRUE, work.dir = sr$work.dir) {
   
   restore.point("compile.report")
   file = system.file(package="StratTourn", "reports",rep$file[1]) 
@@ -492,8 +492,8 @@ compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.in
   txt = c("```{r include=FALSE}\n library(StratTourn);set.view.mode('shiny_report')\n```",txt)
   
   # need to use a directory to which RAppArmor has write access
-  if (!is.null(working.dir))
-    setwd(working.dir)
+  if (!is.null(work.dir))
+    setwd(work.dir)
   html = knit2html(text=txt,fragment.only=fragment.only, envir=env)
   
   setwd(dir)

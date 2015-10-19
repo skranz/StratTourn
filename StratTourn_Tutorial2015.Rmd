@@ -48,6 +48,8 @@ install.packages("knitr")
 install.packages("xtable")
 install.packages("shinyBS")
 install.packages("googleVis")
+install.packages("tidyr")
+install.packages("shinyAce")
 
 
 library(devtools)
@@ -55,8 +57,12 @@ install_github(repo="skranz/restorepoint")
 install_github(repo="skranz/sktools")
 install_github(repo="skranz/stringtools")
 install_github(repo="skranz/dplyrExtras")
+install_github(repo="skranz/shinyEvents")
+install_github(repo="skranz/shinyPart")
+install_github(repo="skranz/codeUtils")
+install_github(repo="skranz/WhitelistEval")
 install_github(repo="skranz/StratTourn")
-install_github(repo="skranz/shinyAce")
+
 
 ```
 
