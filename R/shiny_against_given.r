@@ -28,7 +28,7 @@ check.email.domain = function(email, domain) {
 
 
 
-againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db"), init.userid="", init.password="",app.url="http://127.0.0.1:4915", app.title="Battle of Strategies", email.domain = NULL, check.email.fun = NULL, email.text.fun=default.email.text.fun) {
+againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db"), init.userid="", init.password="",app.url="http://127.0.0.1:4915", app.title="Battle of Strategies", email.domain = NULL, check.email.fun = NULL, email.text.fun=default.email.text.fun, use.db=TRUE) {
   restore.point("againstGivenApp")
   
   library(loginPart)
@@ -71,7 +71,7 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
   app
 }
 
-init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser") {
+init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", work.dir=getwd()) {
   restore.point("init.sr.instance")
   app$glob$ptourns = list()
   
@@ -79,6 +79,7 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser") {
   app$sr = sr
   STRATTOURN.GLOB$get.sr.from.app=TRUE
   
+  sr$work.dir = work.dir
   sr$tourns.dir = app$glob$tourns.dir = tourns.dir
   sr$tourn.names = app$glob$tourn.names = list.files(tourns.dir)
   sr$tourn.name = sr$tourn.names[1]
@@ -90,13 +91,13 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser") {
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
 
   login.fun = function(app=getApp(),...) {
-    sr = init.sr.instance(app = app, tourns.dir=tourns.dir)
+    sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir)
     setUI("mainUI", sr$main.ui)
   }
 
@@ -277,7 +278,7 @@ ag.set.lhs.ui = function(rep.li=sr$rep.li,app=getApp(), sr=app$sr) {
     fluidRow(
       column(3,bsButton("stratBtn","Edit")),
       column(2,bsButton("runTournBtn","Run")),
-      column(4,numericInput("repTournInput",NULL,value = 20,min = 1,max=1000,step = 1))
+      column(4,numericInput("repTournInput",NULL,value = 10,min = 1,max=1000,step = 1))
     ),
     hr(),
     report.buttons,
