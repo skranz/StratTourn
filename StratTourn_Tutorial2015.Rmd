@@ -74,17 +74,17 @@ In the 'Evolution of Cooperation' Robert Axelrod describes his famous computer t
 A one-shot prisoner's dilemma (short: PD) is played only once. We can describe a PD by the following *payoff matrix*:
 
 <center><table border="1"><tr>
-    <td align='center'>Pl 1. / Pl. 2</td>
-    <th align='center'>C</th>
-    <th align='center'>D</th>
-  </tr><tr>
-    <th align='center'>C</th>
-    <td align='center'>  1, 1</td>
-    <td align='center'> -1, 2</td>
-  </tr><tr>
-    <th align='center'>D</th>
-    <td align='center'>  2,-1</td>
-    <td align='center'>  0, 0</td>
+  <td align='center'>Pl 1. / Pl. 2</td>
+  <th align='center'>C</th>
+  <th align='center'>D</th>
+</tr><tr>
+  <th align='center'>C</th>
+  <td align='center'>  1, 1</td>
+  <td align='center'> -1, 2</td>
+</tr><tr>
+  <th align='center'>D</th>
+  <td align='center'>  2,-1</td>
+  <td align='center'>  0, 0</td>
 </tr></table></center>
 
 Each player can either cooperate *C* or defect *D*, which means not to cooperate. The row shows player 1's action and the column player 2's. The cells show the *payoffs* of player 1 and 2 for each *action profile*. For example, when player 1 cooperates C and player 2 defects D, i.e. the action profile (C,D) is played, then player 1's payoff is -1 and player 2's payoff is 2.
