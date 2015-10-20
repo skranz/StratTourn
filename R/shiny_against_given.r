@@ -71,7 +71,7 @@ againstGivenLoginApp = function(tourns.dir=getwd(), db.dir = paste0(getwd(),"/db
   app
 }
 
-init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", work.dir=getwd()) {
+init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", work.dir=getwd(), disable.reports=NULL) {
   restore.point("init.sr.instance")
   app$glob$ptourns = list()
   
@@ -80,6 +80,7 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   STRATTOURN.GLOB$get.sr.from.app=TRUE
   
   sr$work.dir = work.dir
+  sr$disable.reports = disable.reports
   sr$tourns.dir = app$glob$tourns.dir = tourns.dir
   sr$tourn.names = app$glob$tourn.names = list.files(tourns.dir)
   sr$tourn.name = sr$tourn.names[1]
@@ -91,13 +92,13 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
 
   login.fun = function(app=getApp(),...) {
-    sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir)
+    sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir, disable.reports=disable.reports)
     setUI("mainUI", sr$main.ui)
   }
 

@@ -111,6 +111,11 @@ make.rep.li = function(game.name=sr$tourn$game$name,sr=get.sr()) {
   library(yaml)
   rep.li = yaml.load(reports.yaml)
 
+  if (!is.null(sr$disable.reports)) {
+    disable = names(rep.li) %in% sr$disable.reports
+    rep.li = rep.li[!disable]
+  }
+  
   names = names(rep.li)
   rep.li = lapply(seq_along(rep.li), function(i) {
     rep = rep.li[[i]]
