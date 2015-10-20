@@ -148,10 +148,16 @@ ag.make.ui = function(app=getApp(), sr=app$sr) {
 ag.set.user.strat.ui = function(app=getApp(), sr=app$sr,...) {
   restore.point("ag.set.strat.ui")
   tourn.name = sr$tourn.name
-  init.strat = app$glob$ptourns[[tourn.name]]$example.strat.txt
 
+  if (is.null(sr$user.strat.code)) {
+    init.strat = app$glob$ptourns[[tourn.name]]$example.strat.txt
+    text = init.strat
+  } else {
+    text = sr$user.strat.code
+  }
+  
   ui = list(
-    aceEditor("userStratAce", value=init.strat, height="300px"),
+    aceEditor("userStratAce", value=text, height="300px"),
     bsAlert("userStratAlert"),
     fluidRow(
       column(3,
@@ -235,7 +241,10 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
 ag.import.user.strat = function( app=getApp(),sr = app$sr,...) {
   restore.point("ag.import.user.strat")
 
+  
   code = isolate(app$session$input$userStratAce)
+  sr$user.strat.code = code
+  
   res = parse.user.strats(code)
   if (!res$ok) {
     createAlert(app$session, "userStratAlert", title = "Error", content = res$msg, style = "warning", append = FALSE)
