@@ -401,9 +401,9 @@ The `show.tournament` command in the last line opens a window in your webbrowser
 
 In many tasks you will be able to check the performance of your strategy against a set of strategies that have been previously submitted. You can do this on the following website:
 
-econfin.de:3838/battle
+[econfin.de:3838/battle](econfin.de:3838/battle)
 
-The pass
+The password is given to you in the seminar.
 
 
 ## 6. Guidelines for your Strategies

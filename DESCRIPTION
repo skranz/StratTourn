@@ -18,5 +18,5 @@ Depends:
 Remotes: 
   skranz/WhitelistEval, skranz/sktools,
   skranz/dplyrExtras, skranz/stringtools,
-  skranz/shinyEvents, skranz/loginPart
+  skranz/shinyEvents
          
