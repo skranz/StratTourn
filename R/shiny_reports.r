@@ -139,7 +139,8 @@ make.report.ui = function(sr=get.sr()) {
             bsButton("update_strat_btn","update", size="small"),
             selectizeInput("used_strats", label = "Used strategies:",
             choices = strats, selected = strats, multiple=TRUE,width="100%"),
-            aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
+            #aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
+            aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12),
             select.report.ui(),
             uiOutput("ui.custom.parameters")
 
