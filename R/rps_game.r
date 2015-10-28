@@ -47,7 +47,7 @@ always.s = function(i,t,...) {
 }
 
 #' Generate a rock papers scissors game
-make.rps.game = function(delta=NULL,T=NULL,cost.r=1, cost.p=0.5, cost.s=0,...) {
+make.rps.game = function(delta=NULL,T=NULL,cost.r=0.75, cost.p=0, cost.s=0,...) {
   
   run.stage.game = function(a,t,t.obs,...) {
     restore.point("rps.stage.game.fun")

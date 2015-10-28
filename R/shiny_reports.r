@@ -10,9 +10,12 @@ examples.show.tournament = function() {
   
 }
 
+STRATTOURN.GLOB = as.environment(list(get.sr.from.app=FALSE))
 sr = new.env(parent=globalenv())
 
 get.sr = function() {
+  if (isTRUE(STRATTOURN.GLOB$get.sr.from.app))
+    return(getApp()$sr)
   sr
 }
 
@@ -101,13 +104,18 @@ get.reports.yaml = function(name=sr$tourn$game$name, sr=get.sr()) {
   yaml
 }
 
-make.rep.li = function() {
+make.rep.li = function(game.name=sr$tourn$game$name,sr=get.sr()) {
   restore.point("make.rep.li")
 
-  reports.yaml = get.reports.yaml()
+  reports.yaml = get.reports.yaml(game.name,sr=sr)
   library(yaml)
   rep.li = yaml.load(reports.yaml)
 
+  if (!is.null(sr$disable.reports)) {
+    disable = names(rep.li) %in% sr$disable.reports
+    rep.li = rep.li[!disable]
+  }
+  
   names = names(rep.li)
   rep.li = lapply(seq_along(rep.li), function(i) {
     rep = rep.li[[i]]
@@ -128,10 +136,11 @@ make.report.ui = function(sr=get.sr()) {
       sidebarPanel(
         tabsetPanel(id ="leftPanel",
           tabPanel("Reports",
-            bsActionButton("update_strat_btn","update", size="small"),
+            bsButton("update_strat_btn","update", size="small"),
             selectizeInput("used_strats", label = "Used strategies:",
             choices = strats, selected = strats, multiple=TRUE,width="100%"),
-            aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
+            #aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
+            aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12),
             select.report.ui(),
             uiOutput("ui.custom.parameters")
 
@@ -212,11 +221,11 @@ select.tournament.ui = function(sr=get.sr()) {
   fluidRow(
     fluidRow(
       selectizeInput('tourn.file.input',"tournament",choices=files, selected=sr$tourn.file,multiple=FALSE, width="100%"),
-      bsActionButton("load.tourn.btn","load", size="small")
+      bsButton("load.tourn.btn","load", size="small")
     ),
     fluidRow(
       column(3,
-        bsActionButton("run.tourn.btn","run", size="small")
+        bsButton("run.tourn.btn","run", size="small")
       ),
       column(3,
         helpText("Rounds:")
@@ -232,14 +241,14 @@ select.tournament.ui = function(sr=get.sr()) {
 select.report.ui = function(rep.li=sr$rep.li, sr=get.sr()) {
   restore.point("select.report.ui")
   buttons = lapply(rep.li, function(rep) {
-    bsActionButton(rep$button.id,rep$label, size="small")
+    bsButton(rep$button.id,rep$label, size="small")
   })
   names(buttons)=NULL
   do.call(fluidRow,buttons)
   #buttons[[1]]
 }
 
-set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sizes.string="", sr=get.sr(), set.round.data=TRUE) {
+set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sizes.string="", sr=get.sr(), set.round.data=TRUE,  is.combined.tourn=is(tourn, "CombinedTournament")) {
   restore.point("set.tourn.data")
 
   if (is.null(used.strats))
@@ -249,7 +258,13 @@ set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sizes.stri
   shares = strat.sizes / sum(strat.sizes)
 
   # Data for each match
-  md = tourn$dt
+  if (is.combined.tourn) {
+    li = lapply(tourn$tourns, function(tou) tou$dt)
+    md = rbindlist(li)
+  } else {
+    md = tourn$dt
+  }
+  
   md$share = shares[md$strat] 
   md = add.other.var(md,c("strat","u","share"))
   md$delta.u = md$u - md$other.u
@@ -268,7 +283,7 @@ set.tourn.data = function(tourn=sr$tourn, used.strats=sr$used.strats, sizes.stri
   copy.into.env(dest=sr,names = c("tourn","amd", "md","strats","used.strats","strat.sizes", "shares","rank.dt"))
   
   if (set.round.data)
-    adapt.round.data()
+    adapt.round.data(sr=sr)
 }
 
 
@@ -295,8 +310,8 @@ click_run_tourn = function(session,update.report,update.tourn,...,sr=get.sr()) {
 
   })
   
-  set.tourn.data(tourn, used.strats = NULL,sizes.string = "", set.round.data=FALSE)
-  load.round.data(tourn$rs.file)
+  set.tourn.data(tourn, used.strats = NULL,sizes.string = "")
+  import.round.data(tourn=tourn)
   
   #click_load_tourn(session, update.report, update.tourn,...,sr=sr)
   
@@ -419,11 +434,11 @@ set.tourn.file = function(tourn.file=NULL, tourn=NULL, sr = get.sr(), file.path=
   setwd(file.path)
   sr$tourn.file = tourn.file
   
-  set.tourn.data(tourn, used.strats = NULL,sizes.string = sizes.string, set.round.data=FALSE)
-  load.round.data(tourn$rs.file)
+  set.tourn.data(tourn, used.strats = NULL,sizes.string = sizes.string)
+  import.round.data(tourn=tourn)
 }
 
-compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.input=TRUE, fragment.only=TRUE) {
+compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.input=TRUE, fragment.only=TRUE, work.dir = sr$work.dir) {
   
   restore.point("compile.report")
   file = system.file(package="StratTourn", "reports",rep$file[1]) 
@@ -478,22 +493,38 @@ compile.report = function(rep=sr$report,session, sr=get.sr(), parameters.from.in
     txt = txt[-(rows[1]:rows[2])]
   }
   
+  dir = getwd()
+  
   txt = c("```{r include=FALSE}\n library(StratTourn);set.view.mode('shiny_report')\n```",txt)
+  
+  # need to use a directory to which RAppArmor has write access
+  if (!is.null(work.dir))
+    setwd(work.dir)
   html = knit2html(text=txt,fragment.only=fragment.only, envir=env)
+  
+  setwd(dir)
   html
 }
 
 
-load.round.data = function(file=tourn$rs.file, tourn=sr$tourn, sr=get.sr()) {
-  restore.point("load.round.data")
-# Data for each round
-#file = "Tourn_Noisy_PD_20140721_202445_rs.csv"
-  rd = fread(file)
-  rd = as.tbl(as.data.frame(rd))
+import.round.data = function(file=tourn$rs.file, tourn=sr$tourn, sr=get.sr(), store.in.sr = TRUE) {
+  restore.point("import.round.data")
+  
+  if (is.null(tourn$rd)) {
+    if (length(file)==1) {
+      rd = fread(file)
+    } else {
+      li = lapply(file,fread)
+      rd = rbindlist(li)
+    }
+    rd = as.tbl(as.data.frame(rd))
+  } else {
+    rd = as.tbl(as.data.frame(tourn$rd))
+  }
   rd = add.other.var(rd,c("strat","u"))
+  if (!store.in.sr) return(rd)  
   sr$ard = rd
-
-  adapt.round.data()
+  adapt.round.data(sr=sr)
 }
 
 

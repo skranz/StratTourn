@@ -219,7 +219,8 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
           assign(".BOS.ERROR.t",t,.GlobalEnv)
           assign(".BOS.ERROR.i",i,.GlobalEnv)
           
-          stop(as.character(e), call.=FALSE)
+          err = paste0(" evaluating strategy ", names(strat)[i], " in period t=", t, " for player i=",i,": ", str.right.of(as.character(e),":"))
+          stop(err, call.=FALSE)
         }
       )      
       a[[i]] = strat.res[si[[i]]$actions]  
