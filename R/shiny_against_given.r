@@ -1,7 +1,7 @@
 examples.againstGivenApp = function() {
   setwd("D:/libraries/StratTourn")
   tourns.dir="D:/libraries/StratTourn/GivenTourn"
-  set.restore.point.options(display.restore.point = !TRUE)
+  restore.point.options(display.restore.point = !TRUE)
   set.storing(TRUE)
   #app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
   
@@ -92,13 +92,14 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=10,...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
 
   login.fun = function(app=getApp(),...) {
     sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir, disable.reports=disable.reports)
+    sr$max.R = max.R
     setUI("mainUI", sr$main.ui)
   }
 
@@ -188,9 +189,10 @@ get.functions = function(env) {
 }
 
 
-ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getInputValue("repTournInput")), ...) {
+ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getInputValue("repTournInput")), max.R=sr$max.R, ...) {
   restore.point("ag.run.active.tourn")
 
+    
   if (!is.finite(R)) {
     createAlert(app$session, "userStratAlert", title = "Error: cannot run...", content = "You must specify a correct number of rounds...", style = "warning", append = FALSE)
     return(FALSE)
@@ -200,6 +202,14 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
     createAlert(app$session, "userStratAlert", title="Error: cannot run...",content = "You have not yet imported a strategy yet...", style = "warning", append = FALSE)
     return(FALSE)
   }
+
+  
+   if (isTRUE(R>max.R)) {
+    createAlert(app$session, "userStratAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament for at most ", max.R, " rounds each time you press the button."), style = "warning", append = FALSE)
+     R = max.R
+  }
+
+  
   
   atourn = sr$tourn$tourns[[1]]
 
