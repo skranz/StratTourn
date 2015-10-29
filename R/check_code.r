@@ -29,11 +29,14 @@ whitelist.check.strat = function(strat) {
   check.whitelist(call, wl.funs = wl.funs, bl.vars=c(".GlobalEnv",".BaseNamespaceEnv"))    
 }
 
-parse.user.strats = function(code, utf8 = TRUE) {
+parse.user.strats = function(code, utf8 = !TRUE) {
   restore.point("parse.user.strats")
   
   if (utf8)
     Encoding(code) <- "UTF-8"
+  
+  # neccessary to avoid bug in parsing
+  code = gsub("\r","",code, fixed=TRUE)
   
   code = paste0(code, collapse="\n")
   expr = try(parse(text=code))
