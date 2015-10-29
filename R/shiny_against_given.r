@@ -213,7 +213,7 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
      R = max.R
   }
 
- if (isTRUE(sr$num.runs+R>sr$max.total.R)) {
+ if (isTRUE(sr$num.runs+R > sr$max.total.R)) {
     createAlert(app$session, "stratRunAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament in total for at most ", sr$max.total.R, " rounds."), style = "warning", append = FALSE)
     R = sr$max.total.R-sr$num.runs
     if (R <= 0) return(FALSE)
@@ -284,7 +284,7 @@ ag.import.user.strat = function( app=getApp(),sr = app$sr,...) {
   
   strats = res$funs
   sr$user.strats = strats
-  sr$num.runs = 1
+  sr$num.runs = 0
   strat.name = paste0(names(sr$user.strats), collapse=", ")
   
   sr$tourn = active.passive.tourn(astrat = strats, ptourn = sr$ptourn,separate.round.data=FALSE)
