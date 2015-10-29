@@ -37,8 +37,17 @@ examples.bargaining.game = function() {
 }
 
 
-#' Generate a (noisy) Prisoners' Dilemma game
-make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high=0.5, uniform=FALSE, digits=0, price=100, delta=0.8,...) {
+#' Generate a bargaining game
+#' @param cost.low The lower costs in the standard case and the lower bound of costs in the uniform case
+#' @param cost.high The higher costs in the standard case and the upper bound of costs in the uniform case
+#' @param prob.low The probability to draw the lower costs in the standard case
+#' @param prob.high The probability to draw the higher costs in the standard case
+#' @param uniform If TRUE, then the costs are drawn from a uniform distribution between cost.low and cost.high instead of the two discrete choices cost.low and cost.high
+#' @param digits If the costs are drawn from a uniform distribution: To how many digits should the draw be rounded?
+#' @param redraw.costs If TRUE, then the costs are redrawn each round. In the standard case the costs are drawn once and are not changed from round to round
+#' @param price Paid utility in case of an agreement
+#' @param delta Probability of playing another round
+make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high=0.5, uniform=FALSE, digits=0, redraw.costs=FALSE, price=100, delta=0.8,...) {
   
   run.stage.game = function(a,t,t.obs,game.states,...) {
     restore.point("bargaining.run.stage.game")
@@ -54,12 +63,21 @@ make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high
     } else {
       payoff = c(0,0)
     }
+    
+    #Draw new costs if necessary
+    if(redraw.costs){
+      if(uniform){
+        costs = round(runif(2,cost.low, cost.high),digits)
+      } else {
+        costs = sample(c(cost.low,cost.high),2, replace=TRUE, prob=c(prob.low, prob.high))
+      }
+    }
 
     # private signals: each player sees her cost type
     obs = list(list(cost=costs[1], x=x),
                list(cost=costs[2], x=x))
-    round.stats = quick.df(t=c(t,t),i=1:2,cost=costs,x=x,u=payoff) 
-    return(list(payoff=payoff,obs=obs, round.stats=round.stats, game.states=list(costs=costs)))
+    round.stats = quick.df(t=c(t,t),i=1:2,cost=game.states$costs,x=x,u=payoff) 
+    return(list(payoff=payoff,obs=obs, round.stats=round.stats, game.states=list(costs=costs, redraw.costs=redraw.costs)))
   } 
   
   check.action = function(ai,i,t,...) {
@@ -85,7 +103,7 @@ make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high
     nlist(costs)
   }
   
-  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.low,cost.high,prob.low, prob.high, uniform), sym=TRUE, delta=delta, name="bargaining")
+  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.low,cost.high,prob.low, prob.high, uniform, redraw.costs), sym=TRUE, delta=delta, name="bargaining")
 }
 
 
