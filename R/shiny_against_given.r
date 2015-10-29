@@ -1,11 +1,13 @@
 examples.againstGivenApp = function() {
   setwd("D:/libraries/StratTourn")
   tourns.dir="D:/libraries/StratTourn/GivenTourn"
-  set.restore.point.options(display.restore.point = !TRUE)
+  restore.point.options(display.restore.point = !TRUE)
   set.storing(TRUE)
   #app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
   
-  app = againstGivenApp(tourns.dir = tourns.dir,password = "test")
+  strat.log.file = "strats.log"
+  
+  app = againstGivenApp(tourns.dir = tourns.dir,password = "test", strat.log.file = strat.log.file,max.R=10, max.total.R = 10)
   
   runEventsApp(app)  
   
@@ -92,13 +94,16 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=20, max.total.R=NULL, strat.log.file=NULL,  ...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
 
   login.fun = function(app=getApp(),...) {
     sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir, disable.reports=disable.reports)
+    sr$max.R = max.R
+    sr$strat.log.file = strat.log.file
+    sr$max.total.R = max.total.R
     setUI("mainUI", sr$main.ui)
   }
 
@@ -188,18 +193,33 @@ get.functions = function(env) {
 }
 
 
-ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getInputValue("repTournInput")), ...) {
+ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getInputValue("repTournInput")), max.R=sr$max.R, ...) {
   restore.point("ag.run.active.tourn")
 
+    
   if (!is.finite(R)) {
-    createAlert(app$session, "userStratAlert", title = "Error: cannot run...", content = "You must specify a correct number of rounds...", style = "warning", append = FALSE)
+    createAlert(app$session, "stratRunAlert", title = "Error: cannot run...", content = "You must specify a correct number of rounds...", style = "warning", append = FALSE)
     return(FALSE)
   }
 
   if (!is(sr$tourn,"CombinedTournament")) {
-    createAlert(app$session, "userStratAlert", title="Error: cannot run...",content = "You have not yet imported a strategy yet...", style = "warning", append = FALSE)
+    createAlert(app$session, "stratRunAlert", title="Error: cannot run...",content = "You have not yet imported a strategy yet...", style = "warning", append = FALSE)
     return(FALSE)
   }
+
+  
+ if (isTRUE(R>max.R)) {
+    createAlert(app$session, "stratRunAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament for at most ", max.R, " rounds each time you press the button."), style = "warning", append = FALSE)
+     R = max.R
+  }
+
+ if (isTRUE(sr$num.runs+R > sr$max.total.R)) {
+    createAlert(app$session, "stratRunAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament in total for at most ", sr$max.total.R, " rounds."), style = "warning", append = FALSE)
+    R = sr$max.total.R-sr$num.runs
+    if (R <= 0) return(FALSE)
+  }
+
+  
   
   atourn = sr$tourn$tourns[[1]]
 
@@ -229,6 +249,7 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
   } 
 
 
+  sr$num.runs = sr$num.runs + R
   sr$tourn$tourns[[1]] = atourn
   sr$used.strats = sr$strats = names(sr$tourn$strat)
   set.tourn.data(sr=sr,set.round.data = FALSE)
@@ -246,12 +267,24 @@ ag.import.user.strat = function( app=getApp(),sr = app$sr,...) {
   sr$user.strat.code = code
   
   res = parse.user.strats(code)
+  
+  
+  
   if (!res$ok) {
     createAlert(app$session, "userStratAlert", title = "Error", content = res$msg, style = "warning", append = FALSE)
     return()
-  } 
+  }
+
+  if (!is.null(sr$strat.log.file)) {
+    code = gsub("\r","",code, fixed=TRUE)
+    str = paste0("- ", toJSON(list(time=as.character(Sys.time()), code=code)))
+    write(str,sr$strat.log.file,append=TRUE)
+  }  
+
+  
   strats = res$funs
   sr$user.strats = strats
+  sr$num.runs = 0
   strat.name = paste0(names(sr$user.strats), collapse=", ")
   
   sr$tourn = active.passive.tourn(astrat = strats, ptourn = sr$ptourn,separate.round.data=FALSE)
@@ -281,15 +314,12 @@ ag.set.lhs.ui = function(rep.li=sr$rep.li,app=getApp(), sr=app$sr) {
   
   
   ui = list(
-    #bsButton("update_strat_btn","update", size="small"),
-    #selectizeInput("used_strats", label = "Used strategies:",
-    #choices = strats, selected = strats, multiple=TRUE,width="100%"),
-    #aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
     fluidRow(
       column(3,bsButton("stratBtn","Edit")),
       column(2,bsButton("runTournBtn","Run")),
       column(4,numericInput("repTournInput",NULL,value = 10,min = 1,max=1000,step = 1))
     ),
+    bsAlert("stratRunAlert"),
     hr(),
     report.buttons,
     uiOutput("ui.custom.parameters")
