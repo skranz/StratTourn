@@ -14,7 +14,7 @@ Depends:
   dplyrExtras,  stringtools,  shiny,
   knitr,  xtable,  shinyBS,
   googleVis,  shinyAce,  shinyEvents,
-  WhitelistEval
+  WhitelistEval, jsonlite
 Remotes: 
   skranz/WhitelistEval, skranz/sktools,
   skranz/dplyrExtras, skranz/stringtools,

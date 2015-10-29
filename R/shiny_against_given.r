@@ -5,7 +5,9 @@ examples.againstGivenApp = function() {
   set.storing(TRUE)
   #app = againstGivenLoginApp(tourns.dir, init.userid="sebastian.kranz@uni-ulm.de", init.password="mzofo")  
   
-  app = againstGivenApp(tourns.dir = tourns.dir,password = "test")
+  strat.log.file = "strats.log"
+  
+  app = againstGivenApp(tourns.dir = tourns.dir,password = "test", strat.log.file = strat.log.file)
   
   runEventsApp(app)  
   
@@ -92,7 +94,7 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=10,...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=10, strat.log.file=NULL, ...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
@@ -100,6 +102,7 @@ againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),dis
   login.fun = function(app=getApp(),...) {
     sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir, disable.reports=disable.reports)
     sr$max.R = max.R
+    sr$strat.log.file = strat.log.file
     setUI("mainUI", sr$main.ui)
   }
 
@@ -256,10 +259,21 @@ ag.import.user.strat = function( app=getApp(),sr = app$sr,...) {
   sr$user.strat.code = code
   
   res = parse.user.strats(code)
+  
+  
+  
   if (!res$ok) {
     createAlert(app$session, "userStratAlert", title = "Error", content = res$msg, style = "warning", append = FALSE)
     return()
-  } 
+  }
+
+  if (!is.null(sr$strat.log.file)) {
+    code = gsub("\r","",code, fixed=TRUE)
+    str = paste0("- ", toJSON(list(time=as.character(Sys.time()), code=code)))
+    write(str,sr$strat.log.file,append=TRUE)
+  }  
+
+  
   strats = res$funs
   sr$user.strats = strats
   strat.name = paste0(names(sr$user.strats), collapse=", ")
