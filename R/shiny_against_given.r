@@ -7,7 +7,7 @@ examples.againstGivenApp = function() {
   
   strat.log.file = "strats.log"
   
-  app = againstGivenApp(tourns.dir = tourns.dir,password = "test", strat.log.file = strat.log.file)
+  app = againstGivenApp(tourns.dir = tourns.dir,password = "test", strat.log.file = strat.log.file,max.R=10, max.total.R = 10)
   
   runEventsApp(app)  
   
@@ -94,7 +94,7 @@ init.sr.instance = function(app = getApp(), tourns.dir, userid="DefaultUser", wo
   sr
 }
 
-againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=10, strat.log.file=NULL, ...) {
+againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),disable.reports=NULL,max.R=20, max.total.R=NULL, strat.log.file=NULL,  ...) {
   restore.point("againstGivenApp")
   app = eventsApp()
   app$ui = fluidPage(uiOutput("mainUI"))
@@ -103,6 +103,7 @@ againstGivenApp = function(tourns.dir=getwd(),password=NULL,work.dir=getwd(),dis
     sr = init.sr.instance(app = app, tourns.dir=tourns.dir, work.dir=work.dir, disable.reports=disable.reports)
     sr$max.R = max.R
     sr$strat.log.file = strat.log.file
+    sr$max.total.R = max.total.R
     setUI("mainUI", sr$main.ui)
   }
 
@@ -197,19 +198,25 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
 
     
   if (!is.finite(R)) {
-    createAlert(app$session, "userStratAlert", title = "Error: cannot run...", content = "You must specify a correct number of rounds...", style = "warning", append = FALSE)
+    createAlert(app$session, "stratRunAlert", title = "Error: cannot run...", content = "You must specify a correct number of rounds...", style = "warning", append = FALSE)
     return(FALSE)
   }
 
   if (!is(sr$tourn,"CombinedTournament")) {
-    createAlert(app$session, "userStratAlert", title="Error: cannot run...",content = "You have not yet imported a strategy yet...", style = "warning", append = FALSE)
+    createAlert(app$session, "stratRunAlert", title="Error: cannot run...",content = "You have not yet imported a strategy yet...", style = "warning", append = FALSE)
     return(FALSE)
   }
 
   
-   if (isTRUE(R>max.R)) {
-    createAlert(app$session, "userStratAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament for at most ", max.R, " rounds each time you press the button."), style = "warning", append = FALSE)
+ if (isTRUE(R>max.R)) {
+    createAlert(app$session, "stratRunAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament for at most ", max.R, " rounds each time you press the button."), style = "warning", append = FALSE)
      R = max.R
+  }
+
+ if (isTRUE(sr$num.runs+R>sr$max.total.R)) {
+    createAlert(app$session, "stratRunAlert", title = "Warning", content = paste0("For speed reasons you can run the tournament in total for at most ", sr$max.total.R, " rounds."), style = "warning", append = FALSE)
+    R = sr$max.total.R-sr$num.runs
+    if (R <= 0) return(FALSE)
   }
 
   
@@ -242,6 +249,7 @@ ag.run.active.tourn = function( app=getApp(),sr = app$sr,   R = as.numeric(getIn
   } 
 
 
+  sr$num.runs = sr$num.runs + R
   sr$tourn$tourns[[1]] = atourn
   sr$used.strats = sr$strats = names(sr$tourn$strat)
   set.tourn.data(sr=sr,set.round.data = FALSE)
@@ -276,6 +284,7 @@ ag.import.user.strat = function( app=getApp(),sr = app$sr,...) {
   
   strats = res$funs
   sr$user.strats = strats
+  sr$num.runs = 1
   strat.name = paste0(names(sr$user.strats), collapse=", ")
   
   sr$tourn = active.passive.tourn(astrat = strats, ptourn = sr$ptourn,separate.round.data=FALSE)
@@ -305,15 +314,12 @@ ag.set.lhs.ui = function(rep.li=sr$rep.li,app=getApp(), sr=app$sr) {
   
   
   ui = list(
-    #bsButton("update_strat_btn","update", size="small"),
-    #selectizeInput("used_strats", label = "Used strategies:",
-    #choices = strats, selected = strats, multiple=TRUE,width="100%"),
-    #aceEditor("sizes_string", sizes.str, height = "50px", fontSize = 12, debounce = 10, wordWrap=TRUE,showLineNumbers = FALSE, highlightActiveLine = FALSE),
     fluidRow(
       column(3,bsButton("stratBtn","Edit")),
       column(2,bsButton("runTournBtn","Run")),
       column(4,numericInput("repTournInput",NULL,value = 10,min = 1,max=1000,step = 1))
     ),
+    bsAlert("stratRunAlert"),
     hr(),
     report.buttons,
     uiOutput("ui.custom.parameters")
