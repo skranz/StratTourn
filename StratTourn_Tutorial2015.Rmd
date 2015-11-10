@@ -50,7 +50,7 @@ install.packages("shinyBS")
 install.packages("googleVis")
 install.packages("tidyr")
 install.packages("shinyAce")
-
+install.packages("lattice")
 
 library(devtools)
 install_github(repo="skranz/restorepoint")
