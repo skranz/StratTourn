@@ -49,7 +49,6 @@ install.packages("knitr")
 install.packages("xtable")
 install.packages("shinyBS")
 install.packages("googleVis")
-install.packages("lattice")
 
 
 library(devtools)
