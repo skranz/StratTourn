@@ -1,0 +1,77 @@
+---
+title: "Analyse Research Agreement Game based on know how"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+library(dplyr)
+library(tidyr)
+```
+
+```{r "init_data", include=FALSE}
+#setwd("D:/libraries/StratTourn")
+
+#setwd("D:/libraries/StratTourn/studies")
+setwd("E:/!Data/!Daten/Work/Promotion/L - Lectures/Kooperation Spieltheorie/WS 2015-16/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_research.agreement_20151110_133937.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+
+rank.dt = strat.rank.from.matches(md)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+```
+```{r, echo=FALSE}
+sd <- summarise(group_by(rd,strat,other.strat, know.how), share=mean(s))
+sd <- mutate(sd,share.perc=share/know.how,share.abs=know.how-share)
+rank.strats = rank.dt$strat
+sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
+sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
+```
+## Shared knowledge by know how (percent)
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+ggplot(data=sd, aes(know.how, fill=strat, y=share.perc)) + geom_bar(stat="identity",position="identity") +facet_grid(other.strat~strat) + geom_hline(yintercept=0, size=0.5, col="black",alpha=0.5)
+cat("\n")
+```
+
+The plot shows the shared knowledge in percent given the know how.
+
+
+## Not shared know how
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+ggplot(data=sd, aes(know.how, fill=strat, y=share.abs)) + geom_bar(stat="identity",position="identity") +facet_grid(other.strat~strat) + geom_hline(yintercept=0, size=0.5, col="black",alpha=0.5)
+cat("\n")
+```
+
+The plot shows the mean of the **not** shared knowledge given the know how, i.e. the difference know.how-shared.
