@@ -145,7 +145,7 @@ make.research.agreement.game = function(lower.bound=1, upper.bound=5, multiplier
   
   check.action = function(ai,i,t,...) {
     s = ai$s
-    if (is.numeric(s) & length(s)==1) {
+    if (is.finite(s) & length(s)==1) {
       return()
     }
     stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible action: ", ai))
