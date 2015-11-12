@@ -62,11 +62,37 @@ sd <- mutate(sd,share.perc=share/know.how,share.abs=know.how-share)
 rank.strats = rank.dt$strat
 sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
 sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
+
+#Start Block "Slighty change value of sd from those strats where all values are the same"
+#The levelplot function does not react well defined in those cases
+
+strat.combs <- expand.grid(strats,strats, stringsAsFactors = FALSE)
+
+no.variance <- sapply(1:nrow(strat.combs), FUN=function(x){
+  to.test <- (sd[sd$strat==strat.combs[x,1]&sd$other.strat==strat.combs[x,2],]$seen.s)
+  if(all(to.test[!is.na(to.test)][1]==to.test, na.rm=TRUE)){
+    return(list(value=to.test[!is.na(to.test)][1],no.variance=TRUE))
+  } else {
+    return(list(value=NA,no.variance=FALSE))
+  }
+})
+
+no.variance.combs <- strat.combs[which(unlist(no.variance["no.variance",])),]
+
+if(nrow(no.variance.combs)>=1){
+  for(i in 1:nrow(no.variance.combs)){
+    new.val <- sd$seen.s[sd$strat==no.variance.combs[i,1]&sd$other.strat==no.variance.combs[i,2]]
+    new.val <- new.val + runif(length(new.val),0,1e-5)
+    sd$seen.s[sd$strat==no.variance.combs[i,1]&sd$other.strat==no.variance.combs[i,2]] <- new.val
+  }
+}
+
+#End Block "Slighty change value of sd from those strats where all values are the same"
+
 ```
 ## Shared knowledge by know how
 
 ```{r, echo=FALSE, fig.width=12, fig.height=10}
-
 levelplot(share.perc~know.how*seen.s|other.strat+strat, sd,col.regions=heat.colors(1000), cuts=1000-1, xlab="know.how", ylab="share of lower strat")
 cat("\n")
 ```

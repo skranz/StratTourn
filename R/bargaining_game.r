@@ -81,8 +81,9 @@ make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, prob.high
   } 
   
   check.action = function(ai,i,t,...) {
+    restore.point("check.action.bargaining.game")
     x = ai$x
-    if (is.numeric(x) & length(x)==1) {
+    if (is.finite(x) & length(x)==1) {
       return()
     }
     stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible action: ", ai))
