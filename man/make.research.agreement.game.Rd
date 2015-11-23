@@ -8,11 +8,11 @@ make.research.agreement.game(lower.bound = 1, upper.bound = 5,
   multiplier = 1.5, delta = 0.9, ...)
 }
 \arguments{
-\item{lower.bound}{At least this much know how is generated from each firm in each period}
+\item{lower.bound}{At least this much know how is generated from each firm in each period; Non-negative integer value expected}
 
-\item{upper.bound}{At most this much know how is generated from each firm in each period}
+\item{upper.bound}{At most this much know how is generated from each firm in each period; positive integer value expected}
 
-\item{multiplier}{Non shared know how is multiplied by this value}
+\item{multiplier}{Non-shared know how is multiplied by this value}
 
 \item{delta}{Probability of playing another round}
 }
