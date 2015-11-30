@@ -42,7 +42,11 @@ active.passive.tourn = function(astrat, ptourn, game=ptourn$game,...) {
   
   strat = c(astrat, pstrat)
   matchings = active.passive.matchings(names(astrat), names(pstrat), game=game)
-  atourn = init.tournament(strat, game, matchings=matchings,...)
+
+  # use the same game seeds to have better replicability  
+  game.seeds = unique(ptourn$dt$game.seed)
+
+  atourn = init.tournament(strat, game, matchings=matchings, game.seeds=game.seeds,...)
   
   combined.tourn(list(atourn=atourn, ptourn=ptourn))
 }

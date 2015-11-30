@@ -49,7 +49,7 @@ first.vs.all.matchings = function(strat,game) {
 }
 
 #' Inits a tournament object
-init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL, id.add=NULL, separate.round.data=TRUE) {
+init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NULL, rs.file=NULL, dir=getwd(), tourn.id=NULL, id.add=NULL, separate.round.data=TRUE, game.seeds = NULL) {
   
   restore.point("init.tournament")
   
@@ -82,7 +82,7 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
   if (!separate.round.data)
     rs.file = NULL
   
-  tourn = list(tourn.id=tourn.id,strat = strat, game = game, team=team, matchings = matchings, dt=NULL, score.fun = score.fun, rs.file=rs.file, separate.round.data=separate.round.data, rd=NULL)
+  tourn = list(tourn.id=tourn.id,strat = strat, game = game, team=team, matchings = matchings, dt=NULL, score.fun = score.fun, rs.file=rs.file, separate.round.data=separate.round.data, rd=NULL, game.seeds = game.seeds)
   class(tourn) = c("Tournament","list")
   return(tourn)
 }
@@ -90,16 +90,22 @@ init.tournament = function(strat, game, matchings=NULL, score.fun = "u", team=NU
 #' Runs a tournament with R repetitions of each matching and add these rounds to the tournament objects
 #' 
 #' By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
-run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, T=game$T, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL,...) {
+run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, game=tourn$game, delta=game$delta, T=game$T, R = 5, LAPPLY=lapply, verbose=interactive()*1, do.store=FALSE,matchings.fun=random.group.matchings,  fixed.matchings = !is.null(matchings), weights=NULL, ...) {
   restore.point("run.tournament")
   if (is.null(tourn$separate.round.data))
     tourn$separate.round.data = TRUE
   
   temp.env = as.environment(list(rd=tourn$rd))
   r = 1
+  
+
   dt.li = LAPPLY(1:R, function(r) {
     set.random.state(".GLOBAL")
-    game.seed = draw.seed()
+    if (r <= length(tourn$game.seeds)) {
+      game.seed = tourn$game.seeds[r]
+    } else {
+      game.seed = draw.seed()
+    }
     if (verbose >=1)
       cat(paste0("\n",r," game.seed = ", game.seed, " "))
     if (!fixed.matchings) {
@@ -146,9 +152,15 @@ run.tournament = function(tourn, strat=tourn$strat, matchings=tourn$matchings, g
         stop("Your matchings do not have the attribute 'sample.prob.mat'. This is neccessary for games with n>2 players.")
       }
     }
+    mdt$game.seed = game.seed
     mdt
   })
   dt = rbindlist(dt.li)
+  
+  # remove used game seeds
+  if (length(tourn$game.seeds)>0 & R>0) {
+    tourn$game.seeds = tourn$game.seeds[-(1:min(R,length(tourn$game.seeds)))]
+  }
   
   if (is.null(weights)) {
     weights = rep(1/length(strat), length(strat))
