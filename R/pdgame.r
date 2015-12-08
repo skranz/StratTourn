@@ -18,12 +18,17 @@ examples.pd = function() {
   setwd("D:/libraries/StratTourn/studies")
 
   # Init and run a tournament of several strategies against each other  
-  strat = nlist(tit.for.tat,always.defect, always.coop, random.action)  
+  strat = nlist(tit.for.tat, always.coop, random.action)  
   tourn = init.tournament(game=game, strat=strat)
   
   #set.storing(FALSE)  # uncoment to make code run faster
-  tourn = run.tournament(tourn=tourn, R = 4)
+  tourn = run.tournament(tourn=tourn, R = 3)
   set.storing(TRUE)
+  
+  aptourn  = active.passive.tourn(astrat = nlist(always.defect), ptourn = tourn, game = game)
+
+  atourn = aptourn$tourns[[1]]
+  atourn = run.tournament(tourn=atourn,R=2)
   
   tourn
   save.tournament(tourn)
