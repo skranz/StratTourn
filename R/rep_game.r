@@ -208,8 +208,39 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
       # Use only those strat.par that are not returned as a strat.state
       act.strat.par = strat.par[[i]][setdiff(names(strat.par[[i]]),names(strat.states[[i]]))]
       args = c(list(obs = obs.i,i=i,t=t),game$show.par,game.states,strat.states[[i]], act.strat.par)
-      tryCatch(
-        strat.res <- do.call(strat[[i]],args),
+      restore.point("within.run.rep.game.ii")
+      tryCatch({ 
+        strat.res <- do.call(strat[[i]],args)
+        #Has action parameter been returned?
+        if(!(si[[i]]$actions %in% names(strat.res))){
+          e <- paste0("\nAction parameter ",si[[i]]$actions, " has to be a part of the return value!\n")
+          stop(e)
+        }
+        #Have all idiosyncratic parameters been returned?
+        if(!all(si[[i]]$strat.states %in% names(strat.res))){
+          missing.strat.states <- si[[i]]$strat.states[!(si[[i]]$strat.states %in% names(strat.res))]
+          if(length(missing.strat.states)==1){
+            e <- paste0("\nStrat state ",missing.strat.states, " has to be a part of the return value!\n")
+          } else {
+            missing.strat.states <- paste0(missing.strat.states,collapse=", ")
+            e <- paste0("\nStrat states ",missing.strat.states, " have to be a part of the return value!\n")
+          }
+          stop(e)
+        }
+        #Have there been more parameters as what has been expected?
+        #This might e.g. be the case, if the return statement of the first period does not specify all parameters.
+        #parameters handeled in this way are always initialized as the default value, so an error is necessary
+        if(!all(si[[i]]$strat.par %in% names(strat.res))){
+          missing.strat.states <- si[[i]]$strat.par[!(si[[i]]$strat.par %in% names(strat.res))]
+          if(length(missing.strat.states)==1){
+            e <- paste0("\nStrat state ",missing.strat.states, " has to be a part of the return value!\n")
+          } else {
+            missing.strat.states <- paste0(missing.strat.states,collapse=", ")
+            e <- paste0("\nStrat states ",missing.strat.states, " have to be a part of the return value!\n")
+          }
+          stop(e)
+        }
+      },
         error = function(e) {
           message("Error in evaluating strategy ", names(strat)[i], " in period t=", t, " for player i=",i,"\nERROR.HIST:")
           hist = denv$df[1:t,]
@@ -222,7 +253,8 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
           err = paste0(" evaluating strategy ", names(strat)[i], " in period t=", t, " for player i=",i,": ", str.right.of(as.character(e),":"))
           stop(err, call.=FALSE)
         }
-      )      
+      )
+      restore.point("within.run.rep.game")
       a[[i]] = strat.res[si[[i]]$actions]  
       strat.states[[i]] = strat.res[si[[i]]$strat.states]
       game$check.action(ai=a[[i]],i=i,t=t)

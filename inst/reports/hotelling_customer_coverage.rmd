@@ -1,0 +1,144 @@
+---
+title: "Analyse Hotelling Game based Customer Coverage"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(StratTourn)
+library(xtable)
+library(ggplot2)
+library(reshape2)
+library(googleVis)
+library(dplyr)
+library(tidyr)
+library(lattice)
+```
+
+```{r "init_data", include=FALSE}
+#setwd("D:/libraries/StratTourn")
+
+#setwd("D:/libraries/StratTourn/studies")
+setwd("E:/!Data/!Daten/Work/Promotion/L - Lectures/Kooperation Spieltheorie/WS 2015-16/StratTourn/studies")
+
+
+tourn = load.tournament("Tourn_hotelling_20151119_105852.tou")
+# Data for each match
+md = tourn$dt
+md = add.other.var(md,c("strat","u"))
+md$delta.u = md$u - md$other.u
+# Names of all strategies
+strats = unique(md$strat)
+
+
+rank.dt = strat.rank.from.matches(md)
+
+# Data for each round
+file = tourn$rs.file
+rd = fread(file)
+rd = as.tbl(as.data.frame(rd))
+rd = add.other.var(rd,c("strat","u","s"))
+
+# Names of all strategies
+strats = unique(rd$strat)
+
+# Perhaps select a subset of strategies
+used.strats = strats
+ard = rd
+
+if (!identical(used.strats,strats)) {
+  rows = rd$strat %in% used.strats & rd$other.strat %in% used.strats
+  rd = ard[rows,]
+}
+
+```
+
+```{r "init_parameters", include=FALSE}
+end.t = 10
+start.t = 1
+resolution = 20
+```
+
+```{r, echo=FALSE}
+rd = add.other.var(rd,c("strat","p","l"))
+rd = filter(rd, t %in% start.t:end.t) #Timeframe
+rep.params <- tourn$game$params
+#which customers are served?
+bucket.n = resolution
+coverage <- function(p1,l1,p2,l2, rep.params, n=bucket.n){
+  lb <- rep.params$lower.bound
+  ub <- rep.params$upper.bound
+  s <- rep.params$s
+  t <- rep.params$t.distance
+  
+  range <- seq(lb,ub,length.out=n+1)
+  range.length <- range[2]-range[1]
+  
+  #Calculate ranges
+  x.lower1 <- l1 + (p1-s)/t
+  x.lower2 <- l2 + (p2-s)/t
+  x.upper1 <- l1 + (s-p1)/t
+  x.upper2 <- l2 + (s-p2)/t
+  
+  res <- sapply(1:n, FUN=function(i){
+    if(x.lower1<=range[i] && x.upper1>=range[i+1]){
+      res1 <- 1
+    } else if (x.lower1<=range[i] && x.upper1<=range[i]){
+      res1 <- 0
+    } else if (x.lower1>=range[i] && x.upper1>=range[i]){
+      res1 <- 0
+    } else if (x.lower1<=range[i] && x.upper1<range[i+1]){
+      res1 <- (x.upper1-range[i])/range.length
+    } else if (x.lower1>range[i] && x.upper1>=range[i+1]){
+      res1 <- (range[i+1]-x.lower1)/range.length
+    } else if (x.lower1>range[i] && x.upper1<range[i+1]){
+      res1 <- (x.upper1-x.lower1)/range.length
+    } else { #should never happen
+      res1 <- 0
+    }
+    if(x.lower2<=range[i] && x.upper2>=range[i+1]){
+      res2 <- 1
+    } else if (x.lower2<=range[i] && x.upper2<=range[i]){
+      res2 <- 0
+    } else if (x.lower2>=range[i] && x.upper2>=range[i]){
+      res2 <- 0
+    } else if (x.lower2<=range[i] && x.upper2<range[i+1]){
+      res2 <- (x.upper2-range[i])/range.length
+    } else if (x.lower2>range[i] && x.upper2>=range[i+1]){
+      res2 <- (range[i+1]-x.lower2)/range.length
+    } else if (x.lower2>range[i] && x.upper2<range[i+1]){
+      res2 <- (x.upper2-x.lower2)/range.length
+    } else { #should never happen
+      res2 <- 0
+    }
+    res <- max(res1,res2)
+  })
+  return(res)
+}
+
+cov.df <- matrix(sapply(1:nrow(rd),simplify=TRUE,FUN=function(x){
+  coverage(p1=rd$p[x],l1=rd$l[x],p2=rd$other.p[x],l2=rd$other.l[x],rep.params=rep.params)
+}), nrow=nrow(rd), byrow=TRUE)
+lb <- rep.params$lower.bound
+ub <- rep.params$upper.bound
+range <- seq(lb,ub,length.out=bucket.n+1)
+colnames(cov.df) <- range[-length(range)]
+colnames(cov.df)[1] <- "Start.Bucket"
+colnames(cov.df)[ncol(cov.df)] <- "End.Bucket"
+rd <- cbind(rd, cov.df)
+rdt = group_by(gather(rd,type,value,Start.Bucket:End.Bucket), strat, other.strat, t, type)
+
+sd <- summarise(rdt, coverage=mean(value))
+rank.strats = rank.dt$strat
+sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
+sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
+
+```
+## Shared knowledge by know how
+
+```{r, echo=FALSE, fig.width=12, fig.height=10}
+levelplot(coverage~t*type|other.strat+strat, sd,col.regions=heat.colors(1000), cuts=1000-1, xlab="t", ylab="coverage")
+cat("\n")
+```
+
+The plot shows to which percentage the customers choose to buy from either firm on average given the period. 

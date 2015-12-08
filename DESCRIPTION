@@ -1,8 +1,8 @@
 Package: StratTourn
 Type: Package
 Title: Tournament of game theoretic strategies
-Version: 0.2.2
-Date: 2015-11-09
+Version: 0.2.4
+Date: 2015-11-23
 URL: https://github.com/skranz/StratTourn
 Author: Sebastian Kranz
 Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
