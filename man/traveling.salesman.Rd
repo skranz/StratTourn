@@ -7,7 +7,7 @@
 traveling.salesman(obs, i, t, price = 0.5, speed = 0.05, ...)
 }
 \arguments{
-\item{obs}{Observations of current know how and share of previous round as specified in the function make.bargaining.game}
+\item{obs}{Observations of position and price of both players in the last round as specified in the function hotelling.profits}
 
 \item{i}{Number of current player}
 

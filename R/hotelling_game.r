@@ -36,7 +36,7 @@ examples.hotelling.agreement.game = function() {
 #'
 #' A strategy which "walks" through over the "beach" with a fixed price
 #'
-#' @param obs Observations of current know how and share of previous round as specified in the function make.bargaining.game
+#' @param obs Observations of position and price of both players in the last round as specified in the function hotelling.profits
 #' @param i Number of current player
 #' @param t Current period
 #' @param price Fixed price of the strategy
@@ -72,7 +72,7 @@ traveling.salesman = function(obs,i,t,price=0.5,speed=0.05,...) {
 #'
 #' This strategy copies the location of the opponent and sets the price as "price of opponent - cut"
 #'
-#' @param obs Observations of current know how and share of previous round as specified in the function make.bargaining.game
+#' @param obs Observations of position and price of both players in the last round as specified in the function hotelling.profits
 #' @param i Number of current player
 #' @param t Current period
 #' @param cut How much lower than the opponent should the price be set?
@@ -102,6 +102,105 @@ the.undercutter = function(obs,i,t,cut=0.01,...) {
   return(list(a=action, cut=cut))
 }
 
+
+#' Calculates the profits of a hotelling game
+#'
+#' We consider a hotelling game where two firms set price and location at the same time. The Utility Function of the uniformly distributed customers is 
+#' U = s - t.distance*|x-l|-p.
+#' 
+#' @param lower.bound Customers are uniformly distributed in the intervall [lower.bound, upper.bound]
+#' @param upper.bound Customers are uniformly distributed in the intervall [lower.bound, upper.bound]
+#' @param s Prohibitive price of customer
+#' @param t Factor determining how much the customer loathes distance
+#' @param print.details When TRUE the function prints various details and intermediate calculations.
+#' @param choice1 choice of first company. The choice has to have the structure list(p=<numerical price>, l=<numerical location>).
+#' @param choice2 choice of first company. The choice has to have the structure list(p=<numerical price>, l=<numerical location>). Note that in contrast to some standard notations of the hotelling game the location choice of firm2 is given in absolute values and neither starting from the lower bound nor from the upper bound.
+hotelling.profits <- function(lower.bound=0, upper.bound=1, s=1, t=1, print.details=FALSE, choice1, choice2){
+  restore.point("hotelling.profits")
+  
+  #Transform variables to better fit formulas
+  #Now l1/p1 depict the lower location
+  if(choice1$l<=choice2$l){
+    l1 <- choice1$l
+    p1 <- choice1$p
+    l2 <- choice2$l
+    p2 <- choice2$p
+    is.lower <- 1
+  } else {
+    l1 <- choice2$l
+    p1 <- choice2$p
+    l2 <- choice1$l
+    p2 <- choice1$p
+    is.lower <- 2
+  }
+  
+  #Calculate cut off points
+  x.lower1 <- l1 + (p1-s)/t
+  x.lower2 <- l2 + (p2-s)/t
+  x.upper1 <- l1 + (s-p1)/t
+  x.upper2 <- l2 + (s-p2)/t
+  x.indifferent <- (p2-p1)/(2*t) + 1/2 * (l1+l2)
+  ## x.lower may never be left of lower.bound
+  x.lower1 <- max(x.lower1,lower.bound)
+  x.lower2 <- max(x.lower2,lower.bound)
+  x.upper1 <- min(x.upper1, upper.bound)
+  x.upper2 <- min(x.upper2, upper.bound)
+  
+  #calculate part of interval which is relevant for profit
+  area.no.go <- (upper.bound-max(x.upper1,x.upper2)) + (min(x.lower1,x.lower2)-lower.bound) + max(0,x.lower2-x.upper1)
+  if(l1<= x.indifferent && x.indifferent<=l2 && l1!=l2){ 
+    #standard case -> x.indifferent lies between l1 & l2
+    area1 <- min(x.indifferent,x.upper1)-x.lower1
+    area2 <- x.upper2 - max(x.indifferent,x.lower2)
+  } else if (l1 == x.indifferent && l2 == x.indifferent){ 
+    #both are exactly identical (this may only happen if prices are equal too)
+    area1 <- 1/2 * (x.upper1 - x.lower1)
+    area2 <- area1
+  } else if (x.indifferent < l1){ 
+    #left case -> all customers go to l2 [if a company can't hold customers, which are exactly on them, then they do not get any]
+    area1 <- 0
+    area2 <- x.upper2 - x.lower2
+  } else if (x.indifferent > l2){ 
+    #right case -> all customers go to l1 [if a company can't hold customers, which are exactly on them, then they do not get any]
+    area1 <- x.upper1 - x.lower1
+    area2 <- 0
+  } else {
+    #this should never happen
+    stop("bad case differentiation in hotelling.profits when calculating areas.\n")
+  }
+  
+  if(print.details){
+    p.vec <- c()
+    p.vec[1] <- paste0("area.no.go",sep=": ",area.no.go)
+    p.vec[length(p.vec)+1] <- paste0("area1",sep=": ",area1)
+    p.vec[length(p.vec)+1] <- paste0("area2",sep=": ",area2)
+    p.vec[length(p.vec)+1] <- paste0("x.lower1",sep=": ",x.lower1)
+    p.vec[length(p.vec)+1] <- paste0("x.upper1",sep=": ",x.upper1)
+    p.vec[length(p.vec)+1] <- paste0("x.lower2",sep=": ",x.lower2)
+    p.vec[length(p.vec)+1] <- paste0("x.upper2",sep=": ",x.upper2)
+    p.vec[length(p.vec)+1] <- paste0("x.indifferent",sep=": ",x.indifferent)
+    p.vec[length(p.vec)+1] <- "\n" #last should be a blank line
+    p.all <- paste0(p.vec,collapse = "\n")
+    cat(p.all)
+  }
+  
+  #profits
+  pi1 <- area1 * p1
+  pi2 <- area2 * p2
+  
+  #results with updated choices
+  if(is.lower==1){
+    choice1$pi <- pi1
+    choice2$pi <- pi2
+  } else {
+    choice1$pi <- pi2
+    choice2$pi <- pi1
+  }
+  res <- list(choice1=choice1, choice2=choice2)
+  
+  return(res)
+}
+
 #' Generate a Hotelling Game
 #'
 #' We consider two firms playing a repeated hotelling game, setting price and location. The Utility Function of the uniformly distributed customers is 
@@ -115,92 +214,7 @@ the.undercutter = function(obs,i,t,cut=0.01,...) {
 #' @param delta Probability of playing another round
 make.hotelling.game = function(lower.bound=0, upper.bound=1, s=1, t.distance=1, fix.location=FALSE, delta = 0.9, ...) {
   restore.point("make.hotelling.game")
-  hotelling.profits <- function(lower.bound=0, upper.bound=1, s=1, t=1, print.details=FALSE, choice1, choice2){
-    restore.point("hotelling.profits")
-    
-    #Transform variables to better fit formulas
-    #Now l1/p1 depict the lower location
-    if(choice1$l<=choice2$l){
-      l1 <- choice1$l
-      p1 <- choice1$p
-      l2 <- choice2$l
-      p2 <- choice2$p
-      is.lower <- 1
-    } else {
-      l1 <- choice2$l
-      p1 <- choice2$p
-      l2 <- choice1$l
-      p2 <- choice1$p
-      is.lower <- 2
-    }
-    
-    #Calculate cut off points
-    x.lower1 <- l1 + (p1-s)/t
-    x.lower2 <- l2 + (p2-s)/t
-    x.upper1 <- l1 + (s-p1)/t
-    x.upper2 <- l2 + (s-p2)/t
-    x.indifferent <- (p2-p1)/(2*t) + 1/2 * (l1+l2)
-    ## x.lower may never be left of lower.bound
-    x.lower1 <- max(x.lower1,lower.bound)
-    x.lower2 <- max(x.lower2,lower.bound)
-    x.upper1 <- min(x.upper1, upper.bound)
-    x.upper2 <- min(x.upper2, upper.bound)
-    
-    #calculate part of interval which is relevant for profit
-    area.no.go <- (upper.bound-max(x.upper1,x.upper2)) + (min(x.lower1,x.lower2)-lower.bound) + max(0,x.lower2-x.upper1)
-    if(l1<= x.indifferent && x.indifferent<=l2 && l1!=l2){ 
-      #standard case -> x.indifferent lies between l1 & l2
-      area1 <- min(x.indifferent,x.upper1)-x.lower1
-      area2 <- x.upper2 - max(x.indifferent,x.lower2)
-    } else if (l1 == x.indifferent && l2 == x.indifferent){ 
-      #both are exactly identical (this may only happen if prices are equal too)
-      area1 <- 1/2 * (x.upper1 - x.lower1)
-      area2 <- area1
-    } else if (x.indifferent < l1){ 
-      #left case -> all customers go to l2 [if a company can't hold customers, which are exactly on them, then they do not get any]
-      area1 <- 0
-      area2 <- x.upper2 - x.lower2
-    } else if (x.indifferent > l2){ 
-      #right case -> all customers go to l1 [if a company can't hold customers, which are exactly on them, then they do not get any]
-      area1 <- x.upper1 - x.lower1
-      area2 <- 0
-    } else {
-      #this should never happen
-      stop("bad case differentiation in hotelling.profits when calculating areas.\n")
-    }
-    
-    if(print.details){
-      p.vec <- c()
-      p.vec[1] <- paste0("area.no.go",sep=": ",area.no.go)
-      p.vec[length(p.vec)+1] <- paste0("area1",sep=": ",area1)
-      p.vec[length(p.vec)+1] <- paste0("area2",sep=": ",area2)
-      p.vec[length(p.vec)+1] <- paste0("x.lower1",sep=": ",x.lower1)
-      p.vec[length(p.vec)+1] <- paste0("x.upper1",sep=": ",x.upper1)
-      p.vec[length(p.vec)+1] <- paste0("x.lower2",sep=": ",x.lower2)
-      p.vec[length(p.vec)+1] <- paste0("x.upper2",sep=": ",x.upper2)
-      p.vec[length(p.vec)+1] <- paste0("x.indifferent",sep=": ",x.indifferent)
-      p.vec[length(p.vec)+1] <- "\n" #last should be a blank line
-      p.all <- paste0(p.vec,collapse = "\n")
-      cat(p.all)
-    }
-    
-    #profits
-    pi1 <- area1 * p1
-    pi2 <- area2 * p2
-    
-    #results with updated choices
-    if(is.lower==1){
-      choice1$pi <- pi1
-      choice2$pi <- pi2
-    } else {
-      choice1$pi <- pi2
-      choice2$pi <- pi1
-    }
-    res <- list(choice1=choice1, choice2=choice2)
-    
-    return(res)
-  }
-    
+  
   run.stage.game = function(a,t,t.obs,game.states,...) {
     restore.point("hotelling.game.run.stage.game")
     
