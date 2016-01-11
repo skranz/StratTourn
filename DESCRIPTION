@@ -15,8 +15,3 @@ Depends:
   knitr,  xtable,  shinyBS,
   googleVis,  shinyAce,  shinyEvents,
   WhitelistEval, jsonlite, lattice
-Remotes: 
-  skranz/WhitelistEval, skranz/sktools,
-  skranz/dplyrExtras, skranz/stringtools,
-  skranz/shinyEvents
-         
