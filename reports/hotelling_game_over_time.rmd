@@ -11,6 +11,7 @@ library(ggplot2)
 library(reshape2)
 library(googleVis)
 library(dplyr)
+library(tidyr)
 ```
 
 ```{r "init_data", include=FALSE}
