@@ -10,7 +10,6 @@ library(xtable)
 library(ggplot2)
 library(reshape2)
 library(googleVis)
-library(tidyr)
 ```
 
 
@@ -59,7 +58,6 @@ start.t = 1
 ## Average performance each strategy against itself over time
 
 ```{r, echo=FALSE, results='asis'}
-  restore.point("payoffs.over.time.within.report")
   srd = filter(rd, strat==other.strat)
   td = summarise(group_by(srd,strat,t), u=mean(u), num.obs = length(t))
   td = as.data.frame(td)
