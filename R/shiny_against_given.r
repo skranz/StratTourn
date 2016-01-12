@@ -388,7 +388,7 @@ ag.load.tourn = function(name,app=getApp(),sr=app$sr) {
   
   sr$tourn=sr$ptourn=app$glob$ptourns[[name]]
   
-  sr$ard = sr$ptourn$rd
+  sr$ard = sr$ptourn$ard
   sr$used.strats = sr$strats = names(sr$tourn$strat)
   set.tourn.data(tourn = sr$tourn, sr=sr)
   

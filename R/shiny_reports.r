@@ -1,5 +1,3 @@
-
-
 examples.show.tournament = function() {
   run.shiny.reports()
   show.tournament(tourn)
@@ -63,6 +61,7 @@ run.shiny.reports = function() {
   library(shinyBS)
   library(googleVis)
   library(shinyAce)
+  library(tidyr)
   set.restore.point.options(display.restore.point=TRUE)
   setwd("D:/libraries/StratTourn/studies")
   set.view.mode("shiny_report")
