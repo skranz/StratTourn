@@ -162,8 +162,11 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,err.D.prob = 0, err.C.prob=0, p
   example.obs = function(i=1,t=1,...) {
     list(a=c("C","C"))
   }
+  action.set = function(i=1, t=1,...) {
+    list(a=c("C","D"))
+  }
   
-  nlist(run.stage.game, check.action,example.action,example.obs, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
+  nlist(run.stage.game, check.action,example.action,example.obs, action.set, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
 }
 
 

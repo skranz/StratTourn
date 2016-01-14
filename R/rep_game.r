@@ -44,15 +44,6 @@ examples.rep.game = function() {
   
 }
 
-forgiving.grim.trigger = function(obs,i,t,game,coop=TRUE,forgive.prob=0.2,...) {
-  coop = coop & all(obs$a == "C")
-  if (runif(1)<forgive.prob)
-    coop = TRUE
-  a = ifelse(coop,"C","D")
-  list(a=a,coop=coop)
-}
-
-
 get.strat.info = function(i=1,strat, game, game.states=NULL) {
   restore.point("get.strat.info")
   

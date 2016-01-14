@@ -1,0 +1,7 @@
+fields:
+  a:
+    label: Your action
+    help: |
+    choices:
+      C: C
+      D: D
