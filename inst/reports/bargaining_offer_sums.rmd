@@ -59,8 +59,8 @@ start.t = 1
 
 
 ```{r, echo=FALSE}
-rd = add.other.var(rd,c("x","cost"))
-rd$cost.pair = paste0(rd$cost,"_",rd$other.cost)
+rd = add.other.var(rd,c("x","cost","type"))
+rd$cost.pair = paste0(rd$type,"_",rd$other.type)
 cumd = mutate(group_by(rd,strat,other.strat, cost.pair), sum.single.x=x+other.x)
 td = summarise(group_by(cumd,strat,other.strat,t,cost.pair), sum.x=mean(sum.single.x), num.obs = length(t))
 

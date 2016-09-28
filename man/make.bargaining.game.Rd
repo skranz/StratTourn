@@ -5,17 +5,15 @@
 \title{Generate a bargaining game}
 \usage{
 make.bargaining.game(cost.low = 20, cost.high = 60, prob.low = 0.5,
-  prob.high = 0.5, uniform = FALSE, digits = 0, redraw.costs = FALSE,
-  price = 100, delta = 0.8, ...)
+  uniform = FALSE, digits = 0, redraw.costs = FALSE, price = 100,
+  delta = 0.8, ...)
 }
 \arguments{
 \item{cost.low}{The lower costs in the standard case and the lower bound of costs in the uniform case}
 
 \item{cost.high}{The higher costs in the standard case and the upper bound of costs in the uniform case}
 
-\item{prob.low}{The probability to draw the lower costs in the standard case}
-
-\item{prob.high}{The probability to draw the higher costs in the standard case}
+\item{prob.low}{The probability to draw the lower costs in the standard case. The probability of the higher case is thus 1-prob.low}
 
 \item{uniform}{If TRUE, then the costs are drawn from a uniform distribution between cost.low and cost.high instead of the two discrete choices cost.low and cost.high}
 
@@ -28,6 +26,6 @@ make.bargaining.game(cost.low = 20, cost.high = 60, prob.low = 0.5,
 \item{delta}{Probability of playing another round}
 }
 \description{
-Generate a bargaining game
+Note: In a previous version there was the parameter "uniform". In this new version the same effect can be achieved by setting the upper boundary of cost.low to the same value as the lower.boundary of cost.high and setting the probability of prob.low and prob.high to 0.5 each.
 }
 
