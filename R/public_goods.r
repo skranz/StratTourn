@@ -100,7 +100,7 @@ make.pg.game = function(n=5,MPCR=2/n, pun.cost = 1/3, max.x=100, max.pun=200,del
   check.action = function(ai,i,t,...) {
     return()
     #restore.point("check.action.pd")
-    stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible action: ", ai))
+    stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible action: ", ai, ". Feasible actions are 'C' or 'D'."))
   }
   example.action = function(i=1,t=1,...) {
     list(x=0, pun=rep(0,n))

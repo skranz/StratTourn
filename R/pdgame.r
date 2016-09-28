@@ -252,6 +252,9 @@ make.pd.game = function(uCC=1,uCD=-1,uDC=2,uDD=0,digits=2,err.D.prob = 0, err.C.
   example.obs = function(i=1,t=1,game.states,...) {
       list(a=c("C","C"),pm=game.states$payoff.matrix)
   }
+  action.set = function(i=1, t=1,...) {
+    list(a=c("C","D"))
+  }
   
   nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals, params = nlist(uCC,uCD,uDC,uDD,err.D.prob, err.C.prob), sym=TRUE, delta=delta, name="Noisy PD")
 }
