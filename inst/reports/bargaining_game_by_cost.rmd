@@ -50,8 +50,8 @@ if (!identical(used.strats,strats)) {
 }
 ```
 ```{r, echo=FALSE}
-rd = add.other.var(rd,c("x","cost"))
-rd$cost.pair = paste0(rd$cost,"_",rd$other.cost)
+rd = add.other.var(rd,c("cost","type"))
+rd$cost.pair = paste0(rd$type,"_",rd$other.type)
 sd <- summarise(group_by(rd,strat,other.strat, cost.pair), diff=mean(u-other.u), mean=mean(u))
 rank.strats = rank.dt$strat
 sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
@@ -64,7 +64,7 @@ ggplot(data=sd, aes(cost.pair, fill=strat, y=mean)) + geom_bar(stat="identity",p
 cat("\n")
 ```
 
-The plot shows the total mean utility for the cost distributions Low/Low, Low/High, High/Low and High/High respectively for each strategy pair.
+The plot shows the total mean utility for the cost distributions High/High, High/Low, Low/High, Low/Low respectively for each strategy pair.
 
 
 ## Utility Difference by Cost Combination
@@ -74,4 +74,4 @@ ggplot(data=sd, aes(cost.pair, fill=strat, y=diff)) + geom_bar(stat="identity",p
 cat("\n")
 ```
 
-The plot shows the mean difference in utility for the cost distributions Low/Low, Low/High, High/Low and High/High respectively for each strategy pair.
+The plot shows the mean difference in utility for the cost distributions High/High, High/Low, Low/High, Low/Low respectively for each strategy pair.

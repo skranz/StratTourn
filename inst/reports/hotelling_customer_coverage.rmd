@@ -66,6 +66,7 @@ rep.params <- tourn$game$params
 #which customers are served?
 bucket.n = resolution
 coverage <- function(p1,l1,p2,l2, rep.params, n=bucket.n){
+  restore.point("coverage")
   lb <- rep.params$lower.bound
   ub <- rep.params$upper.bound
   s <- rep.params$s
@@ -122,6 +123,8 @@ cov.df <- matrix(sapply(1:nrow(rd),simplify=TRUE,FUN=function(x){
 lb <- rep.params$lower.bound
 ub <- rep.params$upper.bound
 range <- seq(lb,ub,length.out=bucket.n+1)
+start.val <- range[1]
+end.val <- range[length(range)-1]
 colnames(cov.df) <- range[-length(range)]
 colnames(cov.df)[1] <- "Start.Bucket"
 colnames(cov.df)[ncol(cov.df)] <- "End.Bucket"
@@ -129,6 +132,9 @@ rd <- cbind(rd, cov.df)
 rdt = group_by(gather(rd,type,value,Start.Bucket:End.Bucket), strat, other.strat, t, type)
 
 sd <- summarise(rdt, coverage=mean(value))
+sd$type[sd$type=="Start.Bucket"] <- start.val
+sd$type[sd$type=="End.Bucket"] <- end.val
+sd$type <- as.numeric(sd$type)
 rank.strats = rank.dt$strat
 sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
 sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
@@ -138,6 +144,7 @@ sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
 
 ```{r, echo=FALSE, fig.width=12, fig.height=10}
 levelplot(coverage~t*type|other.strat+strat, sd,col.regions=heat.colors(1000), cuts=1000-1, xlab="t", ylab="coverage")
+#levelplot(coverage~t*type, sd,col.regions=heat.colors(1000), cuts=1000-1, xlab="t", ylab="coverage")
 cat("\n")
 ```
 

@@ -56,8 +56,8 @@ start.t = 1
 ```
 
 ```{r, echo=FALSE}
-rd = add.other.var(rd,c("cost"))
-rd$cost.pair = paste0(rd$cost,"_",rd$other.cost)
+rd = add.other.var(rd,c("cost","type"))
+rd$cost.pair = paste0(rd$type,"_",rd$other.type)
 
 ```
 
