@@ -140,7 +140,7 @@ sd$strat = factor(sd$strat, rank.strats, ordered=TRUE)
 sd$other.strat = factor(sd$other.strat, rank.strats, ordered=TRUE)
 
 ```
-## Shared knowledge by know how
+## Average Customer Coverage by Period
 
 ```{r, echo=FALSE, fig.width=12, fig.height=10}
 levelplot(coverage~t*type|other.strat+strat, sd,col.regions=heat.colors(1000), cuts=1000-1, xlab="t", ylab="coverage")

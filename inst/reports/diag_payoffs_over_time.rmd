@@ -14,8 +14,6 @@ library(tidyr)
 ```
 
 
-## Load package and tournament
-
 ```{r "init_data", include=FALSE}
 library(StratTourn)
 library(xtable)
@@ -68,7 +66,9 @@ start.t = 1
     get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u"), wvar="num.obs", spar=0.2))
   tsd$Strat = tsd$strat
   tsd$t = tsd$t+1900
-  state = '{"yZoomedIn":false,"orderedByY":false,"iconKeySettings":[],"yAxisOption":"3","xLambda":1,"xZoomedIn":false,"xZoomedDataMax":2524608000000,"iconType":"LINE","dimensions":{"iconDimensions":["dim0"]},"uniColorForNonSelected":false,"yZoomedDataMin":-0.001,"nonSelectedAlpha":0.4,"yZoomedDataMax":1,"time":"2050","sizeOption":"_UNISIZE","showTrails":false,"orderedByX":false,"xZoomedDataMin":-2177452800000,"yLambda":1,"xAxisOption":"_TIME","playDuration":15000,"duration":{"timeUnit":"Y","multiplier":1},"colorOption":"2"};'
+  state = '
+  {"nonSelectedAlpha":0.4,"duration":{"multiplier":1,"timeUnit":"Y"},"sizeOption":"_UNISIZE","uniColorForNonSelected":false,"xZoomedDataMin":-2177452800000,"yLambda":1,"time":"1951","playDuration":15000,"colorOption":"2","showTrails":false,"yZoomedDataMin":-0.4,"xZoomedIn":false,"orderedByX":false,"orderedByY":false,"xZoomedDataMax":-599616000000,"xLambda":1,"yZoomedIn":false,"yZoomedDataMax":16,"yAxisOption":"3","iconType":"LINE","xAxisOption":"_TIME","dimensions":{"iconDimensions":["dim0"]}}
+  '
 
   tsd = as.data.frame(tsd)
   tsd$const = 1
@@ -87,4 +87,5 @@ plot(t.obs, xlab="t",ylab="matches (log scale)",main="Number of matches with a p
 grid(nx = NA, ny = NULL, col = "lightgray", lty = "dotted",
      lwd = par("lwd"), equilogs = TRUE)
 ```
+
 

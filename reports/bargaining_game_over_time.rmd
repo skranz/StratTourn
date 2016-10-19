@@ -68,6 +68,7 @@ total = summarise(group_by(rd,strat), u=round(mean(u),2))
 total$cost.pair ="all"
 
 sd = summarise(group_by(rd,cost.pair,strat), u=round(mean(u),2))
+sd = ungroup(sd)
 sd = rbind(total,sd)
 sd$cost.pair = paste0("u_",sd$cost.pair)
 d = spread(ungroup(sd),key = cost.pair,value = u)
