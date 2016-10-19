@@ -31,7 +31,7 @@ view.data.table = function(x,...) {
   view.data.frame(as.data.frame(x),...)
 }
 
-view.data.frame = function(x,...,mode=get.view.mode(),style=get.view.style(mode), digits=NULL, scientific=FALSE) {
+view.data.frame = function(x,...,mode=get.view.mode(),style=get.view.style(mode), digits=NULL, scientific=FALSE, rownames.shiny=FALSE) {
   restore.point("view.data.frame")
   if (mode=="html") {
     library(xtable)
@@ -46,10 +46,10 @@ view.data.frame = function(x,...,mode=get.view.mode(),style=get.view.style(mode)
     # return(txt)
   } else if (mode=="shiny_report") {
     library(shiny)
-    cat(renderTable(x)())      
+    cat(renderTable(x, rownames = rownames.shiny)())      
   } else if (mode=="shiny") {
     library(shiny)
-    return(renderTable(x))  
+    return(renderTable(x, rownames = rownames.shiny))  
   } else {
     print(x, digits=digits)
   }

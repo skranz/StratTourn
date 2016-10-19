@@ -28,7 +28,7 @@ shown.strats = strats
 
 ```{r, echo=FALSE, results='asis'}
 view(
-  get.matches.vs.matrix(md, br.sign="*")
+  get.matches.vs.matrix(md, br.sign="*"), rownames.shiny = TRUE
 )
 #d= get.matches.vs.grid(md)
 #library(ggplot2)

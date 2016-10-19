@@ -12,9 +12,6 @@ library(reshape2)
 library(googleVis)
 ```
 
-
-## Load package and tournament
-
 ```{r "init_data", include=FALSE}
 library(StratTourn)
 library(xtable)
@@ -61,8 +58,6 @@ start.t = 1
 
 ```{r, echo=FALSE, results='asis'}
 library(dplyr)
-fun = function(rd, start.t, end.t) {
-  restore.point("fun...")
   td = summarise(group_by(rd,strat,t), u=mean(u),other.u = mean(other.u), num.obs = length(t))
   td = as.data.frame(td)
   t.seq = start.t:min(max(td$t),end.t)
@@ -70,17 +65,17 @@ fun = function(rd, start.t, end.t) {
     get.smoothed.vals(.,xout=t.seq, xvar="t",yvar=c("u","other.u"), wvar="num.obs", spar=0.2))
   tsd$Strat = tsd$strat
   tsd$t = tsd$t+1900
-  state = '{"yZoomedIn":false,"xLambda":1,"colorOption":"2","nonSelectedAlpha":0.4,"xZoomedDataMax":-631152000000,"iconType":"LINE","yAxisOption":"3","uniColorForNonSelected":false,"yZoomedDataMin":0,"dimensions":{"iconDimensions":["dim0"]},"yZoomedDataMax":1.2,"orderedByY":false,"orderedByX":false,"iconKeySettings":[],"xAxisOption":"_TIME","yLambda":1,"xZoomedIn":false,"xZoomedDataMin":-2177452800000,"time":"1950","playDuration":15000,"duration":{"timeUnit":"Y","multiplier":1},"showTrails":false,"sizeOption":"_UNISIZE"};'
+  state = '
+{"iconType":"LINE","duration":{"timeUnit":"Y","multiplier":1},"xAxisOption":"_TIME","orderedByY":false,"nonSelectedAlpha":0.4,"yLambda":1,"dimensions":{"iconDimensions":["dim0"]},"showTrails":false,"yZoomedDataMin":-0.5,"xLambda":1,"yZoomedDataMax":13,"playDuration":15000,"yAxisOption":"3","time":"1951","colorOption":"2","yZoomedIn":false,"orderedByX":false,"sizeOption":"_UNISIZE","xZoomedIn":false,"xZoomedDataMin":-2177452800000,"uniColorForNonSelected":false,"xZoomedDataMax":-599616000000}
+  '
   
   tsd = as.data.frame(tsd)
   tsd$const=1
-  p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "other.u",
+  p = gvisMotionChart(tsd, idvar = "Strat", timevar = "t", xvar = "u",
     yvar = "u", colorvar = "strat", sizevar = "const", 
     options = list(state=state))
   #plot(p)
   print(p, tag="chart")
-}
-fun(rd, start.t, end.t)
 ```
 
 ```{r, echo=FALSE, fig.height=8}
