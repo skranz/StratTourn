@@ -123,6 +123,7 @@ n.evolve = function(initial=NULL,dt,generations = 100,alpha=0.1, min.shares=0, s
 }
 
 detailed.evolve.return = function(s.mat, u.mat) {
+
   df = as.data.frame(s.mat)
   df$generation = 1:NROW(df)
   smdf = melt(df,id.vars = "generation")
@@ -136,7 +137,7 @@ detailed.evolve.return = function(s.mat, u.mat) {
   mdf = merge(smdf,umdf, by=c("generation","strategy"))
   mdf$strat = mdf$strategy
   
-  mdf$time = as.Date(paste0(mdf$generation+2000,"-01-01"))
+  mdf$time = as.Date(mdf$generation, origin="2000-01-01")
   list(grid=mdf, shares.mat=s.mat, u.mat=u.mat)
   
 }
