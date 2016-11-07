@@ -243,19 +243,18 @@ examples.get.matches.vs.matrix = function() {
 
 get.matches.vs.matrix = function(dt=tourn$dt, tourn, var="u", br.sign=NULL, round=3) {
   restore.point("get.matches.vs.matrix")
-  num.u = NROW(dt)
-  weight.factor = num.u / sum(dt$u.weight)
-  
+
   d = copy(dt)
-  d$VAR = d[[var]] * d$u.weight * weight.factor
-  #d = s_mutate(dt, paste0("VAR=",var,"*u.weight * weight.factor"))
-  d = select(d,match.id,i,strat,VAR)
+  d$VAR = d[[var]]
+  d = select(d,match.id,i,strat,VAR,u.weight)
   d1 = filter(d, i==1)
   d2 = filter(d, i==2)
-  dw = data.table(match.id=d1$match.id, strat1=d1$strat, strat2=d2$strat, u1=d1$VAR, u2=d2$VAR)
+  dw = data.table(match.id=d1$match.id, strat1=d1$strat, strat2=d2$strat, u1=d1$VAR, u2=d2$VAR, u.weight=d1$u.weight)
   dw = arrange(dw, strat1, strat2)
-  ds1 = summarise(group_by(dw,strat1, strat2), u1=mean(u1), w=length(u1))
-  ds2 = summarise(group_by(dw,strat1, strat2), u1=mean(u2), w=length(u2))
+  #importance of matching
+  dw = mutate(group_by(dw,strat1, strat2), imp=u.weight/sum(u.weight))
+  ds1 = summarise(group_by(dw,strat1, strat2), u1=sum(u1*imp), w=length(u1))
+  ds2 = summarise(group_by(dw,strat1, strat2), u1=sum(u2*imp), w=length(u2))
   setnames(ds2,c("strat1","strat2"),c("strat2","strat1"))
   dsl =rbind(ds1, ds2, use.names=TRUE)
   ds = summarise(group_by(dsl, strat1, strat2), u=sum(u1*w)/sum(w))

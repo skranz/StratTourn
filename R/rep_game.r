@@ -199,7 +199,7 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
       # Use only those strat.par that are not returned as a strat.state
       act.strat.par = strat.par[[i]][setdiff(names(strat.par[[i]]),names(strat.states[[i]]))]
       args = c(list(obs = obs.i,i=i,t=t),game$show.par,game.states,strat.states[[i]], act.strat.par)
-      restore.point("within.run.rep.game.ii")
+      #restore.point("within.run.rep.game.ii")
       tryCatch({ 
         strat.res <- do.call(strat[[i]],args)
         #Has action parameter been returned?
@@ -245,7 +245,7 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
           stop(err, call.=FALSE)
         }
       )
-      restore.point("within.run.rep.game")
+      #restore.point("within.run.rep.game")
       a[[i]] = strat.res[si[[i]]$actions]  
       strat.states[[i]] = strat.res[si[[i]]$strat.states]
       game$check.action(ai=a[[i]],i=i,t=t)
