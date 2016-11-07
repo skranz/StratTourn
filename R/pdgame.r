@@ -25,7 +25,7 @@ examples.pd = function() {
   tourn = run.tournament(tourn=tourn, R = 3)
   set.storing(TRUE)
   
-  aptourn  = active.passive.tourn(astrat = nlist(always.defect), ptourn = tourn, game = game)
+  aptourn  = active.passive.tourn(astrat = nlist(always.coop), ptourn = tourn, game = game)
 
   atourn = aptourn$tourns[[1]]
   atourn = run.tournament(tourn=atourn,R=2)
