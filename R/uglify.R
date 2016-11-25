@@ -16,6 +16,9 @@ examples.uglify.strat = function() {
   set.storing(TRUE)
   run.rep.game(delta=0.7, game=game, strat = strats, detailed.return=!FALSE)
 
+  
+  tourn = init.tournament(strat=list(strat1=ustrat, strat2=ustrat), game=game)
+  tourn = run.tournament(tourn)
 }
 
 #' Makes a strategy (function) hard to read
