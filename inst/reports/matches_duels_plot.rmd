@@ -73,7 +73,7 @@ Hints for interpreting the graph:
     - top-right corner: effective cooperation, both strategies have high payoffs
     - bottom-left corner: mutual destruction, both strategies get low payoffs
     - top-left corner: strategy 1 is exploited by strategy 2  
-    - top-right corner: strategy 1 exploits strategy 2
+    - bottom-right corner: strategy 1 exploits strategy 2
     
   - A line of bubbles of the same color allows to compare a strategy's outcomes against all other strategies. The shape of the line can be interpreted:
     - A positive slope of strategy's bubbles suggest that the strategies behaves reciprocal: a higher own payoff corresponds to a higher payoff of other strategies.
