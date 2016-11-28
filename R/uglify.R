@@ -1,4 +1,5 @@
 examples.uglify.strat = function() {
+
   ustrat = uglify.strat(tit.for.tat)
   ustrat = uglify.strat(strange.defector)
 
@@ -71,6 +72,13 @@ uglify.function = function(f,keep.funs=NULL, keep.vars = names(formals(f)), ugli
   for (i in seq_along(funs)) {
     ufun.fun = fun.name.to.fun(funs[i])
     assign(ufuns[i],ufun.fun,fun.env)
+
+    # also generate assignemt functions like e.g. `[<-`    
+    arrow.fun = paste0(funs[i],"<-")
+    if (exists(arrow.fun)) {
+      aufun.fun = fun.name.to.fun(arrow.fun)
+      assign(paste0(ufuns[i],"<-"),aufun.fun,fun.env)
+    }
   }
   ls(fun.env)
 
@@ -91,8 +99,11 @@ uglify.function = function(f,keep.funs=NULL, keep.vars = names(formals(f)), ugli
 }
 
 ignore.uglify.syms = function(call, ignore.vars=FALSE) {
-  if (is.name(call) & ignore.vars)
-    return(as.character(call))
+  if (is.name(call) & ignore.vars) {
+    sym = as.character(call)
+    if (substring(sym,1,1) %in% c(letters,LETTERS,".","_"))
+      return(sym)
+  }
   
   if (length(call)<=1) return(NULL)
   if (call[[1]]=="$") {
