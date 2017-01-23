@@ -1,8 +1,8 @@
 examples.uglify.strat = function() {
-
+  
   ustrat = uglify.strat(tit.for.tat)
   ustrat = uglify.strat(strange.defector)
-
+  
   strat(obs = list(a=c("C","C")),t=2, i=1)
   ustrat(obs = list(a=c("C","C")),t=2, i=1)
   
@@ -12,11 +12,11 @@ examples.uglify.strat = function() {
   
   # Pick a pair of strategies
   strats = nlist(ustrat,ustrat)
-
+  
   # Let the strategies play against each other
   set.storing(TRUE)
   run.rep.game(delta=0.7, game=game, strat = strats, detailed.return=!FALSE)
-
+  
   
   tourn = init.tournament(strat=list(strat1=ustrat, strat2=ustrat), game=game)
   tourn = run.tournament(tourn)
@@ -43,36 +43,36 @@ uglify.strat = function(strat,keep.vars=names(formals(strat)),keep.funs=NULL,...
 uglify.function = function(f,keep.funs=NULL, keep.vars = names(formals(f)), uglify.strings=TRUE) {
   restore.point("uglify.function")
   call = body(f)
-
+  
   ign = ignore.uglify.syms(call)
   
   funs = setdiff(find.funs(call),c(keep.funs,"return",ign))
   vars = setdiff(find.variables(call),c(keep.vars,ign))
-
+  
   ufuns = ugly.name(length(funs))
   uvars = ugly.name(length(funs))
-
+  
   syms = c(funs,vars)
   usyms = c(ufuns, uvars)
-
+  
   usyms.sym = lapply(usyms, as.name)
   names(usyms.sym) = syms
   ubody = substitute.call(call, usyms.sym)
-
-
+  
+  
   #nums = find.numbers(call)
-
-
-
+  
+  
+  
   fun.env = new.env(parent = environment(f))
-
+  
   if (uglify.strings)
     ubody = uglify.string.constants(ubody, fun.env)
-
+  
   for (i in seq_along(funs)) {
     ufun.fun = fun.name.to.fun(funs[i])
     assign(ufuns[i],ufun.fun,fun.env)
-
+    
     # also generate assignemt functions like e.g. `[<-`    
     arrow.fun = paste0(funs[i],"<-")
     if (exists(arrow.fun)) {
@@ -81,19 +81,19 @@ uglify.function = function(f,keep.funs=NULL, keep.vars = names(formals(f)), ugli
     }
   }
   ls(fun.env)
-
+  
   form = formals(f)
   na = names(form)
   ind = match(na, vars)
   na[!is.na(ind)] = uvars[ind[!is.na(ind)]]
   change = na %in% vars
   names(form) = na
-
-
+  
+  
   g = f
   body(g) = ubody
   formals(g) = form
-
+  
   environment(g) = fun.env
   g
 }
@@ -156,7 +156,7 @@ fun.name.to.fun = function(fun.name, direct= (!substring(fun.name,1,1) %in% c(le
   
   #bt = if (substring(fun.name,1,1) %in% c(letters,LETTERS)) "" else "`"
   bt =  "`"
-
+  
   if (direct) {
     code=paste0(bt,fun.name,bt)
     fun = eval(parse.as.call(code))
@@ -165,7 +165,6 @@ fun.name.to.fun = function(fun.name, direct= (!substring(fun.name,1,1) %in% c(le
     fun = eval(parse.as.call(code))
   }
   fun
-
+  
 }
-
 
