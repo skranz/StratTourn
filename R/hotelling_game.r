@@ -118,6 +118,10 @@ the.undercutter = function(obs,i,t,cut=0.01,...) {
 hotelling.profits <- function(lower.bound=0, upper.bound=1, s=1, t=1, print.details=FALSE, choice1, choice2){
   restore.point("hotelling.profits")
   
+  if(lower.bound>=upper.bound){
+    stop("lower.bound has to be less than upper.bound")
+  }
+  
   #Transform variables to better fit formulas
   #Now l1/p1 depict the lower location
   if(choice1$l<=choice2$l){
@@ -140,14 +144,14 @@ hotelling.profits <- function(lower.bound=0, upper.bound=1, s=1, t=1, print.deta
   x.upper1 <- l1 + (s-p1)/t
   x.upper2 <- l2 + (s-p2)/t
   x.indifferent <- (p2-p1)/(2*t) + 1/2 * (l1+l2)
-  ## x.lower may never be left of lower.bound
-  x.lower1 <- max(x.lower1,lower.bound)
-  x.lower2 <- max(x.lower2,lower.bound)
-  x.upper1 <- min(x.upper1, upper.bound)
-  x.upper2 <- min(x.upper2, upper.bound)
+  ## x.lower may never be left of lower.bound but should not be higher as upper.bound
+  x.lower1 <- min(max(x.lower1,lower.bound), upper.bound)
+  x.lower2 <- min(max(x.lower2,lower.bound), upper.bound)
+  x.upper1 <- max(min(x.upper1, upper.bound), lower.bound)
+  x.upper2 <- max(min(x.upper2, upper.bound), lower.bound)
+  x.indifferent <- max(min(x.indifferent, upper.bound), lower.bound)
   
   #calculate part of interval which is relevant for profit
-  area.no.go <- (upper.bound-max(x.upper1,x.upper2)) + (min(x.lower1,x.lower2)-lower.bound) + max(0,x.lower2-x.upper1)
   if(l1<= x.indifferent && x.indifferent<=l2 && l1!=l2){ 
     #standard case -> x.indifferent lies between l1 & l2
     area1 <- min(x.indifferent,x.upper1)-x.lower1
@@ -171,8 +175,7 @@ hotelling.profits <- function(lower.bound=0, upper.bound=1, s=1, t=1, print.deta
   
   if(print.details){
     p.vec <- c()
-    p.vec[1] <- paste0("area.no.go",sep=": ",area.no.go)
-    p.vec[length(p.vec)+1] <- paste0("area1",sep=": ",area1)
+    p.vec[1] <- paste0("area1",sep=": ",area1)
     p.vec[length(p.vec)+1] <- paste0("area2",sep=": ",area2)
     p.vec[length(p.vec)+1] <- paste0("x.lower1",sep=": ",x.lower1)
     p.vec[length(p.vec)+1] <- paste0("x.upper1",sep=": ",x.upper1)
@@ -249,6 +252,8 @@ make.hotelling.game = function(lower.bound=0, upper.bound=1, s=1, t.distance=1, 
     restore.point("check.action.hotelling")
     a = ai$a
     is.error = FALSE
+    eps <- 10e-5
+    
     #General structure
     if(length(a)!=2){
       is.error = TRUE
@@ -262,9 +267,17 @@ make.hotelling.game = function(lower.bound=0, upper.bound=1, s=1, t.distance=1, 
     if (!(!is.null(a$p) && is.finite(a$p) && length(a$p)==1)) {
       stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible p: ", a$p))
     }
+    #validity of p
+    if(a$p+eps<0 || a$p-eps>s){
+      stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible p: ", a$p,". p is either higher than s or lower than 0."))
+    }
     #Structure of l
     if (!(!is.null(a$p) && is.finite(a$l) && length(a$l)==1)) {
       stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible l: ", a$p))
+    }
+    #validity of l
+    if(a$l+eps<lower.bound || a$l-eps>upper.bound){
+      stop(paste0("player ",i, "'s strategy in period ",t, " returned an out of bound location: ", a$l))
     }
     return()
   }
