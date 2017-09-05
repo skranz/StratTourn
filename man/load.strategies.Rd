@@ -9,4 +9,3 @@
 \description{
 Loads strategies from a R file and returns a list of strategies
 }
-

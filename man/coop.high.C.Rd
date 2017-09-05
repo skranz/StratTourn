@@ -11,4 +11,3 @@ A strategy for the iterated prisoners dilemma
 It chooses the action with the highest sum value of the payoff matrix (i.e. always.defect in the case of the standard version);
 see make.pd.game
 }
-

@@ -9,4 +9,3 @@ current.random.state()
 \description{
 Gets the name of the current random state
 }
-

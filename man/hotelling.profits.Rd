@@ -26,4 +26,3 @@ hotelling.profits(lower.bound = 0, upper.bound = 1, s = 1, t = 1,
 We consider a hotelling game where two firms set price and location at the same time. The Utility Function of the uniformly distributed customers is 
 U = s - t.distance*|x-l|-p.
 }
-

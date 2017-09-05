@@ -102,6 +102,58 @@ the.undercutter = function(obs,i,t,cut=0.01,...) {
   return(list(a=action, cut=cut))
 }
 
+#' Waits for Input of Human Player in Hotelling Game
+#' 
+#' 
+human.player.ht = function(obs,i,t,...){
+  restore.point("human.player.ht")
+  
+  # Extract variables from obs 
+  j = 3-i #Whats the number of the other player?
+  obs.pj = obs$a[[j]]$p #What was the price of the other firm last round?
+  obs.pi = obs$a[[i]]$p #What was the price of my firm last round?
+  obs.lj = obs$a[[j]]$l #What was the location of the other firm last round?
+  obs.li = obs$a[[i]]$l #What was the location of my firm last round?
+  
+  if(t!=1){
+    profits <- hotelling.profits(lower.bound=game$params$lower.bound, upper.bound = game$params$upper.bound, s=game$params$s, t=game$params$t.distance, choice1=list(p=obs.pi, l=obs.li), choice2=list(p=obs.pj, l=obs.lj))
+    cat(paste0("Your location: ",obs.li," Your price: ",obs.pi," Your profit: ",round(profits$choice1$pi,3), "\n","Other location: ",obs.lj," Other price: ",obs.pj," Other profit: ",round(profits$choice2$pi,3),"\n",collapse=" "))
+  } 
+  cat("Which location do you choose? Write a number or \"Stop\"")
+  
+  ok <- FALSE
+  while(!ok){
+    line <- readline()
+    if(line[1]=="Stop"){
+      stop("Player stopped")
+    } else if(!is.na(as.numeric(line[1]))){
+      location = as.numeric(line[1])
+      ok <- TRUE
+    } else {
+      cat("Not a valid number. Please retry.")
+    }
+  }
+  
+  cat("Which price do you choose? Write a number or \"Stop\"")
+  
+  ok <- FALSE
+  while(!ok){
+    line <- readline()
+    if(line[1]=="Stop"){
+      stop("Player stopped")
+    } else if(!is.na(as.numeric(line[1]))){
+      price = as.numeric(line[1])
+      ok <- TRUE
+    } else {
+      cat("Not a valid number. Please retry.")
+    }
+  }
+  
+  action=list(p=price,l=location)
+  
+  return(list(a=action))
+}
+
 
 #' Calculates the profits of a hotelling game
 #'

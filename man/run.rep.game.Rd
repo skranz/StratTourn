@@ -21,4 +21,3 @@ run.rep.game(delta = game$delta, game, strat, T.max = NULL,
 \description{
 Runs a repeated game
 }
-

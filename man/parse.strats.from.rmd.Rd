@@ -17,4 +17,3 @@ A list with codes and information about your strategy. If the strategies cannot 
 \description{
 Parse strategies from a rmd solution file
 }
-

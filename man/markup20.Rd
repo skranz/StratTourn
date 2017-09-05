@@ -9,4 +9,3 @@ markup20(obs, i, t, markup = 20, ...)
 \description{
 An example strategy that adds a fixed markup of 20 above the own production cost
 }
-

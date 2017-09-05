@@ -10,4 +10,3 @@ run.dt(dt, code, rows = NULL, by = NULL, with = TRUE,
 \description{
 Runs the string code on a data table
 }
-

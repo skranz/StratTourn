@@ -10,4 +10,3 @@ strange.defector(obs, i, t, still.defect = 0, ...)
 A strategy for the iterated prisoners dilemma;
 see make.pd.game
 }
-

@@ -18,4 +18,3 @@ the.undercutter(obs, i, t, cut = 0.01, ...)
 \description{
 This strategy copies the location of the opponent and sets the price as "price of opponent - cut"
 }
-

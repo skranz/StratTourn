@@ -9,4 +9,3 @@ pos.in.seq.of.ones(x)
 \description{
 the function returns a vector of length(x) containing for each 1 the position within each sequence of 1s and a 0 for each 0.
 }
-

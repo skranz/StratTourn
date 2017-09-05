@@ -10,4 +10,3 @@ make.rps.game(delta = NULL, T = NULL, cost.r = 0.75, cost.p = 0,
 \description{
 Generate a rock papers scissors game
 }
-

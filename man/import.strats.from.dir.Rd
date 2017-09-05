@@ -17,4 +17,3 @@ a list that contains a list for each scenario. The list for each scenario has a 
 \description{
 Import all strategies from a directory with all team's solutions (as Rmd files) from stage 1 of a tournament
 }
-

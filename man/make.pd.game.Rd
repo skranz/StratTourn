@@ -30,4 +30,3 @@ make.pd.game(uCC = 1, uCD = -1, uDC = 2, uDD = 0, digits = 2,
 \description{
 Generate an iterated Prisoners Dilemma game
 }
-
