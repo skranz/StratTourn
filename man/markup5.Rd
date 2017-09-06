@@ -9,4 +9,3 @@ markup5(obs, i, t, markup = 5, ...)
 \description{
 An example strategy that adds a fixed markup of 5 above the own production cost
 }
-

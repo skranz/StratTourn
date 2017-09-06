@@ -10,4 +10,3 @@ make.pg_cost.game(cost.min = 0.3, cost.max = 1.3, new.cost.prob = 0.5,
 \description{
 Generate a (noisy) Prisoners' Dilemma game
 }
-

@@ -10,4 +10,3 @@
 \description{
 Saves a tournament to a file
 }
-

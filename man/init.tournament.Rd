@@ -11,4 +11,3 @@ init.tournament(strat, game, matchings = NULL, score.fun = "u",
 \description{
 Inits a tournament object
 }
-

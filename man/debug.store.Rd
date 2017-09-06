@@ -9,4 +9,3 @@ debug.store(strat, i, t, stage = NULL, do.store = TRUE)
 \description{
 store objects when called from a function
 }
-

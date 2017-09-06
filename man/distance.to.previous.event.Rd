@@ -9,4 +9,3 @@ distance.to.previous.event(x)
 \description{
 the function returns a vector of length(x) containing for each index i the distance to the previous entry of a 1, if x[i]=1 we return 0. If the vector starts with 0's, we set the distance for these 0 entries to Inf.
 }
-

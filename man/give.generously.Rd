@@ -18,4 +18,3 @@ give.generously(obs, i, t, more = 2, ...)
 \description{
 Strategy which shares (in the research agreement game) as much as the other firm + more, if possible; in the first period everything
 }
-

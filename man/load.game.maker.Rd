@@ -11,4 +11,3 @@ A game maker is a function that can generate a game}
 Loads a game maker
 A game maker is a function that can generate a game
 }
-

@@ -44,8 +44,13 @@ examples.rep.game = function() {
   
 }
 
-get.strat.info = function(i=1,strat, game, game.states=NULL) {
+get.strat.info = function(i=1,strat, game, game.states=NULL, human=FALSE) {
   restore.point("get.strat.info")
+  
+  if(human){
+    ex.action = game$example.action(i=i)
+    return(nlist(actions=names(ex.action), strat.states=NULL, strat.par=NULL))
+  }
   
   ex.obs = game$example.obs(i=i, game.states=game.states)
   ex.action = game$example.action(i=i)
@@ -117,6 +122,10 @@ sample.T = function(delta, sample.delta = delta) {
 run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.return = TRUE, strat.seed=NULL, game.seed = NULL, do.store = TRUE,strat.par=NULL, sample.delta = delta, match.id = sample.int(2147483647,1), T=game$T) {
   restore.point("run.rep.game")
   
+  get.human.strategy.names <- function(){
+    return(c("human.player.pd","human.player.rps","human.player.bg","human.player.ra","human.player.ht"))
+  }
+  
   gbos$do.store = do.store
    
   if (is.null(game.seed))
@@ -174,7 +183,12 @@ run.rep.game = function(delta=game$delta, game, strat, T.max = NULL,detailed.ret
   
   # Strategy infos
   si = lapply(strat.id, function(i) {
-    get.strat.info(i=i, strat=strat[[i]], game=game, game.states=game.states)
+    if(names(strat[i]) %in% get.human.strategy.names()){
+      human = TRUE
+    } else {
+      human = FALSE
+    }
+    get.strat.info(i=i, strat=strat[[i]], game=game, game.states=game.states, human=human)
   })
   strat.states = lapply(strat.id, function(i) {
     list()

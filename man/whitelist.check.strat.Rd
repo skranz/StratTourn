@@ -9,4 +9,3 @@ whitelist.check.strat(strat)
 \description{
 Checks whether a given strategy passes a whitelist
 }
-

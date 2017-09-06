@@ -128,6 +128,43 @@ coop.high.C = function(obs,i,t,...){
   return(list(a=my.action))
 }
 
+#' Waits for Input of Human Player in Prisoners Dilemma Game
+#' 
+#' 
+human.player.pd = function(obs,i,t,...){
+  restore.point("human.player.pd")
+  j=3-i
+    
+  if(t==1){
+    cat("What do you want to do in your first round? Use \"C\", \"D\" or \"Stop\"")
+  } else {
+    other <- obs$a[j]
+    me <- obs$a[i]
+    cat(paste0("You: ",me,"\n","Other Strategy: ",other,"\n",collapse=" "))
+    cat("What do you want to do?")
+  }
+  
+  ok <- FALSE
+  
+  while(!ok){
+    line <- readline()
+    if(line[1]=="D"||line[1]=="C"||line[1]=="d"||line[1]=="c"||line[1]=="Stop"){
+      if(line[1]=="D"||line[1]=="d"){
+        my.action <- "D"
+      } else if (line[1]=="C"||line[1]=="c"){
+        my.action <- "C"
+      } else {
+        stop("Player stopped")
+      }
+      ok <- TRUE
+    } else {
+      cat("Only D or C are allowed. Please retry.")
+    }
+  }
+  
+  return(list(a=my.action))
+}
+
 #' Generate an iterated Prisoners Dilemma game
 #' 
 #' @param uCC Utility in the case 'both players cooperate'. If specified in form of a vector (e.g. c(0,2)), then a random value is uniformly drawn each round and presented to the strategies.

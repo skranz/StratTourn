@@ -13,4 +13,3 @@ run.tournament(tourn, strat = tourn$strat, matchings = tourn$matchings,
 \description{
 By setting backup.each.R to a number, say 10, a backup of the tournament will be created after each 10 repetitions
 }
-

@@ -38,4 +38,3 @@ study.strats.and.answers(strats, answers = NULL, strat.par = NULL,
 \description{
 The function is based on simulation.study in sktools
 }
-

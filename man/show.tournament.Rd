@@ -10,4 +10,3 @@ show.tournament(tourn = NULL, tourn.file = NULL, launch.browser = TRUE,
 \description{
 Analyse a tournament interactively in web browser
 }
-

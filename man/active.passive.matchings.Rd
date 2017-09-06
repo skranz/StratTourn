@@ -22,4 +22,3 @@ Can be useful if we already have tournament data in which the passive strats
 play against each other and we want it to add the active strats to this
 existing tournament data.
 }
-

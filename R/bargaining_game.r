@@ -26,6 +26,48 @@ markup20 = function(obs,i,t,markup=20,...) {
   return(list(x=cost+markup, markup=markup))
 }
 
+#' Waits for Input of Human Player in Bargaining Game
+#' 
+#' 
+human.player.bg = function(obs,i,t,...){
+  restore.point("human.player.bg")
+  
+  # Extract variables from obs 
+  cost = obs$cost
+  j = 3-i
+  obs.xj = obs$x[j]
+  obs.xi = obs$x[i]
+  
+  if(t!=1){
+    D = obs.xi+obs.xj
+    # Feasible x 
+    if (D<=game$params$price) {
+      payoff = obs.xi + (game$params$price-D)/2 -cost  
+    } else {
+      payoff = 0
+    }
+    cat(paste0("Your share demand: ",obs.xi,"\n","Share demand of other strategy: ",obs.xj,"\n",collapse=" "))
+    cat(paste0("Your payoff was: ",payoff,"\n\n",collapse=" "))
+  }
+  cat(paste0("Your costs are ",cost,"\n",collapse=" "))
+  cat("Which share do you demand? Write a number or \"Stop\"")
+  
+  ok <- FALSE
+  while(!ok){
+    line <- readline()
+    if(line[1]=="Stop"){
+      stop("Player stopped")
+    } else if(!is.na(as.numeric(line[1]))){
+      my.demand = as.numeric(line[1])
+      ok <- TRUE
+    } else {
+      cat("Not a valid number. Please retry.")
+    }
+  }
+
+  return(list(x=my.demand))
+}
+
 
 #' The code inside can be used to explore the behavior of strategies for the PD game
 examples.bargaining.game = function() {
@@ -158,7 +200,7 @@ make.bargaining.game = function(cost.low=20,cost.high=60,prob.low=0.5, digits=2,
     nlist(costs, cost.type=cost.type)
   }
   
-  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.low,cost.high,prob.low, redraw.costs), sym=TRUE, delta=delta, name="bargaining")
+  nlist(run.stage.game, initial.game.states, check.action,example.action,example.obs, n=2, private.signals=TRUE, params = nlist(cost.low,cost.high,prob.low,price, redraw.costs), sym=TRUE, delta=delta, name="bargaining")
 }
 
 

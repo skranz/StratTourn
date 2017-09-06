@@ -46,6 +46,45 @@ always.s = function(i,t,...) {
   return(list(a="s"))
 }
 
+#' Waits for Input of Human Player in Rock-Papers-Scissors
+#' 
+#' 
+human.player.rps = function(obs,i,t,...){
+  restore.point("human.player.rps")
+  j=3-i
+  
+  if(t==1){
+    cat("What do you want to do in your first round? Use \"r\", \"p\", \"s\" or \"Stop\"")
+  } else {
+    other <- obs[j]
+    me <- obs[i]
+    cat(paste0("You: ",me,"\n","Other Strategy: ",other,"\n",collapse=" "))
+    cat("What do you want to do?")
+  }
+  
+  ok <- FALSE
+  
+  while(!ok){
+    line <- readline()
+    if(line[1]=="R"||line[1]=="P"||line[1]=="S"||line[1]=="r"||line[1]=="p"||line[1]=="s"||line[1]=="Stop"){
+      if(line[1]=="R"||line[1]=="r"){
+        my.action <- "r"
+      } else if (line[1]=="S"||line[1]=="s"){
+        my.action <- "s"
+      } else if (line[1]=="P"||line[1]=="p"){
+        my.action <- "p"
+      } else {
+        stop("Player stopped")
+      }
+      ok <- TRUE
+    } else {
+      cat("Use \"r\", \"p\", \"s\" or \"Stop\" Please retry.")
+    }
+  }
+  
+  return(list(a=my.action))
+}
+
 #' Generate a rock papers scissors game
 make.rps.game = function(delta=NULL,T=NULL,cost.r=0.75, cost.p=0, cost.s=0,...) {
   

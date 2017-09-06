@@ -17,4 +17,3 @@ the value of expr evaluated under the specifed random seed
 \description{
 This function can be useful in simulation studies in which some random variables, e.g. explanatory variables X shall always be drawn in the same fashion, while other data, like disturbances epsilon shall differ between runs. One can then draw the X using with.random.seed to guarantee the same X in every simulation run.
 }
-

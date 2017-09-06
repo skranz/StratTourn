@@ -10,4 +10,3 @@
 \description{
 Loads a tournament from a file
 }
-

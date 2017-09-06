@@ -9,4 +9,3 @@ init.random.state(name = ".GLOBAL", seed = NULL)
 \description{
 Sets the random number state to a state specified by name
 }
-

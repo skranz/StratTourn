@@ -16,4 +16,3 @@ most.of.it(obs, i, t, ...)
 \description{
 An example strategy that always shares n-1 of its know-how in the research agreement game
 }
-

@@ -9,4 +9,3 @@ examples.pd()
 \description{
 The code inside can be used to explore the behavior of strategies for the PD game
 }
-

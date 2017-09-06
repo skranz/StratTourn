@@ -10,4 +10,3 @@ make.pg.game(n = 5, MPCR = 2/n, pun.cost = 1/3, max.x = 100,
 \description{
 Generate a public goods game
 }
-

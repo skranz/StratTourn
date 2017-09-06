@@ -24,4 +24,3 @@ make.hotelling.game(lower.bound = 0, upper.bound = 1, s = 1,
 We consider two firms playing a repeated hotelling game, setting price and location. The Utility Function of the uniformly distributed customers is 
 U = s - t.distance*|x-l|-p.
 }
-

@@ -20,4 +20,3 @@ traveling.salesman(obs, i, t, price = 0.5, speed = 0.05, ...)
 \description{
 A strategy which "walks" through over the "beach" with a fixed price
 }
-

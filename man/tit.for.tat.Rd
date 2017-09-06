@@ -10,4 +10,3 @@ tit.for.tat(obs, i, t, ...)
 A strategy for the iterated prisoners dilemma;
 see make.pd.game
 }
-

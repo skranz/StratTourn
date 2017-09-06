@@ -19,4 +19,3 @@ a list that contains a list for each scenario. The list for each scenario has a 
 \description{
 Import Stage 1 strategies and Stage 2 answers
 }
-
