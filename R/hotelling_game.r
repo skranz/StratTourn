@@ -277,6 +277,16 @@ make.hotelling.game = function(lower.bound=0, upper.bound=1, s=1, t.distance=1, 
     choice1 = a[[1]][["a"]]
     choice2 = a[[2]][["a"]]
     
+    #Check for theoretically possible situations, were a warning should be displayed.
+    if(choice1$p<0){
+        warning(paste0("Strategy of player 1 in period ",t, " returned this p: ", round(choice1$p,3),". p is set to 0."))
+        choice1$p <- 0
+    }
+    if(choice2$p<0){
+      warning(paste0("Strategy of player 2 in period ",t, " returned this p: ", round(choice2$p,3),". p is set to 0."))
+      choice2$p <- 0
+    }
+    
     #first round determines fixed locations if TRUE
     if(fix.location){
       if(t==1){
@@ -320,17 +330,17 @@ make.hotelling.game = function(lower.bound=0, upper.bound=1, s=1, t.distance=1, 
       stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible p: ", a$p))
     }
     #validity of p
-    if(a$p+eps<0 || a$p-eps>s){
-      stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible p: ", a$p,". p is either higher than s or lower than 0."))
-    }
+    #if(a$p+eps<0 || a$p-eps>s){
+    #  stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible p: ", a$p,". p is either higher than s or lower than 0."))
+    #}
     #Structure of l
     if (!(!is.null(a$p) && is.finite(a$l) && length(a$l)==1)) {
       stop(paste0("player ",i, "'s strategy in period ",t, " returned an infeasible l: ", a$p))
     }
     #validity of l
-    if(a$l+eps<lower.bound || a$l-eps>upper.bound){
-      stop(paste0("player ",i, "'s strategy in period ",t, " returned an out of bound location: ", a$l))
-    }
+    #if(a$l+eps<lower.bound || a$l-eps>upper.bound){
+    #  stop(paste0("player ",i, "'s strategy in period ",t, " returned an out of bound location: ", a$l))
+    #}
     return()
   }
   example.action = function(i=1,t=1,...) {
