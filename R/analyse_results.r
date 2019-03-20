@@ -241,6 +241,7 @@ examples.get.matches.vs.matrix = function() {
   get.matches.vs.matrix(md, br.sign="*")
 }
 
+#' Generates payoff matrix of strategy combinations
 get.matches.vs.matrix = function(dt=tourn$dt, tourn, var="u", br.sign=NULL, round=3) {
   restore.point("get.matches.vs.matrix")
 
@@ -265,9 +266,12 @@ get.matches.vs.matrix = function(dt=tourn$dt, tourn, var="u", br.sign=NULL, roun
   # Assume all matchings exist
   if (NROW(ds)==ns*ns) {
     mat = matrix(ds$u,ns,ns,byrow=TRUE)
-  } else {
-    warning("Not all matchings exist.")
-    return(NULL)
+  } else { #We fill up the matrix by hand, using only available matchings
+    mat = matrix(NA,ns,ns,byrow=TRUE)
+    colnames(mat) = rownames(mat) = strats
+    for(i in 1:nrow(ds)){
+      mat[as.character(ds[i,"strat1"]),as.character(ds[i,"strat2"])] <- ds$u[i]
+    }
   }
   if (!is.null(round)) {
     mat = round(mat,round)
